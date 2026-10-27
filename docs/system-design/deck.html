@@ -1,0 +1,1101 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>HomeFinder System Design</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+/* ===========================================
+   THEME — "Blueprint"
+   Layout concept: every slide is a sheet of an engineering drawing set —
+   blueprint grid, a framed border, a title block in the corner.
+   Dark blueprint by default, whiteprint in light mode (follows the system, T toggles).
+   =========================================== */
+:root {
+    --bg: #0B1C33;            /* blueprint paper */
+    --panel: #0F2645;         /* card fill, one step up */
+    --ink: #EAF2FB;           /* headings, key text */
+    --muted: #B9CDE4;         /* body text */
+    --line: #7FD1FF;          /* drafting cyan: borders, labels, request arrows */
+    --line-dim: rgba(127, 209, 255, 0.38);
+    --line-faint: rgba(127, 209, 255, 0.16);
+    --accent: #FF8A3D;        /* signal orange: events, emphasis, the one hot thing */
+    --accent-dim: rgba(255, 138, 61, 0.14);
+    --stage-bg: #050D19;      /* letterbox around the stage */
+    --grid-a: rgba(127,209,255,.06);
+    --grid-b: rgba(127,209,255,.12);
+    --seg-1: rgba(127,209,255,.45);
+    --seg-2: rgba(127,209,255,.7);
+    --chrome: rgba(11,28,51,.88);
+    --notes-bg: rgba(5,13,25,.96);
+    --hot-bg: #2A2A33;
+    --slide-bg: var(--bg);
+
+    --display: 'Bricolage Grotesque', 'Trebuchet MS', sans-serif;
+    --sans: 'IBM Plex Sans', 'Segoe UI', Helvetica, sans-serif;
+    --mono: 'IBM Plex Mono', 'Courier New', monospace;
+
+    --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+    color-scheme: dark;
+}
+@media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) {
+    --bg: #F4F7FB; --panel: #FFFFFF; --ink: #0B1C33; --muted: #34506F;
+    --line: #1C6DBA; --line-dim: rgba(28,109,186,.4); --line-faint: rgba(28,109,186,.14);
+    --accent: #CF5A14; --accent-dim: rgba(207,90,20,.12); --stage-bg: #D9E2EC;
+    --grid-a: rgba(28,109,186,.06); --grid-b: rgba(28,109,186,.12);
+    --seg-1: rgba(28,109,186,.4); --seg-2: rgba(28,109,186,.65);
+    --chrome: rgba(244,247,251,.92); --notes-bg: rgba(244,247,251,.97); --hot-bg: #FFF0E5;
+    color-scheme: light; } }
+:root[data-theme="light"] {
+    --bg: #F4F7FB; --panel: #FFFFFF; --ink: #0B1C33; --muted: #34506F;
+    --line: #1C6DBA; --line-dim: rgba(28,109,186,.4); --line-faint: rgba(28,109,186,.14);
+    --accent: #CF5A14; --accent-dim: rgba(207,90,20,.12); --stage-bg: #D9E2EC;
+    --grid-a: rgba(28,109,186,.06); --grid-b: rgba(28,109,186,.12);
+    --seg-1: rgba(28,109,186,.4); --seg-2: rgba(28,109,186,.65);
+    --chrome: rgba(244,247,251,.92); --notes-bg: rgba(244,247,251,.97); --hot-bg: #FFF0E5;
+    color-scheme: light; }
+/* SVG drawn with literal colors follows the theme through these */
+[stroke="#7FD1FF"] { stroke: var(--line); } [fill="#7FD1FF"] { fill: var(--line); }
+[stroke="#FF8A3D"] { stroke: var(--accent); } [fill="#FF8A3D"] { fill: var(--accent); }
+[stroke="#EAF2FB"] { stroke: var(--ink); } [fill="#0B1C33"] { fill: var(--bg); }
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+/* ===========================================
+   FIXED 16:9 STAGE — viewport-base.css (frontend-slides), included in full
+   =========================================== */
+html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; background: var(--stage-bg, #000); }
+.deck-viewport { position: fixed; inset: 0; overflow: hidden; background: var(--stage-bg, #000); }
+.deck-stage { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; overflow: hidden; transform-origin: 0 0; background: var(--slide-bg, #fff); }
+.slide { position: absolute; inset: 0; width: 1920px; height: 1080px; overflow: hidden; display: block; visibility: hidden; opacity: 0; pointer-events: none; background: var(--slide-bg, #fff); }
+.slide.active, .slide.visible { visibility: visible; opacity: 1; pointer-events: auto; z-index: 1; }
+img, video, canvas, svg { max-width: 100%; max-height: 100%; }
+.deck-controls { position: fixed; left: 50%; bottom: 22px; transform: translateX(-50%); z-index: 1000; }
+@media print {
+    html, body { width: 1920px; height: auto; overflow: visible; background: #fff; }
+    .deck-viewport { position: static; overflow: visible; background: #fff; }
+    .deck-stage { position: static; width: auto; height: auto; transform: none !important; background: none; }
+    .slide { position: relative; display: block !important; visibility: visible !important; opacity: 1 !important; pointer-events: auto !important; width: 1920px; height: 1080px; break-after: page; page-break-after: always; }
+    .slide:last-child { break-after: auto; page-break-after: auto; }
+    .deck-controls { display: none !important; }
+}
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.2s !important; }
+}
+
+/* ===========================================
+   SHEET — blueprint grid, frame border, title block
+   =========================================== */
+body { background: var(--stage-bg); color: var(--ink); font-family: var(--sans); }
+.slide {
+    background-color: var(--bg);
+    background-image:
+        linear-gradient(var(--grid-a) 1px, transparent 1px),
+        linear-gradient(90deg, var(--grid-a) 1px, transparent 1px),
+        linear-gradient(var(--grid-b) 1px, transparent 1px),
+        linear-gradient(90deg, var(--grid-b) 1px, transparent 1px);
+    background-size: 24px 24px, 24px 24px, 120px 120px, 120px 120px;
+    color: var(--ink);
+}
+.slide::before { content: ""; position: absolute; inset: 48px; border: 2px solid var(--line-dim); pointer-events: none; }
+.sheet { position: absolute; right: 48px; bottom: 48px; display: flex; font: 500 20px/1 var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--line); background: var(--bg); }
+.sheet span { padding: 16px 22px; border-left: 2px solid var(--line-dim); border-top: 2px solid var(--line-dim); }
+.sheet span:first-child { color: var(--ink); font-family: var(--display); font-weight: 800; letter-spacing: 0; text-transform: none; font-size: 22px; }
+.sheet span.sec { color: var(--accent); }
+.notes { display: none; }
+
+/* ===========================================
+   TYPE — one scale: 84 / 72 / 36 / 26 / 24 / 20 (mono labels)
+   =========================================== */
+.eyebrow { position: absolute; left: 120px; top: 100px; font: 500 24px/1 var(--mono); letter-spacing: .18em; text-transform: uppercase; color: var(--accent); }
+.title { position: absolute; left: 116px; top: 146px; width: 1600px; font: 800 72px/1.05 var(--display); letter-spacing: -1.5px; color: var(--ink); }
+.label { font: 500 21px/1.25 var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--line); }
+.label.acc { color: var(--accent); }
+h3 { font: 800 36px/1.15 var(--display); color: var(--ink); letter-spacing: -.3px; }
+.txt { font: 400 26px/1.45 var(--sans); color: var(--muted); }
+.txt b, .tbl b, .strip b { color: var(--ink); font-weight: 600; }
+.big { font: 800 84px/1 var(--display); color: var(--ink); letter-spacing: -2px; font-variant-numeric: tabular-nums; }
+.big.acc { color: var(--accent); }
+.big.cy { color: var(--line); }
+
+/* ===========================================
+   LAYOUT — content block below the title
+   =========================================== */
+.body { position: absolute; left: 120px; right: 120px; top: 290px; height: 650px; display: flex; flex-direction: column; gap: 32px; }
+.row { display: flex; gap: 32px; }
+.row > * { flex: 1; min-width: 0; }
+.grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px; }
+.spacer { flex: 1; }
+.card { border: 2px solid var(--line-dim); background: var(--panel); padding: 30px 32px; display: flex; flex-direction: column; gap: 14px; }
+.card.hot { border-color: var(--accent); }
+.card ul { list-style: none; display: flex; flex-direction: column; gap: 14px; }
+.card li { font: 400 25px/1.4 var(--sans); color: var(--muted); padding-left: 30px; position: relative; }
+.card li::before { content: ""; position: absolute; left: 0; top: 13px; width: 14px; height: 14px; border: 2px solid var(--line); transform: rotate(45deg); }
+.card.hot li::before { border-color: var(--accent); }
+.strip { border-left: 6px solid var(--accent); background: var(--accent-dim); padding: 22px 28px; font: 400 26px/1.45 var(--sans); color: var(--muted); }
+
+/* Tables: ruled like a drawing schedule */
+.tbl { width: 100%; border-collapse: collapse; font: 400 25px/1.35 var(--sans); color: var(--muted); }
+.tbl th { font: 500 20px/1.2 var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--line); text-align: left; padding: 0 18px 14px; border-bottom: 2px solid var(--line); }
+.tbl td { padding: 12px 18px; border-bottom: 1px solid var(--line-faint); vertical-align: top; }
+.tbl td:first-child { color: var(--ink); font-weight: 600; }
+.tbl .r { text-align: right; font-family: var(--mono); color: var(--ink); font-variant-numeric: tabular-nums; }
+.tbl .acc { color: var(--accent); font-weight: 600; }
+
+/* Flow chains: boxes joined by arrows */
+.chain { display: flex; align-items: stretch; gap: 0; }
+.chain > .step { flex: 1; min-width: 0; }
+.chain > .arrow { flex: 0 0 56px; display: flex; align-items: center; justify-content: center; }
+.arrow svg { width: 44px; height: 20px; }
+.pill { border: 2px solid var(--line); background: var(--bg); padding: 18px 16px; text-align: center; font: 500 24px/1.3 var(--sans); color: var(--ink); display: flex; align-items: center; justify-content: center; }
+.pill.ev { border-color: var(--accent); background: var(--accent-dim); font-family: var(--mono); }
+
+/* Pinned diagram nodes (architecture slide) */
+.node { position: absolute; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; border: 2px solid var(--line); background: var(--bg); font: 400 22px/1.25 var(--sans); color: var(--muted); padding: 6px 12px; }
+.node b { font: 700 24px/1.2 var(--display); color: var(--ink); }
+.node.svc { background: var(--panel); }
+.node.store { border-color: var(--line-dim); border-style: dashed; }
+.node.gw { background: var(--line); border-color: var(--line); color: var(--bg); }
+.node.gw b { color: var(--bg); }
+.node.bus { border-color: var(--accent); background: var(--hot-bg); color: var(--ink); }
+.node.hot { border-color: var(--accent); }
+.wires { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; pointer-events: none; }
+.legend { position: absolute; left: 128px; bottom: 66px; display: flex; gap: 40px; font: 500 20px/1 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.legend span { display: flex; align-items: center; gap: 12px; }
+.legend i { display: inline-block; width: 48px; height: 3px; background: var(--line); }
+.legend i.ev { background: var(--accent); }
+
+/* Budget bar (latency slide) */
+.budget { display: flex; height: 60px; border: 2px solid var(--line-dim); }
+.budget div { height: 100%; display: flex; align-items: center; padding: 0 16px; font: 600 22px/1 var(--mono); color: var(--bg); white-space: nowrap; overflow: hidden; border-right: 2px solid var(--bg); }
+.budget .s1 { background: var(--seg-1); }
+.budget .s2 { background: var(--seg-2); }
+.budget .os { background: var(--line); }
+.budget .head { background: transparent; color: var(--accent); border: 2px dashed var(--accent); border-right: none; }
+
+/* Cover + statement slides */
+.cover h1 { position: absolute; left: 112px; top: 300px; font: 800 200px/.95 var(--display); letter-spacing: -5px; color: var(--ink); }
+.cover .sub { position: absolute; left: 120px; top: 540px; width: 980px; font: 500 44px/1.3 var(--display); color: var(--muted); }
+.hexart { position: absolute; right: 150px; top: 170px; width: 620px; height: 600px; }
+.tblock { position: absolute; right: 48px; bottom: 48px; width: 760px; display: grid; grid-template-columns: 1fr 1fr; border-top: 2px solid var(--line-dim); border-left: 2px solid var(--line-dim); font: 400 22px/1.3 var(--mono); background: var(--bg); }
+.tblock div { padding: 14px 20px; border-right: 2px solid var(--line-dim); border-bottom: 2px solid var(--line-dim); color: var(--ink); }
+.tblock div:last-child, .tblock div:nth-last-child(2) { border-bottom: none; }
+.tblock small { display: block; font-size: 18px; color: var(--line); letter-spacing: .14em; text-transform: uppercase; }
+.tblock .wide { grid-column: span 2; font: 800 30px/1.2 var(--display); }
+.statement h1 { position: absolute; left: 116px; top: 280px; width: 1240px; font: 800 96px/1.04 var(--display); letter-spacing: -2.5px; color: var(--ink); text-wrap: balance; }
+.statement .sub { position: absolute; left: 120px; top: 720px; width: 1240px; font: 500 34px/1.4 var(--display); color: var(--muted); }
+
+/* ===========================================
+   ANIMATION — staggered rise when a slide becomes visible
+   =========================================== */
+.reveal { opacity: 0; transform: translateY(24px); transition: opacity .6s var(--ease-out-expo), transform .6s var(--ease-out-expo); }
+.slide.visible .reveal { opacity: 1; transform: none; }
+.slide.visible .d1 { transition-delay: .08s; } .slide.visible .d2 { transition-delay: .18s; }
+.slide.visible .d3 { transition-delay: .28s; } .slide.visible .d4 { transition-delay: .38s; }
+@media (prefers-reduced-motion: reduce) { .reveal { opacity: 1; transform: none; transition: none; } }
+
+/* ===========================================
+   CHROME OUTSIDE THE STAGE — controls, notes, edit toggle
+   =========================================== */
+.deck-controls { display: flex; gap: 8px; align-items: center; padding: 6px; padding-bottom: calc(6px + env(safe-area-inset-bottom, 0px)); background: var(--chrome); border: 1px solid var(--line-dim); font: 500 13px/1 var(--mono); color: var(--muted); opacity: .35; transition: opacity .2s; }
+.deck-controls:hover, .deck-controls:focus-within { opacity: 1; }
+.deck-controls button { font: inherit; color: var(--ink); background: transparent; border: 1px solid var(--line-dim); padding: 8px 12px; cursor: pointer; letter-spacing: .08em; }
+.deck-controls button:hover { border-color: var(--line); }
+.deck-controls button:focus-visible, .edit-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.deck-controls .count { padding: 0 10px; font-variant-numeric: tabular-nums; }
+#notesPanel { position: fixed; left: 0; right: 0; bottom: 0; max-height: 42%; overflow-y: auto; z-index: 999; background: var(--notes-bg); border-top: 2px solid var(--accent); padding-block: 20px 80px; padding-left: max(24px, env(safe-area-inset-left, 0px)); padding-right: max(24px, env(safe-area-inset-right, 0px)); color: var(--muted); font: 400 16px/1.6 var(--sans); white-space: pre-wrap; }
+#notesPanel h4 { font: 600 13px/1 var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--accent); margin-bottom: 12px; }
+.edit-hotzone { position: fixed; top: 0; left: 0; width: 80px; height: 80px; z-index: 10000; cursor: pointer; }
+.edit-toggle { position: fixed; top: calc(16px + env(safe-area-inset-top, 0px)); left: calc(16px + env(safe-area-inset-left, 0px)); z-index: 10001; font: 600 13px/1 var(--mono); letter-spacing: .1em; padding: 10px 14px; color: var(--bg); background: var(--line); border: none; cursor: pointer; opacity: 0; pointer-events: none; transition: opacity .3s ease; }
+.edit-toggle.show, .edit-toggle.active { opacity: 1; pointer-events: auto; }
+.edit-toggle.active { background: var(--accent); }
+body.editing [contenteditable="true"] { outline: 1px dashed rgba(255,138,61,.5); outline-offset: 4px; }
+</style>
+
+<div class="deck-viewport">
+<main class="deck-stage" id="deckStage" aria-label="HomeFinder system design presentation">
+
+<!-- === 01 COVER === -->
+<section class="slide cover active" data-sec="Cover">
+  <p class="eyebrow reveal">System design · Lead engineer</p>
+  <h1 class="reveal d1">HomeFinder</h1>
+  <p class="sub reveal d2">A national real estate platform for 100M monthly users, 200M properties and 800+ MLS feeds</p>
+  <svg class="hexart reveal d3" viewBox="0 0 620 600" aria-hidden="true"><g fill="none" stroke="#7FD1FF" stroke-opacity=".6" stroke-width="2"><polygon points="160,40 220,75 220,145 160,180 100,145 100,75"/><polygon points="280,40 340,75 340,145 280,180 220,145 220,75"/><polygon points="400,40 460,75 460,145 400,180 340,145 340,75"/><polygon points="220,145 280,180 280,250 220,285 160,250 160,180"/><polygon points="340,145 400,180 400,250 340,285 280,250 280,180"/><polygon points="460,145 520,180 520,250 460,285 400,250 400,180"/><polygon points="160,250 220,285 220,355 160,390 100,355 100,285"/><polygon points="400,250 460,285 460,355 400,390 340,355 340,285"/><polygon points="220,355 280,390 280,460 220,495 160,460 160,390"/><polygon points="340,355 400,390 400,460 340,495 280,460 280,390"/></g><polygon points="280,250 340,285 340,355 280,390 220,355 220,285" fill="#FF8A3D"/><polygon points="280,40 340,75 340,145 280,180 220,145 220,75" fill="#FF8A3D" fill-opacity=".35"/><circle cx="280" cy="320" r="8" fill="#0B1C33"/><line x1="340" y1="320" x2="590" y2="320" stroke="#FF8A3D" stroke-width="2" stroke-dasharray="8 6"/></svg>
+  <div class="tblock reveal d4">
+    <div class="wide">HomeFinder platform</div>
+    <div><small>Drawn by</small>Dani</div>
+    <div><small>Date</small>[interview date]</div>
+    <div><small>Scale</small>100M MAU</div>
+    <div><small>Sheet</small>01 of 22</div>
+  </div>
+  <aside class="notes">Open (15 seconds): "I'm going to walk you through how I'd build HomeFinder. I've picked the MLS data pipeline for the architecture section, the geospatial property search engine for the deep dive, and cost optimization for scaling, on a GCP-native stack I've kept deliberately light. Please interrupt me at any point; I'd rather go deep where you're curious than finish every slide."
+
+The hexagons are a nod to H3, the hexagonal geo index at the heart of the search deep dive (and of the alert matcher).</aside>
+</section>
+
+<!-- === 02 AGENDA === -->
+<section class="slide" data-sec="Plan">
+  <p class="eyebrow">The plan for 30 minutes</p>
+  <h2 class="title reveal">Three picks, chosen for where the risk is</h2>
+  <div class="body">
+    <div class="row reveal d1">
+      <div class="card"><p class="label">Architecture · 7 min</p><h3>MLS integration and the data pipeline</h3><p class="txt">800 inconsistent feeds and a 99.9% accuracy bar are where this platform is won or lost. Search, valuation and alerts all read from it.</p></div>
+      <div class="card hot"><p class="label acc">Deep dive · 14 min</p><h3>Geospatial property search</h3><p class="txt">The hottest path: 25k QPS at peak, under 200 ms at p95, maps with 1,000+ pins. Most users judge us by it.</p></div>
+      <div class="card"><p class="label">Scaling · 6 min</p><h3>Cost optimization</h3><p class="txt">Photos are most of the bill. Tier them, pay for the shape of the load, and buy only what's stateful and speaks an open protocol.</p></div>
+    </div>
+    <div class="spacer"></div>
+    <div class="reveal d2" style="display:flex;flex-direction:column;gap:14px">
+      <p class="label">Minute by minute</p>
+      <div class="budget" aria-label="Timeline: framing 2 minutes, architecture 7, deep dive 14, cost 6, close 1">
+        <div class="s1" style="width:112px">2</div>
+        <div class="s2" style="width:392px">Architecture 7</div>
+        <div class="os" style="width:784px">Search deep dive 14</div>
+        <div class="s2" style="width:336px">Cost 6</div>
+        <div class="s1" style="width:56px">1</div>
+      </div>
+      <p class="txt">Woven through: build vs buy, data architecture, event-driven design and geographic distribution, on GCP.</p>
+    </div>
+  </div>
+  <aside class="notes">Say: "I had to pick one option per section, so I picked where I think the real risk is."
+
+Why the MLS pipeline for architecture: the 800-feed data problem is what actually differentiates a real estate platform; Zillow, Redfin and Realtor.com live or die by listing accuracy and freshness. It also lets me cover build vs buy and data architecture naturally.
+
+Why geospatial search for the deep dive: it is the highest-traffic, most latency-sensitive path, it has the two hardest numbers in the brief (200 ms search, 300 ms maps with 1,000+ pins), and the choices (where to do geometry, how to shard, how to cluster pins) are concrete and defensible. Event-driven design still appears: the index is a projection of the Pub/Sub stream, and saved-search alerts get their own slide.
+
+Why cost optimization: it's where the build vs buy story is sharpest, and the numbers are concrete. Photos are ~99% of bytes, BigQuery slots vs on-demand is a real choice, and every managed service I chose has a premium I can defend. Spring peaks still come up: they're a cost question too (CUD baseline, on-demand for the delta).
+
+Time plan: framing 0–2, architecture 2–9, deep dive 9–23, scaling 23–29, close 29–30. If interrupted a lot, cut the failure-modes table and the data + compute cost slide first; they're good Q&amp;A material anyway.</aside>
+</section>
+
+<!-- === 03 DRIVERS === -->
+<section class="slide" data-sec="Requirements">
+  <p class="eyebrow">Significant requirements</p>
+  <h2 class="title reveal">Five requirements shape almost every decision</h2>
+  <div class="body">
+    <table class="tbl reveal d1">
+      <tr><th style="width:26%">Driver</th><th style="width:34%">The number</th><th style="width:40%">What it forces</th></tr>
+      <tr><td>Read-heavy national search</td><td>400M searches a day; p95 under 200 ms; 1,000-pin maps under 300 ms</td><td>A small in-memory hot index, caching at every layer, geo work done at write time</td></tr>
+      <tr><td>800 messy sources, one truth</td><td>1M updates a day, 99.9% accurate and current</td><td>Config-driven adapters, entity resolution, nightly reconciliation</td></tr>
+      <tr><td>Weekend-critical uptime</td><td>99.95% ≈ 22 min a month; spring ≈ 2× baseline</td><td>Multi-zone serving, a warm DR region, graceful degradation</td></tr>
+      <tr><td>Freshness is the product</td><td>New listing to a buyer's phone in about a minute</td><td>An event backbone; reverse search for alerts</td></tr>
+      <tr><td>Regulated money and data</td><td>TILA-RESPA, fair lending, CCPA, state disclosures</td><td>Isolated mortgage domain, PII vault, audit trails, no protected-class features</td></tr>
+    </table>
+  </div>
+  <aside class="notes">Say: "Before boxes and arrows, these are the five things I designed against. Everything later traces back to one of these rows."
+
+Framing line: a read-heavy system with a hard data-quality problem on the write side. Reads outnumber writes about a thousand to one, so the read path scales out horizontally and the write path stays simple and correct.
+
+Out of scope, say so: internals of 3D/AR rendering (we embed a vendor), the agent CRM, payments. Virtual tours are just another media type: upload, transcode, object storage, CDN.
+
+Compliance point: fair housing and fair lending mean ranking and recommendation models must not use protected-class attributes or obvious proxies (e.g. neighborhood demographics as a ranking feature). Demographic data can be displayed where legally allowed, but it is never a ranking input.</aside>
+</section>
+
+<!-- === 04 ASSUMPTIONS === -->
+<section class="slide" data-sec="Assumptions">
+  <p class="eyebrow">Assumptions</p>
+  <h2 class="title reveal">Round numbers I'm willing to defend</h2>
+  <div class="body">
+    <table class="tbl reveal d1">
+      <tr><th style="width:64%">Assumption</th><th style="width:36%">Drives</th></tr>
+      <tr><td>20M daily users (20% of MAU); 35M on a spring Sunday</td><td>Peak QPS, regional capacity</td></tr>
+      <tr><td>20 searches (map moves included) and 8 listing views per user-day</td><td>Search and image load</td></tr>
+      <tr><td>About 5M active listings (sale, rent, pending) of the 200M properties</td><td>The hot index fits in RAM</td></tr>
+      <tr><td>30M saved searches (15% of users, 2 each)</td><td>Alert matcher size</td></tr>
+      <tr><td>About 25 photos per listed property, 3 MB originals</td><td>Storage and CDN cost</td></tr>
+      <tr><td>MLS feeds update every 1–15 min; we can't be fresher than the source</td><td>The floor on alert latency</td></tr>
+      <tr><td>US only, on GCP: managed where the protocol is open</td><td>Build vs buy, regions</td></tr>
+      <tr><td>Reads outnumber writes about 1,000 to 1</td><td>Scale reads out; keep writes simple</td></tr>
+    </table>
+  </div>
+  <aside class="notes">Say: "These are my assumptions; the brief didn't give them. Round numbers so the math is easy to follow, and I'll flag where being 2× wrong would change the design."
+
+2× wrong doesn't matter: search QPS (add replicas), saved searches (matcher is 20 GB; 40 GB is still small).
+2× wrong would matter: the searchable set. If users searched the full 200M properties rather than ~5M active, the hot index stops fitting in memory everywhere. That's why the index is split in two.
+
+Sanity checks: US for-sale inventory is roughly 1–1.5M at any time; online rentals add a couple of million; pending/recently sold adds more. 20% DAU/MAU is typical for a browsing-heavy consumer app. 20 searches per user-day includes every map pan and filter change.
+
+GCP-native, kept light. The rule: use a managed service when it speaks an open protocol (Postgres, Redis protocol, Kubernetes, Iceberg), so leaving is a migration, not a rewrite. Proprietary services (Pub/Sub, Cloud Tasks, BigQuery) stay off the user request path, behind one adapter or in open formats. Stack: AlloyDB, Memorystore for Valkey, Pub/Sub, Cloud Tasks, BigQuery with Iceberg on GCS, Cloud Run, OpenSearch on GKE.</aside>
+</section>
+
+<!-- === 05 CAPACITY === -->
+<section class="slide" data-sec="Capacity">
+  <p class="eyebrow">Back of the envelope</p>
+  <h2 class="title reveal">Huge reads, tiny writes, heavy photos</h2>
+  <div class="body">
+    <div class="grid3 reveal d1">
+      <div class="card"><p class="big cy">~25k</p><p class="label">search QPS, spring Sunday peak</p><p class="txt">400M a day ≈ 4.6k average; ×2.5 evening peak, ×2 spring. Design for 40k.</p></div>
+      <div class="card"><p class="big cy">~170 Gbps</p><p class="label">peak photo egress</p><p class="txt">~9k listing views/s × 15 photos × 150 KB. CDN only, above 95% hit rate.</p></div>
+      <div class="card hot"><p class="big acc">12/s</p><p class="label acc">average MLS writes</p><p class="txt">1M updates a day, bursts near 500/s. A correctness problem, not a throughput one.</p></div>
+      <div class="card"><p class="big cy">~20 GB</p><p class="label">hot search index</p><p class="txt">5M active listings × 4 KB. Fits in RAM: cheap to replicate, fast to rebuild. All 200M: ~400 GB.</p></div>
+      <div class="card hot"><p class="big acc">7.5 PB</p><p class="label acc">photo originals</p><p class="txt">100M properties × 25 photos × 3 MB. About 99% of all bytes.</p></div>
+      <div class="card"><p class="big cy">15M</p><p class="label">alert matches a day</p><p class="txt">~300k alert-worthy changes × ~50 matching saved searches each.</p></div>
+    </div>
+  </div>
+  <aside class="notes">Say: "Three conclusions, and they drive the rest of the talk."
+1. Reads dominate: ~25k search QPS at peak versus ~12 writes a second. Scale reads horizontally (replicas, caches, CDN); keep the write path simple and correct.
+2. The hot data is small: the active-listing index is ~20 GB, so it fits in memory, rebuilds in under an hour, and a warm standby in the DR region is cheap. That single fact simplifies distribution enormously.
+3. Photos are the bytes: 7.5 PB of originals is ~99% of storage and the CDN bill. Cost optimization is mostly a media problem.
+
+Derivations:
+- Search: 20M × 20 = 400M/day ÷ 86,400 ≈ 4.6k QPS. Evening peak ~2.5× ≈ 12k. Spring weekend ~2× ≈ 23–25k. Design target 40k = 1.6× headroom.
+- Listing views: 20M × 8 = 160M/day ≈ 1.9k/s, ×5 at peak ≈ 9k/s.
+- Egress: 9k/s × 15 photos × 150 KB (sized WebP/AVIF) ≈ 20 GB/s ≈ 160–170 Gbps.
+- Structured data: 200M × ~10 KB ≈ 2 TB golden records; 30 years of history is tens of TB in Parquet.
+- Alerts: ~30% of 1M daily changes matter to buyers; fan-out ~50, highly skewed.
+- 99.95% of a 30-day month = 21.6 min.</aside>
+</section>
+
+<!-- === 06 ARCHITECTURE === -->
+<section class="slide" data-sec="Architecture">
+  <p class="eyebrow">High-level architecture</p>
+  <h2 class="title reveal">Six layers; data flows up from the feeds</h2>
+  <div class="reveal d1">
+    <div class="node" style="left:128px;top:270px;width:400px;height:76px"><b>Clients</b>web (SSR) · iOS · Android</div>
+    <div class="node" style="left:656px;top:270px;width:520px;height:76px"><b>Cloud CDN + Cloud Armor</b>pages, map tiles, photos</div>
+    <div class="node" style="left:1304px;top:270px;width:488px;height:76px"><b>Media pipeline</b>resize, tours, video</div>
+    <div class="node gw" style="left:128px;top:390px;width:1664px;height:64px"><span><b>API gateway / BFF</b> · auth, rate limits, server-side rendering, feature flags</span></div>
+    <div class="node svc hot" style="left:128px;top:498px;width:240px;height:96px"><b>Search &amp; recs</b></div>
+    <div class="node svc" style="left:413px;top:498px;width:240px;height:96px"><b>Property &amp; listings</b></div>
+    <div class="node svc" style="left:698px;top:498px;width:240px;height:96px"><b>Valuation (AVM)</b></div>
+    <div class="node svc" style="left:982px;top:498px;width:240px;height:96px"><b>Agent marketplace</b></div>
+    <div class="node svc" style="left:1267px;top:498px;width:240px;height:96px"><b>Mortgage (isolated)</b></div>
+    <div class="node svc" style="left:1552px;top:498px;width:240px;height:96px"><b>Saved-search alerts</b></div>
+    <div class="node store" style="left:128px;top:638px;width:240px;height:80px"><b>OpenSearch</b>search index</div>
+    <div class="node store" style="left:413px;top:638px;width:240px;height:80px"><b>Valkey</b>Memorystore cache</div>
+    <div class="node store" style="left:698px;top:638px;width:240px;height:80px"><b>AlloyDB</b>golden records</div>
+    <div class="node store" style="left:982px;top:638px;width:240px;height:80px"><b>Alert state</b>dedupe keys · Valkey</div>
+    <div class="node store" style="left:1267px;top:638px;width:240px;height:80px"><b>BigQuery + GCS</b>Iceberg history</div>
+    <div class="node store" style="left:1552px;top:638px;width:240px;height:80px"><b>Feature store</b>AVM, recs</div>
+    <div class="node bus" style="left:128px;top:762px;width:1664px;height:60px"><span><b>Event backbone · Pub/Sub</b> · property.changed · listing.events · search.saved · notify.requested</span></div>
+    <div class="node" style="left:128px;top:866px;width:760px;height:74px"><b>Sources</b>800+ MLS feeds · county records · schools, crime</div>
+    <div class="node hot" style="left:984px;top:866px;width:808px;height:74px"><b>Ingest pipeline</b>Cloud Tasks per MLS → normalize → validate → resolve</div>
+    <svg class="wires" viewBox="0 0 1920 1080" aria-hidden="true">
+      <defs>
+        <marker id="hc" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 Z" fill="#7FD1FF"/></marker>
+        <marker id="ho" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 Z" fill="#FF8A3D"/></marker>
+      </defs>
+      <g stroke="#7FD1FF" stroke-width="3" fill="none">
+        <line x1="530" y1="308" x2="654" y2="308" marker-start="url(#hc)" marker-end="url(#hc)"/>
+        <line x1="1302" y1="308" x2="1178" y2="308" marker-end="url(#hc)"/>
+        <line x1="916" y1="348" x2="916" y2="388" marker-start="url(#hc)" marker-end="url(#hc)"/>
+        <line x1="248" y1="456" x2="248" y2="496" marker-end="url(#hc)"/>
+        <line x1="533" y1="456" x2="533" y2="496" marker-end="url(#hc)"/>
+        <line x1="818" y1="456" x2="818" y2="496" marker-end="url(#hc)"/>
+        <line x1="1102" y1="456" x2="1102" y2="496" marker-end="url(#hc)"/>
+        <line x1="1387" y1="456" x2="1387" y2="496" marker-end="url(#hc)"/>
+        <line x1="1672" y1="456" x2="1672" y2="496" marker-end="url(#hc)"/>
+        <line x1="890" y1="903" x2="982" y2="903" marker-end="url(#hc)"/>
+      </g>
+      <g stroke="#FF8A3D" stroke-width="3" fill="none">
+        <line x1="818" y1="720" x2="818" y2="760" marker-end="url(#ho)"/>
+        <line x1="248" y1="760" x2="248" y2="720" marker-end="url(#ho)"/>
+        <line x1="533" y1="760" x2="533" y2="720" marker-end="url(#ho)"/>
+        <line x1="1387" y1="760" x2="1387" y2="720" marker-end="url(#ho)"/>
+        <line x1="1388" y1="864" x2="1388" y2="824" marker-end="url(#ho)"/>
+      </g>
+    </svg>
+  </div>
+  <div class="legend"><span><i></i>Requests</span><span><i class="ev"></i>Events</span></div>
+  <aside class="notes">Walk it bottom-up, because that's how data moves (about 90 seconds):
+1. Sources: 800+ MLS feeds, county public records, third-party data (schools, crime, walkability, demographics).
+2. The ingest pipeline (Cloud Run workers, one Cloud Tasks queue per MLS) normalizes everything into one canonical property model and writes the golden record to AlloyDB (next slide).
+3. Every committed change goes out on Pub/Sub via a transactional outbox as property.changed, carrying the MLS ModificationTimestamp as its version.
+4. Each consumer has its own subscription: the OpenSearch index, Valkey cache purge, a BigQuery subscription for history and ML, and the alert matcher. Every sink checks the version, so redelivery and replay are harmless.
+5. Domain services sit above the stores. Mortgage is isolated on purpose: own database, own GCP project and VPC, field-level encryption, audit log (TILA-RESPA, credit data).
+6. The gateway/BFF does auth, rate limiting and server-side rendering for SEO (listing pages are a huge share of organic traffic).
+7. The CDN fronts everything cacheable: SSR pages with short TTLs, map tiles, all photos.
+
+Principle: one write path, many read models. The golden record is the only place a fact is written; everything else is a projection we can rebuild from the raw GCS zone, BigQuery history or a Pub/Sub seek.
+
+"Why not microservices for everything": these are domain boundaries owned by teams; split further only where scaling or ownership demands it. Search and alerts scale very differently, so they're separate from day one.</aside>
+</section>
+
+<!-- === 07 MLS === -->
+<section class="slide" data-sec="MLS pipeline">
+  <p class="eyebrow">MLS integration</p>
+  <h2 class="title reveal">800 feeds, about 15 adapters, one canonical model</h2>
+  <div class="body">
+    <div class="chain reveal d1">
+      <div class="step card"><p class="label acc">1 · Connect</p><p class="txt">About 15 platform adapters plus per-MLS config. One Cloud Tasks queue per MLS, rate-capped to its contract.</p></div>
+      <div class="arrow"><svg viewBox="0 0 44 20" aria-hidden="true"><path d="M0 10 H36" stroke="#7FD1FF" stroke-width="3"/><path d="M30 2 L42 10 L30 18 Z" fill="#7FD1FF"/></svg></div>
+      <div class="step card"><p class="label acc">2 · Land</p><p class="txt">Raw payload to GCS, immutable and versioned. A mapping fix becomes a replay, not a re-pull.</p></div>
+      <div class="arrow"><svg viewBox="0 0 44 20" aria-hidden="true"><path d="M0 10 H36" stroke="#7FD1FF" stroke-width="3"/><path d="M30 2 L42 10 L30 18 Z" fill="#7FD1FF"/></svg></div>
+      <div class="step card"><p class="label acc">3 · Normalize</p><p class="txt">Per-MLS mapping to the RESO Data Dictionary: enums, units, status codes, media.</p></div>
+      <div class="arrow"><svg viewBox="0 0 44 20" aria-hidden="true"><path d="M0 10 H36" stroke="#7FD1FF" stroke-width="3"/><path d="M30 2 L42 10 L30 18 Z" fill="#7FD1FF"/></svg></div>
+      <div class="step card"><p class="label acc">4 · Validate</p><p class="txt">Address standardization, geocoding, rule checks. Failures go to quarantine, never to production.</p></div>
+      <div class="arrow"><svg viewBox="0 0 44 20" aria-hidden="true"><path d="M0 10 H36" stroke="#7FD1FF" stroke-width="3"/><path d="M30 2 L42 10 L30 18 Z" fill="#7FD1FF"/></svg></div>
+      <div class="step card hot"><p class="label acc">5 · Resolve</p><p class="txt">Match to a property_id (county + parcel), merge cross-MLS duplicates by precedence, upsert, emit the event.</p></div>
+    </div>
+    <div class="row reveal d2">
+      <div class="card"><p class="label">Fan-out on Pub/Sub</p><p class="txt">Five subscriptions: indexer · cache purge · alert matcher · AVM refresh · BigQuery. Dead-letter topics; seek to replay; version check at every sink.</p></div>
+      <div class="card hot"><p class="label acc">The accuracy loop behind 99.9%</p><p class="txt">Nightly full-key reconciliation per feed catches missed deletes. Per-feed freshness SLOs, field-level provenance, a review queue for quarantined records.</p></div>
+    </div>
+  </div>
+  <aside class="notes">Lead with: "800 MLSs sounds like 800 integrations. It isn't. Most run on a handful of vendor platforms (CoreLogic Matrix, FBS Flexmls, Black Knight Paragon, Rapattoni…), and the industry is converging on the RESO Web API and Data Dictionary. So we build ~15 platform adapters and treat each MLS as configuration: credentials, cadence, field mappings, quirks."
+
+1. Connect: incremental pulls on a ModificationTimestamp cursor; cadence 1–15 min per MLS. Cloud Scheduler fills one Cloud Tasks queue per MLS, with maxDispatchesPerSecond and maxConcurrentDispatches set to that MLS's contract: a slow MLS can't starve the others, and retries with backoff are built in. Pub/Sub can't rate-limit per source; that's why Tasks is here. Use neutral aggregators (MLS Grid, Trestle) where an MLS distributes through them.
+2. Land: untouched payload to GCS (gs://raw/…) with feed, timestamp, cursor. Audit trail and replay button.
+3. Normalize: declarative mapping per MLS (versioned, tested in CI against sample payloads). Onboarding an MLS needs no code deploy.
+4. Validate: USPS CASS address standardization, geocode, rules (price > 0, plausible sqft, sold after listed). Bad records are quarantined with a reason; the previous good version stays live.
+5. Resolve: stable property_id from county FIPS + parcel number (APN), falling back to normalized address + geo proximity. Duplicates across overlapping MLSs merge; per-field precedence and provenance.
+
+Accuracy loop: incremental feeds don't reliably report deletes. Nightly, pull all active keys per feed and diff. Per-feed SLO: 95% of changes visible within 5 minutes of the MLS publishing them; alert when a feed goes quiet.
+
+Fan-out: Pub/Sub, not Kafka, because we have ~12 events/s; Kafka means brokers and partitions sized for scale we don't have. Not Cloud Tasks either: a task hits one target, so five consumers would mean five tasks and a producer change for every new consumer.
+
+Ordering: the version check is the guarantee (write only if the MLS ModificationTimestamp + sequence is newer). Ordering keys only keep publish order; they don't cover worker races, redelivery or replay, and one poison message blocks its key.
+
+MLS display rules (IDX/VOW attribution, allowed fields) live in the same per-MLS config and are enforced at render time.</aside>
+</section>
+
+<!-- === 08 DATA === -->
+<section class="slide" data-sec="Data">
+  <p class="eyebrow">Data architecture</p>
+  <h2 class="title reveal">One write path, many read models</h2>
+  <div class="body">
+    <table class="tbl reveal d1">
+      <tr><th style="width:30%">Data</th><th style="width:36%">Store</th><th style="width:34%">Why</th></tr>
+      <tr><td>Raw feed payloads</td><td>GCS, immutable and versioned</td><td>Audit trail; replay after a fix</td></tr>
+      <tr><td>Golden property records</td><td class="acc">AlloyDB (Postgres + PostGIS)</td><td>ACID upserts, provenance, geometry</td></tr>
+      <tr><td>Search documents</td><td>OpenSearch, two indices</td><td>Filters, geo and facets in ms</td></tr>
+      <tr><td>Hot reads, AVM values</td><td>Memorystore for Valkey, behind the CDN</td><td>Sub-ms reads; absorbs peaks</td></tr>
+      <tr><td>30 years of history, ML</td><td>BigQuery, Iceberg tables on GCS</td><td>Open format, time travel, SQL</td></tr>
+      <tr><td>Users, agents, searches</td><td>AlloyDB, a database per service</td><td>Relational, modest in size</td></tr>
+      <tr><td>Mortgage and credit data</td><td>Encrypted AlloyDB, own GCP project</td><td>Audit trail, small blast radius</td></tr>
+      <tr><td>Alert dedupe, inbox</td><td>Valkey SET NX with a TTL</td><td>Auto-expiry, no extra database</td></tr>
+    </table>
+    <p class="strip reveal d2"><b>Event rules:</b> transactional outbox to Pub/Sub · MLS timestamp as version, checked at every sink · CloudEvents schemas · dead-letter topics · every read model rebuildable</p>
+  </div>
+  <aside class="notes">Say: "There's exactly one place a fact about a property gets written: the golden record in AlloyDB. Everything else is a read model built from the event stream; I can throw any of them away and rebuild it."
+
+Why AlloyDB: 200M × ~10 KB ≈ 2 TB, comfortable for Postgres with hash partitioning on property_id. Transactions for upsert + outbox; PostGIS for write-time geometry; read pools for detail reads that miss the cache; a cross-region secondary for DR. ~12 writes/s. Why not Spanner: it sells multi-region writes and 99.999% we don't need at 12 writes/s, and we'd lose PostGIS and plain Postgres tooling. Nothing needs Cassandra.
+
+Why not event sourcing everything: the raw GCS zone plus BigQuery history already give replay and history; querying current state from events is painful. The lake keeps every version.
+
+Outbox: record + outbox row in one transaction; a small relay publishes to Pub/Sub. No dual-write bugs. Pub/Sub sits behind our own publish/consume adapter with CloudEvents envelopes, so moving to Kafka later is one module.
+
+Ordering: consumers apply a version check (MLS timestamp + sequence), so replays, redelivery and duplicates are harmless.
+
+Schemas: Protobuf in CloudEvents envelopes, Pub/Sub schemas plus backward-compatibility checks in CI.
+
+History: a Pub/Sub BigQuery subscription lands every change with zero pipeline code (Datastream would only mirror current state). BigQuery tables for Apache Iceberg on GCS, partitioned by state and year (deeds, tax assessments, listing history, permits). Time travel lets ML train on what we knew at the time, avoiding leakage.
+
+Privacy: CCPA deletions fan out as an event; every store with user data has a deleting consumer. Mortgage/credit data in its own GCP project with Cloud KMS field-level encryption and access logging.</aside>
+</section>
+
+<!-- === 09 ALERTS === -->
+<section class="slide" data-sec="Alerts">
+  <p class="eyebrow">Event-driven · Saved-search alerts</p>
+  <h2 class="title reveal">Stream listings through saved searches</h2>
+  <div class="body">
+    <div class="row reveal d1">
+      <div class="card"><p class="label">Naive: poll</p><p class="big acc">50k QPS</p><p class="txt">30M saved searches every 10 minutes. More load than all user search, and still 10 minutes late.</p></div>
+      <div class="card hot"><p class="label acc">Chosen: reverse search</p><p class="big cy">~12 events/s</p><p class="txt">Each change looks up its H3 cell in an in-memory index of saved searches (~20 GB), then checks the filters.</p></div>
+      <div class="card"><p class="label">Deliver once</p><p class="big cy">&lt; 60 s</p><p class="txt">Dedupe on user + listing + change, merge across searches, quiet hours and caps, overflow to a digest.</p></div>
+    </div>
+    <div class="spacer"></div>
+    <div class="chain reveal d2">
+      <div class="step pill ev">property.changed</div>
+      <div class="arrow"><svg viewBox="0 0 44 20" aria-hidden="true"><path d="M0 10 H36" stroke="#FF8A3D" stroke-width="3"/><path d="M30 2 L42 10 L30 18 Z" fill="#FF8A3D"/></svg></div>
+      <div class="step pill">Classifier + storm guard</div>
+      <div class="arrow"><svg viewBox="0 0 44 20" aria-hidden="true"><path d="M0 10 H36" stroke="#FF8A3D" stroke-width="3"/><path d="M30 2 L42 10 L30 18 Z" fill="#FF8A3D"/></svg></div>
+      <div class="step pill">Matcher shards by H3 cell</div>
+      <div class="arrow"><svg viewBox="0 0 44 20" aria-hidden="true"><path d="M0 10 H36" stroke="#FF8A3D" stroke-width="3"/><path d="M30 2 L42 10 L30 18 Z" fill="#FF8A3D"/></svg></div>
+      <div class="step pill">Orchestrator: dedupe, caps</div>
+      <div class="arrow"><svg viewBox="0 0 44 20" aria-hidden="true"><path d="M0 10 H36" stroke="#FF8A3D" stroke-width="3"/><path d="M30 2 L42 10 L30 18 Z" fill="#FF8A3D"/></svg></div>
+      <div class="step pill">Push · email · in-app</div>
+    </div>
+  </div>
+  <aside class="notes">The event-driven showcase (60–90 seconds). Say: "The obvious design re-runs every saved search on a timer. 30M searches every 10 minutes is 50k QPS, more than our entire user search load, and alerts are still 10 minutes stale. So I flip it: index the searches, stream the listings through them."
+
+Matcher: on save, the area (polygon, ZIP, city, school district) becomes H3 cells (res 7, ~5 km²; ~40 per search). Postings: cell → search ids, plus compiled filters. A listing is a point in exactly one cell: look up candidates, exact point-in-polygon + filter check. Typical cell: thousands of candidates, &lt;1 ms; densest (Manhattan) ~200k, ~10 ms. Memory: 30M × 40 × 8 B ≈ 10 GB + ~9 GB filters ≈ 20 GB, sharded by coarse H3 parent, 3 replicas. State rebuilds from the saved-search table in AlloyDB plus a GCS snapshot; a crashed node is back in minutes.
+
+Classifier: only buyer-relevant changes (new, price drop, back on market, open house). Storm guard: a feed suddenly emitting 5× its normal change rate has its alerts held and on-call paged.
+
+Delivery: idempotency key = hash(user, listing, change, version) with SET NX + TTL on a small no-eviction Valkey instance (one less database than Bigtable). One notification even if three searches match. Quiet hours, daily caps, digest overflow. SMS only with TCPA consent; CAN-SPAM unsubscribe.
+
+SLO: p95 under 60 s from ingest to device. The MLS poll interval comes before that and is outside our control.
+
+Safety net: nightly batch re-runs saved searches over the last 24h of changes; dedupe prevents double sends.
+
+Alternative: OpenSearch percolator is a valid v1 "buy"; a custom matcher gives predictable latency and fast rebuilds for our narrow query shape.</aside>
+</section>
+
+<!-- === 10 GCP STACK === -->
+<section class="slide" data-sec="GCP stack">
+  <p class="eyebrow">GCP-native, kept light</p>
+  <h2 class="title reveal">Managed where the protocol is open</h2>
+  <div class="body">
+    <table class="tbl reveal d1">
+      <tr><th style="width:18%">Layer</th><th style="width:36%">GCP choice</th><th style="width:46%">Why, and the exit</th></tr>
+      <tr><td>Events</td><td class="acc">Pub/Sub behind our adapter</td><td>12 events/s; Kafka is scale we don't have. Exit: one module</td></tr>
+      <tr><td>MLS polling</td><td>Cloud Tasks, one queue per MLS</td><td>Rate cap per contract, retries built in</td></tr>
+      <tr><td>Truth</td><td class="acc">AlloyDB (Postgres + PostGIS)</td><td>2 TB, 12 writes/s, one region. Exit: Postgres wire</td></tr>
+      <tr><td>Cache</td><td>Memorystore for Valkey</td><td>Redis protocol, rebuildable, 99.99% managed</td></tr>
+      <tr><td>Search</td><td class="acc">OpenSearch on GKE</td><td>Geo + ranking we control. Fallback: Elastic Cloud</td></tr>
+      <tr><td>Analytics, ML</td><td>BigQuery, Iceberg on GCS, XGBoost</td><td>Open formats; BigQuery ML as the day-one baseline</td></tr>
+      <tr><td>Compute</td><td>Cloud Run; GKE only for OpenSearch</td><td>Plain containers; scale to zero</td></tr>
+      <tr><td>Edge</td><td>Global LB, Cloud CDN, Cloud Armor</td><td>One anycast IP, WAF and bot control at the edge</td></tr>
+    </table>
+  </div>
+  <aside class="notes">Say: "I know GCP well, so I went native, but light. One rule: if a managed service speaks an open protocol, leaving it is a migration, not a rewrite. Proprietary services stay off the user request path, behind one adapter or in open formats."
+
+Why not (one line each):
+- Kafka: 12 events/s. Brokers and partitions sized for scale we don't have. Pub/Sub gives fan-out, 31-day retention, seek replay, dead-letter topics.
+- Cloud Tasks for fan-out: one task, one target. Five consumers = five tasks and a producer change per new consumer. Tasks is great for throttled, targeted work: MLS polling.
+- Eventarc: only for GCP-sourced triggers (a photo lands in GCS → Cloud Run resizes it). Not the business event bus.
+- Spanner: multi-region writes and 99.999% we don't need; we'd lose PostGIS.
+- Datastream: current state only; the BigQuery subscription keeps every change.
+- Vertex AI Search: a relevance black box, not geo-first. We need geo_shape, facets and our own ranking.
+- Vertex AI endpoints: proprietary serving. XGBoost in a container runs on Cloud Run, GKE or anywhere. BigQuery ML (BOOSTED_TREE_REGRESSOR) gives the baseline in hours.
+- AVM serving: nightly batch scores into AlloyDB + Valkey, re-scored only for homes touched by property.changed. Live re-estimate under 1 s when an owner edits beds/baths.
+- BigQuery GIS: analytics only (heatmaps, distance-to-transit features). PostGIS does write-time tagging. Neither runs per search.
+- Dragonfly / Redis for the cache: next section (cost, build vs buy).</aside>
+</section>
+
+<!-- === 11 DEEP DIVE INTRO === -->
+<section class="slide statement" data-sec="Search deep dive">
+  <p class="eyebrow">Deep dive · Geospatial property search</p>
+  <h1 class="reveal d1">Any shape on the map, any filter, 25k times a second, under 200 ms</h1>
+  <p class="sub reveal d2">Four decisions: do geometry at write time · keep the hot index small · shard by geography · send clusters, not pins, when zoomed out</p>
+  <svg class="hexart reveal d3" style="right:110px;top:240px;width:460px;height:445px" viewBox="0 0 620 600" aria-hidden="true"><g fill="none" stroke="#7FD1FF" stroke-opacity=".5" stroke-width="2"><polygon points="160,40 220,75 220,145 160,180 100,145 100,75"/><polygon points="280,40 340,75 340,145 280,180 220,145 220,75"/><polygon points="400,40 460,75 460,145 400,180 340,145 340,75"/><polygon points="220,145 280,180 280,250 220,285 160,250 160,180"/><polygon points="340,145 400,180 400,250 340,285 280,250 280,180"/><polygon points="460,145 520,180 520,250 460,285 400,250 400,180"/><polygon points="160,250 220,285 220,355 160,390 100,355 100,285"/><polygon points="400,250 460,285 460,355 400,390 340,355 340,285"/><polygon points="220,355 280,390 280,460 220,495 160,460 160,390"/><polygon points="340,355 400,390 400,460 340,495 280,460 280,390"/></g><polygon points="280,250 340,285 340,355 280,390 220,355 220,285" fill="#FF8A3D"/></svg>
+  <aside class="notes">Transition (about 14 minutes for this section): "Search is the path every user hits, dozens of times a session. It has the two hardest numbers in the brief: 200 ms p95 for results and 300 ms for a map with 1,000+ pins. Here's how I hit them."
+
+Roadmap: latency budget, index design, index layout and sharding, the map, ranking, what breaks.
+
+Expectation: I'm building on OpenSearch (or Elasticsearch), not writing a search engine. The engineering is in what we put in the index and how we route queries.</aside>
+</section>
+
+<!-- === 12 LATENCY BUDGET === -->
+<section class="slide" data-sec="Search deep dive">
+  <p class="eyebrow">Search deep dive · Latency budget</p>
+  <h2 class="title reveal">160 ms planned, 40 ms held back</h2>
+  <div class="body">
+    <table class="tbl reveal d1">
+      <tr><th style="width:20%">Stage</th><th style="width:66%">What happens</th><th style="width:14%;text-align:right">p95 ms</th></tr>
+      <tr><td>Edge</td><td>CDN point of presence and TLS; tile-snapped GETs are cacheable</td><td class="r">15</td></tr>
+      <tr><td>Gateway</td><td>Auth, rate limit, parse and normalize the query</td><td class="r">10</td></tr>
+      <tr><td>Query cache</td><td>Valkey lookup on normalized query + tile; ~40% hit and stop here</td><td class="r">5</td></tr>
+      <tr><td>OpenSearch</td><td>Filters, geo cell terms, sort; top 500 from one shard group</td><td class="r" style="color:var(--line)">70</td></tr>
+      <tr><td>Re-rank</td><td>Light model on the top 200; skipped if the request is over budget</td><td class="r">20</td></tr>
+      <tr><td>Hydrate</td><td>Card data (photo URL, AVM, badges) from Valkey in one batch</td><td class="r">15</td></tr>
+      <tr><td>Return</td><td>Serialize, compress, network back to the client</td><td class="r">25</td></tr>
+    </table>
+    <div class="reveal d2" style="display:flex;flex-direction:column;gap:12px">
+      <div class="budget" aria-label="Latency budget drawn to scale against 200 ms">
+        <div class="s1" style="width:126px"></div><div class="s2" style="width:84px"></div><div class="s1" style="width:42px"></div>
+        <div class="os" style="width:588px">OpenSearch 70</div>
+        <div class="s2" style="width:168px"></div><div class="s1" style="width:126px"></div><div class="s2" style="width:210px"></div>
+        <div class="head" style="width:336px">Headroom 40</div>
+      </div>
+      <p class="label">To scale against the 200 ms p95 target, stages in table order</p>
+    </div>
+  </div>
+  <aside class="notes">Say: "I budget the 200 ms before I design anything. If OpenSearch gets 70 ms, the index must be designed so a query never fans out to every shard and never does expensive geometry. That's the next two slides."
+
+- The cache key is the normalized query (sorted filters, rounded price bounds) plus the map tile, not the raw viewport. Raw viewports are unique; tiles are shared. That's what gets the hit rate to ~40%.
+- Re-rank runs under a deadline; if the request is already slow it's skipped. Users never wait for personalization.
+- Hydration: the index returns ids plus sort/filter fields; display data comes from Valkey in one MGET. Index docs stay small and card content changes without reindexing.
+- The 40 ms headroom is for GC pauses, cross-zone hops and bad days.
+
+"How do you know OpenSearch does 70 ms?" I don't yet; it's a target to validate with a load test on production-shaped data. Filter-plus-terms queries on a ~2.5 GB in-memory shard usually run in single-digit to tens of ms; 70 is conservative at p95 under load.
+
+p99: internal target ~350 ms, watched but not the SLO.</aside>
+</section>
+
+<!-- === 13 GEO INDEXING === -->
+<section class="slide" data-sec="Search deep dive">
+  <p class="eyebrow">Search deep dive · Geospatial indexing</p>
+  <h2 class="title reveal">Geometry at write time, not search time</h2>
+  <div class="body">
+    <div class="row reveal d1" style="align-items:stretch">
+      <div class="card" style="flex:0 0 500px;align-items:center;gap:16px">
+        <svg viewBox="0 0 506 506" style="width:340px;height:340px" aria-label="A drawn search area covered by hexagonal H3 cells: interior cells shaded blue, boundary cells outlined orange"><polygon points="33,-1 33,25 10,38 -13,25 -13,-1 10,-14" fill="none" stroke="#7FD1FF" stroke-opacity=".15" stroke-width="1"/><polygon points="78,-1 78,25 55,38 33,25 33,-1 55,-14" fill="none" stroke="#7FD1FF" stroke-opacity=".15" stroke-width="1"/><polygon points="123,-1 123,25 100,38 78,25 78,-1 100,-14" fill="none" stroke="#7FD1FF" stroke-opacity=".15" stroke-width="1"/><polygon points="168,-1 168,25 145,38 123,25 123,-1 145,-14" fill="none" stroke="#7FD1FF" stroke-opacity=".15" stroke-width="1"/><polygon points="213,-1 213,25 190,38 168,25 168,-1 190,-14" fill="none" stroke="#7FD1FF" stroke-opacity=".15" stroke-width="1"/><polygon points="258,-1 258,25 235,38 213,25 213,-1 235,-14" fill="none" stroke="#7FD1FF" stroke-opacity=".15" stroke-width="1"/><polygon points="303,-1 303,25 280,38 258,25 258,-1 280,-14" fill="none" stroke="#7FD1FF" stroke-opacity=".15" stroke-width="1"/><polygon points="348,-1 348,25 325,38 303,25 303,-1 325,-14" fill="none" stroke="#7FD1FF" stroke-opacity=".15" stroke-width="1"/><polygon points="393,-1 393,25 370,38 348,25 348,-1 370,-14" fill="none" stroke="#7FD1FF" stroke-opacity=".15" stroke-width="1"/><polygon points="438,-1 438,25 415,38 393,25 393,-1 415,-14" fill="none" stroke="#7FD1FF" stroke-opacity=".15" stroke-width="1"/><polygon points="483,-1 483,25 460,38 438,25 438,-1 460,-14" fill="none" stroke="#7FD1FF" stroke-opacity=".15" stroke-width="1"/><polygon points="55,38 55,64 33,77 10,64 10,38 33,25" fill="none" stroke="#7FD1FF" stroke-opacity=".15" stroke-width="1"/><polygon points="100,38 100,64 78,77 55,64 55,38 78,25" fill="#FF8A3D" fill-opacity=".18" stroke="#FF8A3D" stroke-width="2"/><polygon points="145,38 145,64 123,77 100,64 100,38 123,25" fill="#FF8A3D" fill-opacity=".18" stroke="#FF8A3D" stroke-width="2"/><polygon points="190,38 190,64 168,77 145,64 145,38 168,25" fill="#FF8A3D" fill-opacity=".18" stroke="#FF8A3D" stroke-width="2"/><polygon points="235,38 235,64 213,77 190,64 190,38 213,25" fill="#FF8A3D" fill-opacity=".18" stroke="#FF8A3D" stroke-width="2"/><polygon points="280,38 280,64 258,77 235,64 235,38 258,25" fill="#FF8A3D" fill-opacity=".18" stroke="#FF8A3D" stroke-width="2"/><polygon points="325,38 325,64 303,77 280,64 280,38 303,25" fill="#FF8A3D" fill-opacity=".18" stroke="#FF8A3D" stroke-width="2"/><polygon points="370,38 370,64 348,77 325,64 325,38 348,25" fill="#FF8A3D" fill-opacity=".18" stroke="#FF8A3D" stroke-width="2"/><polygon points="415,38 415,64 393,77 370,64 370,38 393,25" fill="none" stroke="#7FD1FF" stroke-opacity=".15" stroke-width="1"/><polygon points="460,38 460,64 438,77 415,64 415,38 438,25" fill="none" stroke="#7FD1FF" stroke-opacity=".15" stroke-width="1"/><polygon points="505,38 505,64 483,77 460,64 460,38 483,25" fill="none" stroke="#7FD1FF" stroke-opacity=".15" stroke-width="1"/><polygon points="33,77 33,103 10,116 -13,103 -13,77 10,64" fill="none" stroke="#7FD1FF" stroke-opacity=".15" stroke-width="1"/><polygon points="78,77 78,103 55,116 33,103 33,77 55,64" fill="#FF8A3D" fill-opacity=".18" stroke="#FF8A3D" stroke-width="2"/><polygon points="123,77 123,103 100,116 78,103 78,77 100,64" fill="#7FD1FF" fill-opacity=".28" stroke="#7FD1FF" stroke-opacity=".7" stroke-width="1.5"/><polygon points="168,77 168,103 145,116 123,103 123,77 145,64" fill="#7FD1FF" fill-opacity=".28" stroke="#7FD1FF" stroke-opacity=".7" stroke-width="1.5"/><polygon points="213,77 213,103 190,116 168,103 168,77 190,64" fill="#7FD1FF" fill-opacity=".28" stroke="#7FD1FF" stroke-opacity=".7" stroke-width="1.5"/><polygon points="258,77 258,103 235,116 213,103 213,77 235,64" fill="#7FD1FF" fill-opacity=".28" stroke="#7FD1FF" stroke-opacity=".7" stroke-width="1.5"/><polygon points="303,77 303,103 280,116 258,103 258,77 280,64" fill="#7FD1FF" fill-opacity=".28" stroke="#7FD1FF" stroke-opacity=".7" stroke-width="1.5"/><polygon points="348,77 348,103 325,116 303,103 303,77 325,64" fill="#7FD1FF" fill-opacity=".28" stroke="#7FD1FF" stroke-opacity=".7" stroke-width="1.5"/><polygon points="393,77 393,103 370,116 348,103 348,77 370,64" fill="#FF8A3D" fill-opacity=".18" stroke="#FF8A3D" stroke-width="2"/><polygon points="438,77 438,103 415,116 393,103 393,77 415,64" fill="none" stroke="#7FD1FF" stroke-opacity=".15" stroke-width="1"/><polygon points="483,77 483,103 460,116 438,103 438,77 460,64" fill="none" stroke="#7FD1FF" stroke-opacity=".15" stroke-width="1"/><polygon points="55,116 55,142 33,155 10,142 10,116 33,103" fill="none" stroke="#7FD1FF" stroke-opacity=".15" stroke-width="1"/><polygon points="100,116 100,142 78,155 55,142 55,116 78,103" fill="#FF8A3D" fill-opacity=".18" stroke="#FF8A3D" stroke-width="2"/><polygon points="145,116 145,142 123,155 100,142 100,116 123,103" fill="#7FD1FF" fill-opacity=".28" stroke="#7FD1FF" stroke-opacity=".7" stroke-width="1.5"/><polygon points="190,116 190,142 168,155 145,142 145,116 168,103" fill="#7FD1FF" fill-opacity=".28" stroke="#7FD1FF" stroke-opacity=".7" stroke-width="1.5"/><polygon points="235,116 235,142 213,155 190,142 190,116 213,103" fill="#7FD1FF" fill-opacity=".28" stroke="#7FD1FF" stroke-opacity=".7" stroke-width="1.5"/><polygon points="280,116 280,142 258,155 235,142 235,116 258,103" fill="#7FD1FF" fill-opacity=".28" stroke="#7FD1FF" stroke-opacity=".7" stroke-width="1.5"/><polygon points="325,116 325,142 303,155 280,142 280,116 303,103" fill="#7FD1FF" fill-opacity=".28" stroke="#7FD1FF" stroke-opacity=".7" stroke-width="1.5"/><polygon points="370,116 370,142 348,155 325,142 325,116 348,103" fill="#7FD1FF" fill-opacity=".28" stroke="#7FD1FF" stroke-opacity=".7" stroke-width="1.5"/><polygon points="415,116 415,142 393,155 370,142 370,116 393,103" fill="#FF8A3D" fill-opacity=".18" stroke="#FF8A3D" stroke-width="2"/><polygon points="460,116 460,142 438,155 415,142 415,116 438,103" fill="none" stroke="#7FD1FF" stroke-opacity=".15" stroke-width="1"/><polygon points="505,116 505,142 483,155 460,142 460,116 483,103" fill="none" stroke="#7FD1FF" stroke-opacity=".15" stroke-width="1"/><polygon points="33,155 33,181 10,194 -13,181 -13,155 10,142" fill="none" stroke="#7FD1FF" stroke-opacity=".15" stroke-width="1"/><polygon points="78,155 78,181 55,194 33,181 33,155 55,142" fill="#FF8A3D" fill-opacity=".18" stroke="#FF8A3D" stroke-width="2"/><polygon points="123,155 123,181 100,194 78,181 78,155 100,142" fill="#7FD1FF" fill-opacity=".28" stroke="#7FD1FF" stroke-opacity=".7" stroke-width="1.5"/><polygon points="168,155 168,181 145,194 123,181 123,155 145,142" fill="#7FD1FF" fill-opacity=".28" stroke="#7FD1FF" stroke-opacity=".7" stroke-width="1.5"/><polygon points="213,155 213,181 190,194 168,181 168,155 190,142" fill="#7FD1FF" fill-opacity=".28" stroke="#7FD1FF" stroke-opacity=".7" stroke-width="1.5"/><polygon points="258,155 258,181 235,194 213,181 213,155 235,142" fill="#7FD1FF" fill-opacity=".28" stroke="#7FD1FF" stroke-opacity=".7" stroke-width="1.5"/><polygon points="303,155 303,181 280,194 258,181 258,155 280,142" fill="#7FD1FF" fill-opacity=".28" stroke="#7FD1FF" stroke-opacity=".7" stroke-width="1.5"/><polygon points="348,155 348,181 325,194 303,181 303,155 325,142" fill="#7FD1FF" fill-opacity=".28" stroke="#7FD1FF" stroke-opacity=".7" stroke-width="1.5"/><polygon points="393,155 393,181 370,194 348,181 348,155 370,142" fill="#7FD1FF" fill-opacity=".28" stroke="#7FD1FF" stroke-opacity=".7" stroke-width="1.5"/><polygon points="438,155 438,181 415,194 393,181 393,155 415,142" fill="#FF8A3D" fill-opacity=".18" stroke="#FF8A3D" stroke-width="2"/><polygon points="483,155 483,181 460,194 438,181 438,155 460,142" fill="none" stroke="#7FD1FF" stroke-opacity=".15" stroke-width="1"/><polygon points="55,194 55,220 33,233 10,220 10,194 33,181" fill="#FF8A3D" fill-opacity=".18" stroke="#FF8A3D" stroke-width="2"/><polygon points="100,194 100,220 78,233 55,220 55,194 78,181" fill="#7FD1FF" fill-opacity=".28" stroke="#7FD1FF" stroke-opacity=".7" stroke-width="1.5"/><polygon points="145,194 145,220 123,233 100,220 100,194 123,181" fill="#7FD1FF" fill-opacity=".28" stroke="#7FD1FF" stroke-opacity=".7" stroke-width="1.5"/><polygon points="190,194 190,220 168,233 145,220 145,194 168,181" fill="#7FD1FF" fill-opacity=".28" stroke="#7FD1FF" stroke-opacity=".7" stroke-width="1.5"/><polygon points="235,194 235,220 213,233 190,220 190,194 213,181" fill="#7FD1FF" fill-opacity=".28" stroke="#7FD1FF" stroke-opacity=".7" stroke-width="1.5"/><polygon points="280,194 280,220 258,233 235,220 235,194 258,181" fill="#7FD1FF" fill-opacity=".28" stroke="#7FD1FF" stroke-opacity=".7" stroke-width="1.5"/><polygon points="325,194 325,220 303,233 280,220 280,194 303,181" fill="#7FD1FF" fill-opacity=".28" stroke="#7FD1FF" stroke-opacity=".7" stroke-width="1.5"/><polygon points="370,194 370,220 348,233 325,220 325,194 348,181" fill="#7FD1FF" fill-opacity=".28" stroke="#7FD1FF" stroke-opacity=".7" stroke-width="1.5"/><polygon points="415,194 415,220 393,233 370,220 370,194 393,181" fill="#FF8A3D" fill-opacity=".18" stroke="#FF8A3D" stroke-width="2"/><polygon points="460,194 460,220 438,233 415,220 415,194 438,181" fill="#FF8A3D" fill-opacity=".18" stroke="#FF8A3D" stroke-width="2"/><polygon points="505,194 505,220 483,233 460,220 460,194 483,181" fill="none" stroke="#7FD1FF" stroke-opacity=".15" stroke-width="1"/><polygon points="33,233 33,259 10,272 -13,259 -13,233 10,220" fill="none" stroke="#7FD1FF" stroke-opacity=".15" stroke-width="1"/><polygon points="78,233 78,259 55,272 33,259 33,233 55,220" fill="#FF8A3D" fill-opacity=".18" stroke="#FF8A3D" stroke-width="2"/><polygon points="123,233 123,259 100,272 78,259 78,233 100,220" fill="#7FD1FF" fill-opacity=".28" stroke="#7FD1FF" stroke-opacity=".7" stroke-width="1.5"/><polygon points="168,233 168,259 145,272 123,259 123,233 145,220" fill="#7FD1FF" fill-opacity=".28" stroke="#7FD1FF" stroke-opacity=".7" stroke-width="1.5"/><polygon points="213,233 213,259 190,272 168,259 168,233 190,220" fill="#7FD1FF" fill-opacity=".28" stroke="#7FD1FF" stroke-opacity=".7" stroke-width="1.5"/><polygon points="258,233 258,259 235,272 213,259 213,233 235,220" fill="#7FD1FF" fill-opacity=".28" stroke="#7FD1FF" stroke-opacity=".7" stroke-width="1.5"/><polygon points="303,233 303,259 280,272 258,259 258,233 280,220" fill="#7FD1FF" fill-opacity=".28" stroke="#7FD1FF" stroke-opacity=".7" stroke-width="1.5"/><polygon points="348,233 348,259 325,272 303,259 303,233 325,220" fill="#7FD1FF" fill-opacity=".28" stroke="#7FD1FF" stroke-opacity=".7" stroke-width="1.5"/><polygon points="393,233 393,259 370,272 348,259 348,233 370,220" fill="#7FD1FF" fill-opacity=".28" stroke="#7FD1FF" stroke-opacity=".7" stroke-width="1.5"/><polygon points="438,233 438,259 415,272 393,259 393,233 415,220" fill="#FF8A3D" fill-opacity=".18" stroke="#FF8A3D" stroke-width="2"/><polygon points="483,233 483,259 460,272 438,259 438,233 460,220" fill="none" stroke="#7FD1FF" stroke-opacity=".15" stroke-width="1"/><polygon points="55,272 55,298 33,311 10,298 10,272 33,259" fill="#FF8A3D" fill-opacity=".18" stroke="#FF8A3D" stroke-width="2"/><polygon points="100,272 100,298 78,311 55,298 55,272 78,259" fill="#FF8A3D" fill-opacity=".18" stroke="#FF8A3D" stroke-width="2"/><polygon points="145,272 145,298 123,311 100,298 100,272 123,259" fill="#7FD1FF" fill-opacity=".28" stroke="#7FD1FF" stroke-opacity=".7" stroke-width="1.5"/><polygon points="190,272 190,298 168,311 145,298 145,272 168,259" fill="#7FD1FF" fill-opacity=".28" stroke="#7FD1FF" stroke-opacity=".7" stroke-width="1.5"/><polygon points="235,272 235,298 213,311 190,298 190,272 213,259" fill="#7FD1FF" fill-opacity=".28" stroke="#7FD1FF" stroke-opacity=".7" stroke-width="1.5"/><polygon points="280,272 280,298 258,311 235,298 235,272 258,259" fill="#7FD1FF" fill-opacity=".28" stroke="#7FD1FF" stroke-opacity=".7" stroke-width="1.5"/><polygon points="325,272 325,298 303,311 280,298 280,272 303,259" fill="#7FD1FF" fill-opacity=".28" stroke="#7FD1FF" stroke-opacity=".7" stroke-width="1.5"/><polygon points="370,272 370,298 348,311 325,298 325,272 348,259" fill="#7FD1FF" fill-opacity=".28" stroke="#7FD1FF" stroke-opacity=".7" stroke-width="1.5"/><polygon points="415,272 415,298 393,311 370,298 370,272 393,259" fill="#FF8A3D" fill-opacity=".18" stroke="#FF8A3D" stroke-width="2"/><polygon points="460,272 460,298 438,311 415,298 415,272 438,259" fill="none" stroke="#7FD1FF" stroke-opacity=".15" stroke-width="1"/><polygon points="505,272 505,298 483,311 460,298 460,272 483,259" fill="none" stroke="#7FD1FF" stroke-opacity=".15" stroke-width="1"/><polygon points="33,311 33,337 10,350 -13,337 -13,311 10,298" fill="none" stroke="#7FD1FF" stroke-opacity=".15" stroke-width="1"/><polygon points="78,311 78,337 55,350 33,337 33,311 55,298" fill="none" stroke="#7FD1FF" stroke-opacity=".15" stroke-width="1"/><polygon points="123,311 123,337 100,350 78,337 78,311 100,298" fill="#FF8A3D" fill-opacity=".18" stroke="#FF8A3D" stroke-width="2"/><polygon points="168,311 168,337 145,350 123,337 123,311 145,298" fill="#7FD1FF" fill-opacity=".28" stroke="#7FD1FF" stroke-opacity=".7" stroke-width="1.5"/><polygon points="213,311 213,337 190,350 168,337 168,311 190,298" fill="#7FD1FF" fill-opacity=".28" stroke="#7FD1FF" stroke-opacity=".7" stroke-width="1.5"/><polygon points="258,311 258,337 235,350 213,337 213,311 235,298" fill="#7FD1FF" fill-opacity=".28" stroke="#7FD1FF" stroke-opacity=".7" stroke-width="1.5"/><polygon points="303,311 303,337 280,350 258,337 258,311 280,298" fill="#7FD1FF" fill-opacity=".28" stroke="#7FD1FF" stroke-opacity=".7" stroke-width="1.5"/><polygon points="348,311 348,337 325,350 303,337 303,311 325,298" fill="#7FD1FF" fill-opacity=".28" stroke="#7FD1FF" stroke-opacity=".7" stroke-width="1.5"/><polygon points="393,311 393,337 370,350 348,337 348,311 370,298" fill="#FF8A3D" fill-opacity=".18" stroke="#FF8A3D" stroke-width="2"/><polygon points="438,311 438,337 415,350 393,337 393,311 415,298" fill="none" stroke="#7FD1FF" stroke-opacity=".15" stroke-width="1"/><polygon points="483,311 483,337 460,350 438,337 438,311 460,298" fill="none" stroke="#7FD1FF" stroke-opacity=".15" stroke-width="1"/><polygon points="55,350 55,376 33,389 10,376 10,350 33,337" fill="none" stroke="#7FD1FF" stroke-opacity=".15" stroke-width="1"/><polygon points="100,350 100,376 78,389 55,376 55,350 78,337" fill="none" stroke="#7FD1FF" stroke-opacity=".15" stroke-width="1"/><polygon points="145,350 145,376 123,389 100,376 100,350 123,337" fill="#FF8A3D" fill-opacity=".18" stroke="#FF8A3D" stroke-width="2"/><polygon points="190,350 190,376 168,389 145,376 145,350 168,337" fill="#7FD1FF" fill-opacity=".28" stroke="#7FD1FF" stroke-opacity=".7" stroke-width="1.5"/><polygon points="235,350 235,376 213,389 190,376 190,350 213,337" fill="#7FD1FF" fill-opacity=".28" stroke="#7FD1FF" stroke-opacity=".7" stroke-width="1.5"/><polygon points="280,350 280,376 258,389 235,376 235,350 258,337" fill="#7FD1FF" fill-opacity=".28" stroke="#7FD1FF" stroke-opacity=".7" stroke-width="1.5"/><polygon points="325,350 325,376 303,389 280,376 280,350 303,337" fill="#7FD1FF" fill-opacity=".28" stroke="#7FD1FF" stroke-opacity=".7" stroke-width="1.5"/><polygon points="370,350 370,376 348,389 325,376 325,350 348,337" fill="#FF8A3D" fill-opacity=".18" stroke="#FF8A3D" stroke-width="2"/><polygon points="415,350 415,376 393,389 370,376 370,350 393,337" fill="none" stroke="#7FD1FF" stroke-opacity=".15" stroke-width="1"/><polygon points="460,350 460,376 438,389 415,376 415,350 438,337" fill="none" stroke="#7FD1FF" stroke-opacity=".15" stroke-width="1"/><polygon points="505,350 505,376 483,389 460,376 460,350 483,337" fill="none" stroke="#7FD1FF" stroke-opacity=".15" stroke-width="1"/><polygon points="33,389 33,415 10,428 -13,415 -13,389 10,376" fill="none" stroke="#7FD1FF" stroke-opacity=".15" stroke-width="1"/><polygon points="78,389 78,415 55,428 33,415 33,389 55,376" fill="none" stroke="#7FD1FF" stroke-opacity=".15" stroke-width="1"/><polygon points="123,389 123,415 100,428 78,415 78,389 100,376" fill="none" stroke="#7FD1FF" stroke-opacity=".15" stroke-width="1"/><polygon points="168,389 168,415 145,428 123,415 123,389 145,376" fill="#FF8A3D" fill-opacity=".18" stroke="#FF8A3D" stroke-width="2"/><polygon points="213,389 213,415 190,428 168,415 168,389 190,376" fill="#FF8A3D" fill-opacity=".18" stroke="#FF8A3D" stroke-width="2"/><polygon points="258,389 258,415 235,428 213,415 213,389 235,376" fill="#FF8A3D" fill-opacity=".18" stroke="#FF8A3D" stroke-width="2"/><polygon points="303,389 303,415 280,428 258,415 258,389 280,376" fill="#FF8A3D" fill-opacity=".18" stroke="#FF8A3D" stroke-width="2"/><polygon points="348,389 348,415 325,428 303,415 303,389 325,376" fill="#FF8A3D" fill-opacity=".18" stroke="#FF8A3D" stroke-width="2"/><polygon points="393,389 393,415 370,428 348,415 348,389 370,376" fill="none" stroke="#7FD1FF" stroke-opacity=".15" stroke-width="1"/><polygon points="438,389 438,415 415,428 393,415 393,389 415,376" fill="none" stroke="#7FD1FF" stroke-opacity=".15" stroke-width="1"/><polygon points="483,389 483,415 460,428 438,415 438,389 460,376" fill="none" stroke="#7FD1FF" stroke-opacity=".15" stroke-width="1"/><polygon points="55,428 55,454 33,467 10,454 10,428 33,415" fill="none" stroke="#7FD1FF" stroke-opacity=".15" stroke-width="1"/><polygon points="100,428 100,454 78,467 55,454 55,428 78,415" fill="none" stroke="#7FD1FF" stroke-opacity=".15" stroke-width="1"/><polygon points="145,428 145,454 123,467 100,454 100,428 123,415" fill="none" stroke="#7FD1FF" stroke-opacity=".15" stroke-width="1"/><polygon points="190,428 190,454 168,467 145,454 145,428 168,415" fill="#FF8A3D" fill-opacity=".18" stroke="#FF8A3D" stroke-width="2"/><polygon points="235,428 235,454 213,467 190,454 190,428 213,415" fill="none" stroke="#7FD1FF" stroke-opacity=".15" stroke-width="1"/><polygon points="280,428 280,454 258,467 235,454 235,428 258,415" fill="none" stroke="#7FD1FF" stroke-opacity=".15" stroke-width="1"/><polygon points="325,428 325,454 303,467 280,454 280,428 303,415" fill="none" stroke="#7FD1FF" stroke-opacity=".15" stroke-width="1"/><polygon points="370,428 370,454 348,467 325,454 325,428 348,415" fill="none" stroke="#7FD1FF" stroke-opacity=".15" stroke-width="1"/><polygon points="415,428 415,454 393,467 370,454 370,428 393,415" fill="none" stroke="#7FD1FF" stroke-opacity=".15" stroke-width="1"/><polygon points="460,428 460,454 438,467 415,454 415,428 438,415" fill="none" stroke="#7FD1FF" stroke-opacity=".15" stroke-width="1"/><polygon points="505,428 505,454 483,467 460,454 460,428 483,415" fill="none" stroke="#7FD1FF" stroke-opacity=".15" stroke-width="1"/><polygon points="33,467 33,493 10,506 -13,493 -13,467 10,454" fill="none" stroke="#7FD1FF" stroke-opacity=".15" stroke-width="1"/><polygon points="78,467 78,493 55,506 33,493 33,467 55,454" fill="none" stroke="#7FD1FF" stroke-opacity=".15" stroke-width="1"/><polygon points="123,467 123,493 100,506 78,493 78,467 100,454" fill="none" stroke="#7FD1FF" stroke-opacity=".15" stroke-width="1"/><polygon points="168,467 168,493 145,506 123,493 123,467 145,454" fill="none" stroke="#7FD1FF" stroke-opacity=".15" stroke-width="1"/><polygon points="213,467 213,493 190,506 168,493 168,467 190,454" fill="none" stroke="#7FD1FF" stroke-opacity=".15" stroke-width="1"/><polygon points="258,467 258,493 235,506 213,493 213,467 235,454" fill="none" stroke="#7FD1FF" stroke-opacity=".15" stroke-width="1"/><polygon points="303,467 303,493 280,506 258,493 258,467 280,454" fill="none" stroke="#7FD1FF" stroke-opacity=".15" stroke-width="1"/><polygon points="348,467 348,493 325,506 303,493 303,467 325,454" fill="none" stroke="#7FD1FF" stroke-opacity=".15" stroke-width="1"/><polygon points="393,467 393,493 370,506 348,493 348,467 370,454" fill="none" stroke="#7FD1FF" stroke-opacity=".15" stroke-width="1"/><polygon points="438,467 438,493 415,506 393,493 393,467 415,454" fill="none" stroke="#7FD1FF" stroke-opacity=".15" stroke-width="1"/><polygon points="483,467 483,493 460,506 438,493 438,467 460,454" fill="none" stroke="#7FD1FF" stroke-opacity=".15" stroke-width="1"/><polygon points="70,60 330,40 420,200 360,380 150,420 40,250" fill="none" stroke="#EAF2FB" stroke-width="3" stroke-dasharray="10 6"/></svg>
+        <p class="txt" style="font-size:24px;text-align:center"><span style="color:var(--line)">Interior cells:</span> term filter.<br><span style="color:var(--accent)">Boundary cells:</span> exact check.</p>
+      </div>
+      <div class="card hot"><p class="label acc">At write time · 1M a day</p>
+        <ul><li>Store H3 cells at resolutions 5, 7 and 9</li><li>Point-in-polygon once in PostGIS for district, ZIP, city; store the ids</li><li>One denormalized ~4 KB doc per listing</li><li>Index with the listing version; stale events are ignored</li></ul></div>
+      <div class="card"><p class="label">At query time · 400M a day</p>
+        <ul><li>Viewport or drawn shape becomes an H3 cover</li><li>Only boundary cells pay for real geometry</li><li>"In this school district" is a term filter</li><li>Price, beds, type, amenities: cheap doc-value filters</li></ul></div>
+    </div>
+    <p class="strip reveal d2"><b>Why H3:</b> uniform neighbors, clean parent and child levels, and the same cells drive map clusters and alert matching. S2 or geohash would also work; one system everywhere matters more than which.</p>
+  </div>
+  <aside class="notes">Core argument: "Writes are 1M a day. Reads are 400M a day. Every bit of geometry I move from the read path to the write path is paid 400 times less often."
+
+H3: Uber's hierarchical hexagonal grid. Res 5 ≈ 250 km² (metro), res 7 ≈ 5 km² (neighborhood), res 9 ≈ 0.1 km² (a few blocks). 64-bit ids, known parent at every coarser level.
+
+Map query: (1) client sends viewport or polygon + zoom; (2) server computes the H3 cover at a zoom-appropriate resolution: interior cells go into a terms filter on h3_r7/r9, boundary cells into a clause with an exact geo_polygon/bounding-box check, so only a thin ring pays for geometry (the picture: blue interior, orange ring); (3) add price, beds, type, amenities filters on doc values, all cacheable in Lucene.
+
+School districts: ~13,000 US districts plus attendance zones. Point-in-polygon per query would be the single most expensive thing we could do. Compute once at ingest in PostGIS (AlloyDB); yearly boundary changes trigger a batch re-tag that emits events. BigQuery GIS is for analytics (market heatmaps, AVM features like distance to transit), never the request path.
+
+Versioned indexing: external version = listing version; older versions are rejected. Refresh 1–2 s.
+
+"Why not geo_shape everywhere?" It works, and I use it on the boundary. Using it for everything makes every query pay for geometry and hurts caching.
+
+Radius search: the circle becomes an H3 cover with exact distance checks on the boundary ring.</aside>
+</section>
+
+<!-- === 14 INDEX LAYOUT === -->
+<section class="slide" data-sec="Search deep dive">
+  <p class="eyebrow">Search deep dive · Index layout</p>
+  <h2 class="title reveal">Two indices, sized and sharded for different jobs</h2>
+  <div class="body">
+    <table class="tbl reveal d1">
+      <tr><th style="width:18%"></th><th style="width:41%">Active listings · hot</th><th style="width:41%">All properties · warm</th></tr>
+      <tr><td>Holds</td><td>For sale, for rent, pending, sold in the last 90 days</td><td>All 200M parcels, off-market and history</td></tr>
+      <tr><td>Size</td><td class="acc">~5M docs, ~20 GB</td><td>~200M docs, ~400 GB</td></tr>
+      <tr><td>Shards</td><td>8 × 2.5 GB, routed by metro group</td><td>16 × 25 GB, routed by state</td></tr>
+      <tr><td>Placement</td><td>In memory across 3 zones; warm standby in the DR region</td><td>SSD warm nodes; snapshots to GCS</td></tr>
+      <tr><td>Traffic</td><td>~95% of searches and every map view</td><td>Address lookup, home values, off-market</td></tr>
+    </table>
+    <div class="row reveal d2">
+      <div class="card"><p class="label">Route by geography</p><p class="txt">A metro query hits one shard, not eight. Shards are balanced by traffic, not area: New York and LA get their own.</p></div>
+      <div class="card"><p class="label">Capacity</p><p class="txt">40k QPS ÷ ~1,500 per node ≈ 27 nodes at peak, about half off-season. Ignores the cache, so it's conservative.</p></div>
+      <div class="card"><p class="label">Reindex safely</p><p class="txt">Blue/green behind an alias. The hot index rebuilds from AlloyDB in under an hour; rollback is one alias swap.</p></div>
+    </div>
+  </div>
+  <aside class="notes">Say: "The most useful fact in this design is that the searchable set is small: 5M active listings, 20 GB. So I split it from the 200M-property index and treat the two completely differently."
+
+Hot index: small shards (~2.5 GB) are fast to move, recover and replicate. Custom routing key = metro group (bin-packed H3 res-3/4 cells). A metro viewport hits one shard; a boundary viewport hits two; country zoom returns precomputed cluster rollups. With fan-out, p95 is driven by the slowest shard; one shard per query also multiplies throughput.
+
+Hot spots: shards balanced by query traffic, not geography or doc count. Dense metros get their own shard; rural states share. Rebalancing = new routing map, reindex into a new index behind the alias.
+
+Warm index: 200M docs on SSD-backed nodes; lower traffic (address search, "what's my home worth", off-market). Snapshots to GCS; if it's down, those features degrade to AlloyDB lookups.
+
+Runs on GKE: OpenSearch is the one stateful thing we run ourselves, because geo + ranking is the product. Elastic Cloud is the buy fallback with the same query model.
+
+~1,500 QPS per 16-vCPU node is a planning estimate to validate with a load test. Applied to the full 40k ignoring the ~40% cache hit rate, so conservative.
+
+Indexing: ~12 updates/s, a few hundred in bursts, nightly AVM refreshes via bulk API off-peak.
+
+"Why not one index filtered on status?" The hot working set becomes 400 GB, not 20, it doesn't fit in memory everywhere, and every query skips 195M irrelevant docs.</aside>
+</section>
+
+<!-- === 15 MAPS === -->
+<section class="slide" data-sec="Search deep dive">
+  <p class="eyebrow">Search deep dive · Maps</p>
+  <h2 class="title reveal">1,000+ pins in under 300 ms: send less, cache tiles</h2>
+  <div class="body">
+    <table class="tbl reveal d1">
+      <tr><th style="width:24%">Zoom level</th><th style="width:48%">The server returns</th><th style="width:28%">Payload</th></tr>
+      <tr><td>Country to metro</td><td>Coarse H3 clusters: count and median price</td><td>~200 clusters, 8 KB</td></tr>
+      <tr><td>City</td><td>Finer clusters, or pins when under 2,000 results</td><td>≤ 2,000 items, 30 KB</td></tr>
+      <tr><td>Neighborhood</td><td>Pins only: id, position, price, status</td><td class="acc">16 B each · 1,500 ≈ 24 KB</td></tr>
+    </table>
+    <div class="row reveal d2">
+      <div class="card"><p class="label">Tile-snapped requests</p><p class="txt">The viewport snaps to map tiles, filters are hashed into the key, the CDN keeps tiles 30–60 s, and a pan reuses its neighbors.</p></div>
+      <div class="card"><p class="label">Clusters from cells</p><p class="txt">A grid aggregation on the stored H3 field, or per-cell rollups kept current by the event stream for the default view.</p></div>
+      <div class="card"><p class="label">Render on the GPU</p><p class="txt">A WebGL map draws thousands of pins at 60 fps. Card details load on hover, not with the pins.</p></div>
+    </div>
+    <p class="strip reveal d3"><b>Budget:</b> a tile cache hit is ~40 ms end to end; a miss is ~150 ms on the server plus ~100 ms to draw.</p>
+  </div>
+  <aside class="notes">Say: "300 ms for 1,000 pins is mostly a payload and rendering problem, not a query problem."
+
+Payload: id (4–8 B), lat/lng as int32 each (8 B), price in thousands (2 B), status byte ≈ 16–20 B. 1,500 pins ≈ 24–30 KB, smaller gzipped or as protobuf. Full JSON cards would be ~1 KB each, 1.5 MB, which blows the budget on mobile.
+
+Clustering: nobody can see 40,000 pins in LA. Return clusters from an H3 grid aggregation (OpenSearch geohex_grid/geotile_grid) on the stored cells. For the unfiltered default view, per-cell rollups (count, median price) maintained by a stream consumer are basically static tiles on the CDN.
+
+Tile snapping: two users looking at Austin with "3+ beds under $600k" share cache entries; a pan fetches only new tiles. 30–60 s TTL is fine for pins; the detail page is always current.
+
+Rendering: Mapbox GL / MapLibre WebGL handles thousands of symbols; DOM markers don't. Base map vector tiles from the vendor.
+
+Miss budget: edge 15 + server ~120 + transfer ~20 + render ~100 ≈ 255–300 ms worst case at p95.
+
+"What if a user wants 10,000 pins?" Cap at ~2,000 per request and switch to clusters; at that density a sorted list view is the better product answer.</aside>
+</section>
+
+<!-- === 16 RANKING === -->
+<section class="slide" data-sec="Search deep dive">
+  <p class="eyebrow">Search deep dive · Ranking and recommendations</p>
+  <h2 class="title reveal">Cheap filters first, then a light personal re-rank</h2>
+  <div class="body">
+    <div class="chain reveal d1">
+      <div class="step card"><p class="label">1 · Retrieve</p><h3>OpenSearch</h3><p class="txt">Filters and geo cells, then a default score: freshness, photo quality, completeness, recent price cut. Keep the top 500.</p></div>
+      <div class="arrow"><svg viewBox="0 0 44 20" aria-hidden="true"><path d="M0 10 H36" stroke="#7FD1FF" stroke-width="3"/><path d="M30 2 L42 10 L30 18 Z" fill="#7FD1FF"/></svg></div>
+      <div class="step card"><p class="label">2 · Re-rank</p><h3>Small model, 20 ms</h3><p class="txt">Gradient-boosted trees on the top 200 with feature-store inputs: price band, homes viewed, engagement. Past deadline, skip it.</p></div>
+      <div class="arrow"><svg viewBox="0 0 44 20" aria-hidden="true"><path d="M0 10 H36" stroke="#7FD1FF" stroke-width="3"/><path d="M30 2 L42 10 L30 18 Z" fill="#7FD1FF"/></svg></div>
+      <div class="step card"><p class="label">3 · Recommend</p><h3>Same index</h3><p class="txt">"Homes like this": vector search on listing embeddings within the same metro. "For you": daily candidates, refreshed by events.</p></div>
+    </div>
+    <div class="spacer"></div>
+    <div class="card hot reveal d2" style="background:var(--hot-bg)"><p class="label acc">Fair housing guardrail</p><p class="txt" style="color:var(--ink)">No protected-class or proxy features in ranking or recommendations. Disparate-impact checks on every model release. Sponsored results are labeled.</p></div>
+  </div>
+  <aside class="notes">Say: "Most property search is filtering; relevance in the web-search sense matters less. So retrieval is filters plus a simple quality score, and personalization is a small, optional second stage."
+
+Default score: recency (new listings first matters to buyers), photo count/quality, completeness, recent price reductions, with decay. A function_score; no ML needed.
+
+Re-rank: LightGBM-style model over ~200 candidates, ~50 features precomputed in the feature store (Valkey-backed online store). Under 20 ms on CPU, under a deadline; on timeout, retrieval order. Explicit sorts (price, newest) bypass it.
+
+Recommendations: "similar homes" via listing embeddings (features + photos + text) in an OpenSearch k-NN field, always with a geo filter. "For you" candidates generated offline daily, refreshed on save/favorite/view. Saved searches use the same query DSL, so alerts and search agree on what "matches" means.
+
+Fair housing (likely to come up): the Fair Housing Act prohibits steering. No race, religion, national origin, familial status, etc., or proxies (neighborhood demographic mix). Legal reviews the feature list; each release runs disparate-impact tests across geography.
+
+Evaluation: offline NDCG on saves/contacts, then A/B on contact-agent rate (the revenue event) with latency guardrails.</aside>
+</section>
+
+<!-- === 17 FAILURE MODES === -->
+<section class="slide" data-sec="Search deep dive">
+  <p class="eyebrow">Search deep dive · Failure modes</p>
+  <h2 class="title reveal">What breaks first, and what we do about it</h2>
+  <div class="body">
+    <table class="tbl reveal d1">
+      <tr><th style="width:30%">Risk</th><th style="width:70%">Guard</th></tr>
+      <tr><td>One metro gets hot</td><td>Shards balanced by traffic; extra replicas for hot shard groups; caches absorb repeats</td></tr>
+      <tr><td>Expensive queries</td><td>Cap polygon points and result size, no deep paging, per-query timeouts, partial results</td></tr>
+      <tr><td>Index falls behind</td><td>Freshness SLO: p95 under 30 s from event to searchable; detail pages read the golden record</td></tr>
+      <tr><td>Bad mapping or analyzer</td><td>New index behind an alias, shadow traffic first; rollback is one alias swap</td></tr>
+      <tr><td>Node or zone loss</td><td>Replicas across 3 zones; adaptive replica selection routes around slow nodes</td></tr>
+      <tr><td>Region loss</td><td>Promote the AlloyDB secondary and the warm search standby; CDN serves stale meanwhile</td></tr>
+    </table>
+    <div class="spacer"></div>
+    <p class="strip reveal d2"><b>The trade-off I'm making on purpose:</b> search is eventually consistent by a few seconds. Anything that costs money or creates a lead reads the source of truth.</p>
+  </div>
+  <aside class="notes">Say: "Here's what I'd expect to page us, in rough order of likelihood."
+
+Hot metro: replicas for one shard group are quick to add because the index is tiny; a viral listing is mostly a CDN problem.
+
+Expensive queries: simplify polygons server-side (~100 vertices), search_after instead of from/size, cap ~2,000 results, per-query timeouts. Also bots and scrapers: rate limiting and bot detection at the edge protect capacity.
+
+Index lag: search keeps working with slightly stale data; alert on consumer lag and end-to-end freshness. The detail page reads the golden record (short-TTL cache with event-driven purge), so the price and status clicked are current.
+
+Bad deploys: schema/analyzer changes always go to a new index; mirror a slice of production queries and compare before the alias swap.
+
+Node/zone/region: standard. Serving is multi-zone in one region. For a region loss, the DR region has an AlloyDB cross-region secondary (promote in minutes) and a small warm OpenSearch standby fed from Pub/Sub; the 20 GB hot index makes that standby cheap. The CDN serves stale pages and tiles during the switch.
+
+Consistency: search results can be seconds stale; browsing tolerates it. Contacting an agent, mortgage pre-approval and saved preferences go to strongly consistent stores. A deliberate CAP choice: for search, availability and latency.</aside>
+</section>
+
+<!-- === 18 COST: PHOTOS === -->
+<section class="slide" data-sec="Cost">
+  <p class="eyebrow">Scaling · Cost optimization</p>
+  <h2 class="title reveal">Most of the bill is photos; tier them</h2>
+  <div class="body">
+    <div class="row reveal d1" style="align-items:stretch">
+      <div class="card hot" style="flex:0 0 700px;justify-content:center;gap:20px;background:var(--hot-bg)">
+        <p class="label acc">Photo originals · 7.5 PB</p>
+        <p class="big">~$160k → ~$30k</p>
+        <p class="txt" style="color:var(--ink)">a month, by moving originals to colder GCS classes once the web-sized versions exist</p>
+        <p class="txt" style="font-size:24px">Rough list prices. Originals are only read again to make a new size.</p>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <div class="card" style="padding:20px 26px"><p class="txt"><b>Lifecycle rules:</b> Standard, then Nearline at 30 days, Coldline at 90, Archive once a home sells</p></div>
+        <div class="card" style="padding:20px 26px"><p class="txt"><b>Smaller bytes on the wire:</b> AVIF and WebP at the right size per device cut image egress by a third or more</p></div>
+        <div class="card" style="padding:20px 26px"><p class="txt"><b>Resize once:</b> GCS upload → Eventarc → Cloud Run makes every size; content-hash dedupe</p></div>
+        <div class="card" style="padding:20px 26px"><p class="txt"><b>Hot and warm search:</b> 380 GB of off-market data stays off memory-heavy nodes</p></div>
+      </div>
+    </div>
+  </div>
+  <aside class="notes">Scaling section: cost optimization, about 6 minutes, three slides.
+
+Say: "Structured data is cheap here: 2 TB of golden records and tens of TB of history are rounding errors. The money is media storage, media egress and compute. So I start with photos."
+
+Photo math (say "roughly"): 7.5 PB in GCS Standard at ~$20–26/TB-month ≈ $160k/month. Once derivatives (thumbnail, card, full-screen, retina) exist, originals are only needed for a new size or re-encode: Coldline or Archive at ~$1–4/TB-month ≈ $10–30k/month. Derivatives (~1.5 PB) stay hot. Lifecycle rules move long-off-market listings' derivatives down too. Watch minimum storage durations and retrieval fees on the cold classes: only move what's really cold.
+
+Resize once: Eventarc is the right tool here (a GCP-sourced trigger), not the business event bus.
+
+Egress: ~160 Gbps peak makes the CDN contract a top cost. Modern formats and device-appropriate sizes cut bytes 30–50%; a high hit ratio keeps origin egress low.
+
+Search: one 200M index on memory-optimized nodes would keep 400 GB hot; the split keeps 20 GB hot.</aside>
+</section>
+
+<!-- === 19 COST: BUILD VS BUY === -->
+<section class="slide" data-sec="Cost">
+  <p class="eyebrow">Scaling · Build vs buy</p>
+  <h2 class="title reveal">Buy the plumbing, build the product</h2>
+  <div class="body">
+    <table class="tbl reveal d1" style="font-size:23px">
+      <tr><th style="width:25%">Capability</th><th style="width:13%">Decision</th><th style="width:34%">Why</th><th style="width:28%">Switch when</th></tr>
+      <tr><td>AlloyDB</td><td>Buy</td><td>Stateful and painful to run; Postgres wire</td><td>—</td></tr>
+      <tr><td>Memorystore for Valkey</td><td>Buy</td><td>Rebuildable; premium &lt; an engineer</td><td>Top-3 cost → Dragonfly</td></tr>
+      <tr><td>Pub/Sub</td><td>Buy</td><td>12 events/s; one adapter</td><td>Need Kafka API → Managed Kafka</td></tr>
+      <tr><td>OpenSearch on GKE</td><td class="acc">Build</td><td>Geo + ranking is the product</td><td>Ops pain → Elastic Cloud</td></tr>
+      <tr><td>Valuation (XGBoost)</td><td class="acc">Build</td><td>Differentiator; BQML baseline first</td><td>—</td></tr>
+      <tr><td>Normalization, resolution</td><td class="acc">Build</td><td>Data accuracy is the moat</td><td>—</td></tr>
+      <tr><td>MLS access</td><td>Hybrid</td><td>Neutral aggregators + own adapters</td><td>—</td></tr>
+      <tr><td>Maps, records, push, email</td><td>Buy</td><td>Commodity vendors</td><td>—</td></tr>
+      <tr><td>Mortgage</td><td>Partner</td><td>Licensing sits with lenders</td><td>—</td></tr>
+    </table>
+  </div>
+  <aside class="notes">Rule: "Buy what is stateful, painful to run and speaks an open protocol. Build what differentiates: ranking and valuation. And name the trigger that would make me switch."
+
+Cache, the build vs buy example:
+- Chosen: Memorystore for Valkey. Valkey is the BSD fork of Redis under the Linux Foundation. Google runs failover with replicas at 99.99%; we pay a managed premium.
+- Speed doesn't decide: ~50–100 GB hot set at a few hundred k ops/s. A small Valkey cluster handles it.
+- Why not Dragonfly (self-host on GKE): its edge is multi-threading, one big node replaces a sharded cluster, no fork on snapshot. At our size that saves a handful of nodes, not a fleet, and failover, upgrades, backups and the pager become ours. BSL license, one vendor.
+- Why not Redis (Redis Cloud or Memorystore for Redis Cluster): Redis left BSD in 2024 (RSAL/SSPL, AGPL added in 2025). Same performance class as Valkey; we don't need Redis Cloud extras (active-active geo, search modules) because search lives in OpenSearch and we write from one region.
+- Switch trigger: the cache becomes a top-3 cost, or one hot key outgrows a shard. The cache can be rebuilt from AlloyDB, so it is the safest thing to self-host later.
+
+OpenSearch: our one stateful build, because relevance and geo are product. Elastic Cloud is the escape hatch.
+
+MLS access: some aggregators are owned by competitors (Bridge Interactive is owned by Zillow). Neutral aggregators (MLS Grid, Trestle) where they exist, own RESO Web API/RETS adapters elsewhere, always own normalization.
+
+Mortgage: a lead-gen and workflow layer, not a lender. Partner with lenders, an LOS (e.g. ICE Encompass), a pricing engine (e.g. Optimal Blue), credit bureaus.
+
+Cost of buying: lock-in and margins. Every vendor behind our own interface.</aside>
+</section>
+
+<!-- === 20 COST: DATA + COMPUTE === -->
+<section class="slide" data-sec="Cost">
+  <p class="eyebrow">Scaling · Data and compute</p>
+  <h2 class="title reveal">Pay for the shape of the load</h2>
+  <div class="body">
+    <div class="row reveal d1" style="align-items:stretch">
+      <div class="card"><p class="label acc">BigQuery</p>
+        <ul><li>Baseline slot reservation with autoscaling for ETL and training</li><li>On-demand for ad hoc (~$6.25 per TiB scanned)</li><li>Partition by date, cluster by state and H3: scan less</li><li>Untouched for 90 days: storage drops to about half price</li></ul></div>
+      <div class="card"><p class="label acc">Compute and regions</p>
+        <ul><li>Cloud Run scales to zero for spiky APIs</li><li>Spot VMs for nightly scoring and reindex</li><li>Committed use discounts for the AlloyDB and GKE base</li><li>One serving region + warm DR, not three hot copies</li></ul></div>
+    </div>
+    <p class="strip reveal d2"><b>Spring:</b> reads double, writes stay flat. The CUD baseline covers normal weeks, autoscaling on-demand covers the delta, and the cache absorbs ~40% of searches before they reach OpenSearch.</p>
+  </div>
+  <aside class="notes">Say: "After photos, the levers are BigQuery and compute, and both come down to paying for the shape of the load."
+
+BigQuery slots (I know these well):
+- Steady, predictable work (the BigQuery subscription loads, nightly ETL, AVM training) runs on an editions reservation: a baseline of slots plus autoscaling to a max, assigned per project so analysts can't starve ETL.
+- Ad hoc analyst queries run on-demand at ~$6.25/TiB scanned; partitioning by date and clustering by state/H3 keeps scans small. Require partition filters on big tables.
+- Long-term storage: a table or partition untouched for 90 days drops to about half price automatically. Consider physical (compressed) storage billing for big, compressible tables.
+- No streaming pipeline to pay for: the Pub/Sub BigQuery subscription writes directly.
+
+Compute:
+- Cloud Run for stateless APIs and ingest workers: per-request billing, scales to zero overnight.
+- Spot VMs (GCP lists up to ~91% off) for interruptible batch: nightly AVM scoring (200M × ~1 ms ≈ 55 CPU-hours, and only changed homes are re-scored), reindexing, replays.
+- CUDs (1 or 3 years) for what runs 24/7: AlloyDB, core GKE nodes for OpenSearch.
+
+Regions: one serving region, multi-zone, plus a DR region with an AlloyDB secondary and a small warm search standby. Three active regions would triple the hot footprint for reads that a CDN already serves near users. Data locality: listings are US public data; user PII stays in the primary region.
+
+Spring peaks as a cost question: reads ~2×, MLS writes flat. Scheduled floors before weekends, autoscaling above them; Feb load test at 2× last year's peak. Degrade cheapest first (longer TTLs, skip re-rank, precomputed values, pause batch); never shed search, listing pages, contact agent, mortgage.
+
+Watch: cross-region egress and logging, often a top-five line item. Sampled traces, tiered log retention.</aside>
+</section>
+
+<!-- === 21 DECISIONS === -->
+<section class="slide" data-sec="Summary">
+  <p class="eyebrow">Summary</p>
+  <h2 class="title reveal">Eight decisions, and what I gave up for each</h2>
+  <div class="body">
+    <table class="tbl reveal d1">
+      <tr><th style="width:15%">Area</th><th style="width:31%">Chose</th><th style="width:24%">Over</th><th style="width:30%">Because</th></tr>
+      <tr><td>Feeds</td><td>Own adapters + neutral aggregators</td><td>One aggregator</td><td>Coverage; no competitor dependency</td></tr>
+      <tr><td>Truth</td><td>AlloyDB golden record + events</td><td>Full event sourcing</td><td>Simple current state; replay still works</td></tr>
+      <tr><td>Events</td><td>Pub/Sub behind an adapter</td><td>Kafka</td><td>12 events/s; Kafka is scale we don't have</td></tr>
+      <tr><td>Geo</td><td class="acc">Precomputed H3 cells as terms</td><td>Shape queries per search</td><td>1M writes vs 400M reads a day</td></tr>
+      <tr><td>Index</td><td class="acc">20 GB hot + 400 GB warm</td><td>One 200M-doc index</td><td>Fits in memory; standby is cheap</td></tr>
+      <tr><td>Alerts</td><td>Reverse search on the stream</td><td>Polling saved searches</td><td>50k QPS down to almost nothing</td></tr>
+      <tr><td>Consistency</td><td>Seconds-stale search; strong for leads</td><td>Strong everywhere</td><td>Latency and availability</td></tr>
+      <tr><td>Regions</td><td>One serving region + warm DR</td><td>Active-active, multi-writer</td><td>Writes are tiny; DR is a promotion</td></tr>
+    </table>
+  </div>
+  <aside class="notes">60-second wrap-up, then questions. Say: "If you remember one thing per row, it's the 'because' column."
+
+One-line defenses:
+- Feeds: "I never want a competitor to be able to turn off my supply."
+- Truth: "I already have replay from the raw GCS zone and BigQuery history, without making every read rebuild state."
+- Events: "12 events a second doesn't need Kafka. The lock-in is one adapter."
+- Geo: "Every bit of geometry I do at write time is paid 400 times less often."
+- Index: "The active set is small. Exploiting that is the biggest single win in the design."
+- Alerts: "Index the queries, stream the documents."
+- Consistency: "Browsing tolerates seconds of staleness; money and leads don't."
+- Regions: "Multi-writer solves a write-scale problem we don't have and creates a conflict problem we'd rather not. The CDN already puts reads near users."
+
+What I gave up: operational complexity of a custom geo layer, matcher and self-run OpenSearch; some freshness in search; ~70 ms extra latency for west-coast users on uncached requests.</aside>
+</section>
+
+<!-- === 22 CLOSE === -->
+<section class="slide statement" data-sec="Questions">
+  <p class="eyebrow">Questions</p>
+  <h1 class="reveal d1" style="top:240px">Where should we go deeper?</h1>
+  <div class="reveal d2" style="position:absolute;left:120px;top:500px;width:1100px;display:flex;flex-direction:column;gap:18px">
+    <p class="label">First 90 days</p>
+    <div class="card" style="gap:16px"><ul><li>Pilot three MLSs end to end and measure accuracy against the source</li><li>Load-test the search path on production-shaped queries</li><li>Agree per-feed freshness and accuracy SLOs with the data team</li></ul></div>
+  </div>
+  <aside class="notes">Close: "That's the design. I'd love to go deeper wherever you're most interested: the index, entity resolution, the AVM, or anything you think I got wrong."
+
+The 90-day plan shows de-risking, not only architecture. Riskiest assumptions: (1) how messy MLS data really is, (2) per-node search throughput, (3) whether a 40% cache hit rate holds. Each bullet tests one.
+
+Q&amp;A posture: answer in one sentence first, then the reasoning, then the trade-off. If you don't know a number, say how you'd find it ("I'd load test that before committing"). It's fine to change your mind when given a new constraint; say what changes.</aside>
+</section>
+
+</main>
+</div>
+
+<!-- === CONTROLS (outside the stage) === -->
+<nav class="deck-controls" aria-label="Slide controls">
+  <button id="prevBtn" type="button" aria-label="Previous slide">←</button>
+  <span class="count" id="count" aria-live="polite">01 / 22</span>
+  <button id="nextBtn" type="button" aria-label="Next slide">→</button>
+  <button id="notesBtn" type="button" aria-pressed="false">NOTES (N)</button>
+  <button id="themeBtn" type="button" title="Theme (T)">AUTO</button>
+</nav>
+<div id="notesPanel" hidden><h4 id="notesHead">Speaker notes</h4><div id="notesBody"></div></div>
+<div class="edit-hotzone" aria-hidden="true"></div>
+<button class="edit-toggle" id="editToggle" type="button" title="Edit mode (E)">EDIT</button>
+
+<script>
+/* Theme: auto (system) → light → dark. Saved per viewer when storage works. */
+const THEMES = ['auto', 'light', 'dark'];
+function applyTheme(t) {
+    if (t === 'auto') document.documentElement.removeAttribute('data-theme');
+    else document.documentElement.setAttribute('data-theme', t);
+    const b = document.getElementById('themeBtn'); if (b) b.textContent = t.toUpperCase();
+}
+function cycleTheme() {
+    const cur = document.documentElement.getAttribute('data-theme') || 'auto';
+    const next = THEMES[(THEMES.indexOf(cur) + 1) % 3];
+    applyTheme(next);
+    try { localStorage.setItem('hf-theme', next); } catch (e) {}
+}
+try { applyTheme(localStorage.getItem('hf-theme') || 'auto'); } catch (e) { applyTheme('auto'); }
+document.getElementById('themeBtn').addEventListener('click', cycleTheme);
+
+/* ===========================================
+   SLIDE PRESENTATION CONTROLLER
+   Stage scaling, keyboard / touch / wheel nav, sheet chrome, notes panel.
+   =========================================== */
+class SlidePresentation {
+    constructor() {
+        this.slides = Array.from(document.querySelectorAll('.slide'));
+        this.stage = document.getElementById('deckStage');
+        this.current = 0;
+        this.notesOpen = false;
+        this.addSheetChrome();
+        this.setupStageScale();
+        this.setupNav();
+        const fromHash = /^#s(\d+)$/.exec(location.hash);
+        this.show(fromHash ? parseInt(fromHash[1], 10) - 1 : 0);
+    }
+
+    /* Title-block strip on every sheet except the cover */
+    addSheetChrome() {
+        const total = String(this.slides.length).padStart(2, '0');
+        this.slides.forEach((s, i) => {
+            if (i === 0) return;
+            const el = document.createElement('div');
+            el.className = 'sheet';
+            el.innerHTML = '<span>HomeFinder</span><span class="sec"></span><span></span>';
+            el.children[1].textContent = s.dataset.sec || '';
+            el.children[2].textContent = 'Sheet ' + String(i + 1).padStart(2, '0') + ' / ' + total;
+            s.appendChild(el);
+        });
+    }
+
+    setupStageScale() {
+        const scale = () => {
+            const f = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+            const x = (window.innerWidth - 1920 * f) / 2;
+            const y = (window.innerHeight - 1080 * f) / 2;
+            this.stage.style.transform = `translate(${x}px, ${y}px) scale(${f})`;
+        };
+        scale();
+        window.addEventListener('resize', scale);
+    }
+
+    setupNav() {
+        document.addEventListener('keydown', (e) => {
+            if (document.body.classList.contains('editing') && e.target.isContentEditable) return;
+            if (['ArrowRight', 'ArrowDown', 'PageDown', ' '].includes(e.key)) { e.preventDefault(); this.show(this.current + 1); }
+            else if (['ArrowLeft', 'ArrowUp', 'PageUp'].includes(e.key)) { e.preventDefault(); this.show(this.current - 1); }
+            else if (e.key === 'Home') this.show(0);
+            else if (e.key === 'End') this.show(this.slides.length - 1);
+            else if (e.key === 'n' || e.key === 'N') this.toggleNotes();
+            else if (e.key === 't' || e.key === 'T') cycleTheme();
+        });
+        document.getElementById('prevBtn').addEventListener('click', () => this.show(this.current - 1));
+        document.getElementById('nextBtn').addEventListener('click', () => this.show(this.current + 1));
+        document.getElementById('notesBtn').addEventListener('click', () => this.toggleNotes());
+
+        let tx = null, ty = null;
+        document.addEventListener('touchstart', (e) => { tx = e.touches[0].clientX; ty = e.touches[0].clientY; }, { passive: true });
+        document.addEventListener('touchend', (e) => {
+            if (tx === null) return;
+            const dx = e.changedTouches[0].clientX - tx, dy = e.changedTouches[0].clientY - ty;
+            if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) this.show(this.current + (dx < 0 ? 1 : -1));
+            tx = ty = null;
+        });
+
+        let lock = false;
+        document.querySelector('.deck-viewport').addEventListener('wheel', (e) => {
+            if (lock || Math.abs(e.deltaY) < 20) return;
+            lock = true; setTimeout(() => { lock = false; }, 700);
+            this.show(this.current + (e.deltaY > 0 ? 1 : -1));
+        }, { passive: true });
+    }
+
+    show(i) {
+        this.current = Math.max(0, Math.min(i, this.slides.length - 1));
+        this.slides.forEach((s, k) => {
+            s.classList.toggle('active', k === this.current);
+            s.classList.toggle('visible', k === this.current);
+            s.setAttribute('aria-hidden', k === this.current ? 'false' : 'true');
+        });
+        const n = String(this.current + 1).padStart(2, '0');
+        document.getElementById('count').textContent = n + ' / ' + String(this.slides.length).padStart(2, '0');
+        try { history.replaceState(null, '', '#s' + (this.current + 1)); } catch (e) {}
+        this.renderNotes();
+    }
+
+    toggleNotes() {
+        this.notesOpen = !this.notesOpen;
+        document.getElementById('notesPanel').hidden = !this.notesOpen;
+        document.getElementById('notesBtn').setAttribute('aria-pressed', String(this.notesOpen));
+        this.renderNotes();
+    }
+
+    renderNotes() {
+        if (!this.notesOpen) return;
+        const s = this.slides[this.current];
+        const notes = s.querySelector('.notes');
+        document.getElementById('notesHead').textContent = 'Speaker notes · sheet ' + (this.current + 1);
+        document.getElementById('notesBody').textContent = notes ? notes.textContent.trim() : 'No notes for this slide.';
+    }
+}
+
+/* ===========================================
+   INLINE EDITING — E key or top-left hotzone; edits kept in this browser only
+   =========================================== */
+class InlineEditor {
+    constructor() {
+        this.isActive = false;
+        this.key = 'homefinder-deck-edits-v1';
+        this.selector = '.slide h1, .slide h2, .slide h3, .slide p, .slide li, .slide td, .slide th, .slide .node, .slide .pill';
+        this.restore();
+    }
+    toggleEditMode() {
+        this.isActive = !this.isActive;
+        document.body.classList.toggle('editing', this.isActive);
+        document.getElementById('editToggle').classList.toggle('active', this.isActive);
+        document.getElementById('editToggle').textContent = this.isActive ? 'DONE' : 'EDIT';
+        document.querySelectorAll(this.selector).forEach(el => {
+            if (el.closest('.sheet')) return;
+            if (this.isActive) el.setAttribute('contenteditable', 'true'); else el.removeAttribute('contenteditable');
+        });
+        if (!this.isActive) this.save();
+    }
+    save() {
+        const data = Array.from(document.querySelectorAll(this.selector)).map(el => el.innerHTML);
+        try { localStorage.setItem(this.key, JSON.stringify(data)); } catch (e) {}
+    }
+    restore() {
+        let data = null;
+        try { data = JSON.parse(localStorage.getItem(this.key) || 'null'); } catch (e) { data = null; }
+        if (!Array.isArray(data)) return;
+        const els = document.querySelectorAll(this.selector);
+        if (data.length !== els.length) return;
+        els.forEach((el, i) => { el.innerHTML = data[i]; });
+    }
+}
+
+const editor = new InlineEditor();
+const deck = new SlidePresentation();
+
+const hotzone = document.querySelector('.edit-hotzone');
+const editToggle = document.getElementById('editToggle');
+let hideTimeout = null;
+editToggle.addEventListener('click', () => editor.toggleEditMode());
+hotzone.addEventListener('click', () => editor.toggleEditMode());
+hotzone.addEventListener('mouseenter', () => { clearTimeout(hideTimeout); editToggle.classList.add('show'); });
+hotzone.addEventListener('mouseleave', () => { hideTimeout = setTimeout(() => { if (!editor.isActive) editToggle.classList.remove('show'); }, 400); });
+editToggle.addEventListener('mouseenter', () => clearTimeout(hideTimeout));
+editToggle.addEventListener('mouseleave', () => { hideTimeout = setTimeout(() => { if (!editor.isActive) editToggle.classList.remove('show'); }, 400); });
+document.addEventListener('keydown', (e) => {
+    if ((e.key === 'e' || e.key === 'E') && !e.target.isContentEditable) editor.toggleEditMode();
+});
+document.addEventListener('input', () => { if (editor.isActive) editor.save(); });
+</script>
+
+</body></html>
