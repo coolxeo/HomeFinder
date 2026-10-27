@@ -1,0 +1,1195 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>HomeFinder System Explorer</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap">
+<style>
+/* Hallmark · redesign (copy + icons) · macrostructure: Workbench (studied: user reference video) · tone: technical, austere
+ * theme: studied-DNA (warm grey ground, paper sheets, one blue accent, one red signal) · Geist + Geist Mono · icons: Lucide 0.460, inlined
+ * Hallmark · pre-emit critique: P4 H4 E4 S5 R5 V4 */
+/* Layout: a warm grey table (ground) with paper sheets on it. Cues on the left, a stage on the right.
+   Elevation encodes how temporary a thing is: ground < card < sheet < panel < nav. */
+:root {
+  --ground: #e8e6e1;
+  --well: #dedbd5;
+  --sheet: #fcfcfa;
+  --ink: #1c1c1a;
+  --ink-2: #57554f;
+  --ink-3: #8e8b84;
+  --hair: rgba(28,27,24,.09);
+  --hair-2: rgba(28,27,24,.17);
+  --accent: #2c59cc;
+  --accent-soft: rgba(44,89,204,.15);
+  --signal: #cf4527;
+  --signal-soft: rgba(207,69,39,.17);
+  --glass: rgba(250,250,247,.66);
+  --scrim: rgba(232,230,225,.72);
+  --lift1: 0 1px 2px rgba(30,28,24,.06), 0 0 0 1px rgba(28,27,24,.05);
+  --lift2: 0 3px 8px rgba(30,28,24,.07), 0 0 0 1px rgba(28,27,24,.07);
+  --lift3: 0 12px 32px rgba(30,28,24,.11), 0 2px 6px rgba(30,28,24,.06), 0 0 0 1px rgba(28,27,24,.08);
+  --lift4: 0 26px 64px rgba(30,28,24,.17), 0 4px 12px rgba(30,28,24,.08), 0 0 0 1px rgba(28,27,24,.1);
+  --f-sans: "Geist", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --f-mono: "Geist Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  --spring: cubic-bezier(.22,1.2,.36,1);
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --ground: #191917; --well: #121210; --sheet: #262624; --ink: #ecebe6; --ink-2: #b3b0a8; --ink-3: #7c7972;
+  --hair: rgba(255,255,250,.08); --hair-2: rgba(255,255,250,.15);
+  --accent: #86a2f2; --accent-soft: rgba(134,162,242,.2); --signal: #f0805f; --signal-soft: rgba(240,128,95,.2);
+  --glass: rgba(38,38,36,.62); --scrim: rgba(18,18,16,.7);
+  --lift1: 0 1px 2px rgba(0,0,0,.4), 0 0 0 1px rgba(255,255,250,.05);
+  --lift2: 0 3px 8px rgba(0,0,0,.4), 0 0 0 1px rgba(255,255,250,.07);
+  --lift3: 0 12px 32px rgba(0,0,0,.5), 0 0 0 1px rgba(255,255,250,.08);
+  --lift4: 0 26px 64px rgba(0,0,0,.6), 0 0 0 1px rgba(255,255,250,.1);
+  color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --ground: #191917; --well: #121210; --sheet: #262624; --ink: #ecebe6; --ink-2: #b3b0a8; --ink-3: #7c7972;
+  --hair: rgba(255,255,250,.08); --hair-2: rgba(255,255,250,.15);
+  --accent: #86a2f2; --accent-soft: rgba(134,162,242,.2); --signal: #f0805f; --signal-soft: rgba(240,128,95,.2);
+  --glass: rgba(38,38,36,.62); --scrim: rgba(18,18,16,.7);
+  --lift1: 0 1px 2px rgba(0,0,0,.4), 0 0 0 1px rgba(255,255,250,.05);
+  --lift2: 0 3px 8px rgba(0,0,0,.4), 0 0 0 1px rgba(255,255,250,.07);
+  --lift3: 0 12px 32px rgba(0,0,0,.5), 0 0 0 1px rgba(255,255,250,.08);
+  --lift4: 0 26px 64px rgba(0,0,0,.6), 0 0 0 1px rgba(255,255,250,.1);
+  color-scheme: dark; }
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-padding-top: 84px; overflow-x: clip; }
+body {
+  background: var(--ground); color: var(--ink); font-family: var(--f-sans); font-size: 15px; line-height: 1.5; overflow-x: clip;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  -webkit-font-smoothing: antialiased;
+}
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--ground); }
+h1, h2, h3 { text-wrap: balance; margin: 0; font-weight: 600; letter-spacing: -0.01em; }
+p { margin: 0; }
+button { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
+.wrap { max-width: 1120px; margin: 0 auto; }
+.ic { width: 16px; height: 16px; flex: none; vertical-align: -3px; }
+.ic.m { width: 20px; height: 20px; vertical-align: -4px; }
+.ic.l { width: 24px; height: 24px; }
+.tile { display: inline-grid; place-items: center; width: 32px; height: 32px; border-radius: 9px; background: var(--ground); color: var(--ink); flex: none; }
+.lbl { font-size: 12px; color: var(--ink-3); }
+
+/* Floating glass navigation */
+.nav {
+  position: sticky; top: calc(env(safe-area-inset-top, 0px) + 12px); z-index: 20; margin: 12px auto 0; width: fit-content; max-width: 100%;
+  display: flex; align-items: center; gap: 2px; padding: 5px; border-radius: 999px;
+  background: var(--glass); backdrop-filter: blur(18px) saturate(1.4); -webkit-backdrop-filter: blur(18px) saturate(1.4);
+  box-shadow: var(--lift3); overflow-x: auto; scrollbar-width: none;
+}
+.nav::-webkit-scrollbar { display: none; }
+.nav a { white-space: nowrap; text-decoration: none; color: var(--ink-2); font-size: 13px; padding: 6px 11px; border-radius: 999px; display: inline-flex; gap: 6px; align-items: center; transition: background .2s, color .2s; }
+.nav a:hover { color: var(--ink); background: var(--hair); }
+.nav a.here { color: var(--ink); background: var(--sheet); box-shadow: var(--lift1); }
+.nav .brand { font-weight: 600; color: var(--ink); padding-right: 12px; }
+
+/* Masthead */
+.mast { padding-block: 48px 32px; display: grid; gap: 20px; }
+.mast h1 { font-size: clamp(36px, 6vw, 56px); line-height: 1.02; letter-spacing: -0.03em; }
+.facts { display: flex; flex-wrap: wrap; gap: 10px; }
+.fact { display: inline-flex; align-items: center; gap: 10px; background: var(--sheet); border-radius: 12px; box-shadow: var(--lift1); padding: 10px 14px 10px 10px; }
+.fact b { font-family: var(--f-mono); font-weight: 500; font-size: 18px; letter-spacing: -0.02em; }
+.fact span { color: var(--ink-2); font-size: 13px; }
+.hint { display: flex; flex-wrap: wrap; gap: 8px 18px; color: var(--ink-3); font-size: 13px; }
+.hint span { display: inline-flex; align-items: center; gap: 6px; }
+kbd { font-family: var(--f-mono); font-size: 11px; padding: 1px 6px; border-radius: 5px; background: var(--sheet); box-shadow: var(--lift1); color: var(--ink-2); }
+
+/* Sections */
+section.block { padding-block: 64px; border-top: 1px solid var(--hair); }
+.cols { display: grid; grid-template-columns: minmax(0, 270px) minmax(0, 1fr); gap: 48px; align-items: start; }
+.prose { display: grid; gap: 14px; position: sticky; top: 92px; }
+.prose h2 { font-size: 26px; letter-spacing: -0.02em; }
+.when { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--ink-3); }
+.key { font-size: 15px; font-weight: 500; color: var(--ink); border-left: 2px solid var(--accent); padding-left: 10px; }
+.sec-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 8px; }
+.sec-head h2 { font-size: 30px; letter-spacing: -0.02em; }
+.sec-lead { color: var(--ink-2); margin-bottom: 32px; font-size: 16px; }
+
+.tabs { display: inline-flex; gap: 2px; padding: 3px; border-radius: 10px; background: var(--well); }
+.tabs button { border: 0; background: none; padding: 5px 12px; border-radius: 8px; font-size: 13px; color: var(--ink-2); cursor: pointer; }
+.tabs button[aria-selected="true"] { background: var(--sheet); color: var(--ink); box-shadow: var(--lift1); }
+
+/* Isometric stack */
+.stackgrid { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 32px; align-items: center; }
+.iso-stage { position: relative; height: 640px; }
+.iso { position: absolute; left: 50%; top: 50%; transform-style: preserve-3d; transform: rotateX(57deg) rotateZ(-36deg); }
+.plate {
+  --z: calc((var(--i) - 3) * var(--gap, 68px));
+  position: absolute; width: 330px; height: 180px; left: -165px; top: -90px; border-radius: 14px;
+  background: var(--sheet); box-shadow: var(--lift2); transform: translateZ(var(--z));
+  transition: transform .5s var(--spring), box-shadow .3s, opacity .3s; cursor: pointer; padding: 14px; transform-style: preserve-3d;
+  display: flex; flex-direction: column; justify-content: flex-end; gap: 8px;
+}
+.plate.ground { background: var(--well); box-shadow: none; }
+.plate:hover, .plate.hot { transform: translateZ(calc(var(--z) + 18px)); box-shadow: var(--lift4); }
+.plate.sel { transform: translateZ(calc(var(--z) + 26px)); box-shadow: var(--lift4), 0 0 0 2px var(--accent); }
+.iso.focus .plate:not(.sel) { opacity: .45; }
+.plate .pl { font-size: 12px; font-weight: 600; color: var(--ink-2); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip {
+  border: 0; background: var(--sheet); box-shadow: var(--lift1); border-radius: 7px; padding: 5px 9px; font-size: 12px; color: var(--ink);
+  cursor: pointer; transition: transform .25s var(--spring), box-shadow .2s; text-align: left; display: inline-flex; align-items: center; gap: 6px; text-decoration: none;
+}
+.plate .chip { background: var(--ground); }
+.plate.ground .chip { background: var(--sheet); }
+.chip:hover { transform: translateY(-2px); box-shadow: var(--lift2); }
+.chip .ic { width: 14px; height: 14px; vertical-align: 0; color: var(--ink-2); }
+.stack-tools { position: absolute; right: 0; top: 0; display: flex; gap: 6px; }
+.iconbtn { border: 0; background: var(--sheet); box-shadow: var(--lift1); border-radius: 8px; height: 30px; padding: 0 10px; font-size: 12px; color: var(--ink-2); cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+.iconbtn:hover { color: var(--ink); box-shadow: var(--lift2); }
+.iconbtn:active { transform: translateY(1px); }
+
+table.spec { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+table.spec th { text-align: left; font-weight: 500; color: var(--ink-3); font-size: 12px; padding: 6px 8px; border-bottom: 1px solid var(--hair); }
+table.spec td { padding: 10px 8px; border-bottom: 1px solid var(--hair); vertical-align: middle; color: var(--ink-2); }
+table.spec td:first-child { color: var(--ink); font-weight: 600; white-space: nowrap; }
+table.spec td:first-child .ic { margin-right: 8px; color: var(--ink-2); }
+table.spec tr.row { cursor: pointer; transition: background .2s; }
+table.spec tr.row:hover td, table.spec tr.row.hot td { background: var(--hair); }
+table.spec tr.row.sel td:first-child { color: var(--accent); }
+.tablebox { overflow-x: auto; min-width: 0; }
+
+/* Concept cards (Nouns) */
+.concepts { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
+.concept {
+  text-align: left; border: 0; background: var(--sheet); border-radius: 12px; box-shadow: var(--lift1); padding: 14px; cursor: pointer;
+  display: grid; grid-template-columns: auto minmax(0,1fr); gap: 4px 12px; align-items: center; transition: transform .35s var(--spring), box-shadow .25s;
+}
+.concept:hover { transform: translateY(-3px); box-shadow: var(--lift3); }
+.concept .tile { grid-row: span 2; }
+.concept h3 { font-size: 15px; }
+.concept p { font-size: 12.5px; color: var(--ink-3); }
+
+/* Verbs matrix */
+table.matrix { border-collapse: separate; border-spacing: 0; font-size: 13px; background: var(--sheet); border-radius: 12px; box-shadow: var(--lift1); overflow: hidden; min-width: 640px; width: 100%; }
+table.matrix th, table.matrix td { padding: 10px 8px; text-align: center; border-bottom: 1px solid var(--hair); }
+table.matrix thead th { font-weight: 500; color: var(--ink-3); font-size: 12px; }
+table.matrix tbody th { text-align: left; font-weight: 600; padding-left: 16px; cursor: pointer; white-space: nowrap; }
+table.matrix tbody th .ic { margin-right: 8px; color: var(--ink-2); }
+table.matrix tbody th:hover { color: var(--accent); }
+table.matrix tr:last-child > * { border-bottom: 0; }
+.dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: var(--ink); }
+.dot.no { background: none; box-shadow: inset 0 0 0 1px var(--hair-2); width: 5px; height: 5px; }
+table.matrix td.on { background: var(--accent-soft); }
+
+/* Walks */
+.steps { list-style: none; padding: 0; margin: 4px 0 0; display: grid; gap: 1px; counter-reset: s; }
+.steps button { border: 0; background: none; padding: 4px 0; display: flex; gap: 12px; width: 100%; text-align: left; cursor: pointer; color: var(--ink-3); font-size: 14px; transition: color .2s; }
+.steps button::before { counter-increment: s; content: counter(s); font-family: var(--f-mono); font-size: 12px; width: 14px; flex: none; padding-top: 2px; }
+.steps button.past { color: var(--ink-2); }
+.steps button.cur { color: var(--ink); font-weight: 600; }
+.steps button:hover { color: var(--ink); }
+.sdesc { display: none; margin: 0 0 8px 26px; font-size: 13px; line-height: 1.5; color: var(--ink-3); max-width: 40ch; }
+.steps li.cur .sdesc { display: block; animation: fadein .45s ease-out both; }
+@keyframes fadein { from { opacity: 0; transform: translateY(-3px); } to { opacity: 1; transform: none; } }
+.flowdesc { margin-top: 10px; font-size: 14px; color: var(--ink-3); max-width: 70ch; min-height: 21px; }
+.note-cloud { margin-top: 14px; font-size: 12.5px; color: var(--ink-3); display: flex; gap: 6px; align-items: center; }
+.flowdesc.fade { animation: fadein .45s ease-out both; }
+.stage-wrap { position: relative; min-width: 0; }
+.stage-tools { display: flex; justify-content: flex-end; gap: 6px; margin-bottom: 8px; }
+.stage { position: relative; border-radius: 16px; background: var(--well); box-shadow: inset 0 1px 2px rgba(0,0,0,.05); padding: 24px; min-height: 400px; overflow: hidden; }
+.cap { margin-top: 14px; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; min-height: 36px; }
+.cap .n { font-family: var(--f-mono); font-size: 12px; color: var(--accent); margin-right: 4px; }
+.cue { font-family: var(--f-mono); font-size: 12.5px; background: var(--sheet); box-shadow: var(--lift1); border-radius: 7px; padding: 4px 9px; color: var(--ink); }
+.go { border: 0; background: none; padding: 4px 6px; color: var(--accent); font-size: 13px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; border-radius: 6px; }
+.go:hover { background: var(--accent-soft); }
+
+.card { background: var(--sheet); border-radius: 10px; box-shadow: var(--lift1); padding: 10px 12px; transition: transform .45s var(--spring), box-shadow .3s, opacity .3s; }
+.card.act { transform: translateY(-4px); box-shadow: var(--lift3), 0 0 0 1.5px var(--accent); }
+.card.act .tile { background: var(--accent); color: var(--sheet); }
+
+/* Pipeline */
+.pipe { display: grid; grid-template-columns: repeat(5, minmax(0,1fr)); gap: 8px; }
+.pipe .card { font-size: 13px; font-weight: 600; display: grid; justify-items: start; gap: 8px; cursor: pointer; border: 0; text-align: left; }
+.rec { margin-top: 18px; background: var(--sheet); border-radius: 12px; box-shadow: var(--lift3); padding: 14px 16px; font-family: var(--f-mono); font-size: 12px; line-height: 1.75; min-height: 150px; }
+.rec .k { color: var(--ink-3); }
+.rec .new { color: var(--accent); }
+.rec .bad { color: var(--signal); }
+.rec .hd { font-family: var(--f-sans); font-size: 12px; color: var(--ink-3); margin-bottom: 6px; }
+.fan { margin-top: 18px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; opacity: .35; transition: opacity .4s; }
+.ge-5 .fan { opacity: 1; }
+
+/* Search budget */
+.ms { display: flex; align-items: baseline; gap: 10px; }
+.ms .big { font-family: var(--f-mono); font-size: 54px; font-weight: 500; letter-spacing: -0.03em; line-height: 1; font-variant-numeric: tabular-nums; }
+.ms .of { color: var(--ink-3); font-size: 13px; }
+.budget { position: relative; display: flex; height: 34px; border-radius: 8px; overflow: hidden; margin: 18px 0 6px; background: var(--sheet); box-shadow: var(--lift1); }
+.budget i { display: block; height: 100%; border-right: 1px solid var(--well); background: var(--hair); transition: background .35s; }
+.budget i.on { background: var(--ink); }
+.budget i.act { background: var(--accent); }
+.budget i.head { background: repeating-linear-gradient(135deg, var(--hair) 0 4px, transparent 4px 8px); }
+.budget i.head.on { background: repeating-linear-gradient(135deg, var(--accent-soft) 0 4px, transparent 4px 8px); }
+.ticks { display: flex; justify-content: space-between; font-family: var(--f-mono); font-size: 11px; color: var(--ink-3); }
+.hops { margin-top: 18px; display: grid; grid-template-columns: repeat(7, minmax(0,1fr)); gap: 6px; }
+.hop { display: grid; justify-items: start; gap: 6px; font-size: 12.5px; font-weight: 600; padding: 10px; border: 0; text-align: left; cursor: pointer; }
+.hop .v { font-family: var(--f-mono); font-weight: 400; color: var(--ink-3); font-size: 12px; }
+.hop.act .v { color: var(--accent); }
+.hop:not(.act):not(.seen) { opacity: .55; }
+.branch { margin-top: 14px; display: inline-flex; align-items: center; gap: 8px; font-size: 13px; opacity: 0; transform: translateY(6px); transition: opacity .4s, transform .5s var(--spring); }
+.at-2 .branch { opacity: 1; transform: none; }
+
+/* H3 */
+.hexsvg { width: 100%; height: auto; display: block; }
+.hex { fill: var(--sheet); stroke: var(--hair-2); stroke-width: 1; transition: fill .4s, opacity .4s; }
+.ge-3 .hex.int { fill: var(--accent-soft); stroke: var(--accent); stroke-opacity: .35; }
+.ge-4 .hex.ring { fill: var(--signal-soft); stroke: var(--signal); stroke-opacity: .4; }
+.ge-3 .hex.out { opacity: .55; }
+.home { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 2; opacity: 0; transition: opacity .4s; }
+.at-0 .home, .at-1 .home { opacity: 1; }
+.parent { fill: none; stroke: var(--accent); stroke-width: 1.5; stroke-dasharray: 4 3; opacity: 0; transition: opacity .4s; }
+.at-1 .parent { opacity: 1; }
+.pin { fill: var(--ink-3); transition: fill .4s, opacity .4s; opacity: .25; }
+.ge-2 .pin { opacity: .9; }
+.pin.me { opacity: 1; fill: var(--accent); }
+.ge-5 .pin.hit { fill: var(--ink); }
+.ge-5 .pin.miss { opacity: .2; }
+.ge-4 .pin.chk { fill: var(--signal); }
+.ge-5 .pin.chk.hit { fill: var(--ink); }
+.vp { fill: none; stroke: var(--ink); stroke-width: 2; stroke-dasharray: 6 4; opacity: 0; transition: opacity .4s; }
+.ge-2 .vp { opacity: 1; }
+.tag { opacity: 0; transition: opacity .4s; }
+.at-0 .tag.t0, .at-1 .tag.t1 { opacity: 1; }
+.tag rect { fill: var(--sheet); filter: drop-shadow(0 4px 10px rgba(0,0,0,.12)); }
+.tag text { fill: var(--ink); font-family: var(--f-mono); font-size: 11px; }
+.tag tspan.k { fill: var(--ink-3); }
+.hexlegend { display: flex; flex-wrap: wrap; gap: 14px; font-size: 12px; color: var(--ink-2); margin-top: 10px; }
+.hexlegend i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; vertical-align: -2px; margin-right: 6px; }
+.result { position: absolute; left: 24px; bottom: 20px; font-size: 13px; opacity: 0; transition: opacity .4s; }
+.ge-5 .result { opacity: 1; }
+
+/* Alerts */
+.versus { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.versus .card { display: flex; align-items: center; gap: 12px; }
+.versus .num { font-family: var(--f-mono); font-size: 26px; font-weight: 500; letter-spacing: -0.02em; line-height: 1.1; }
+.versus .bad .num { color: var(--signal); }
+.versus .bad .tile { color: var(--signal); }
+.chain { margin-top: 18px; display: grid; gap: 8px; }
+.chain .card { display: grid; grid-template-columns: 32px minmax(0,1fr) auto; gap: 12px; align-items: center; font-size: 13.5px; border: 0; text-align: left; cursor: pointer; padding: 8px 12px 8px 8px; }
+.chain .card small { color: var(--ink-3); font-family: var(--f-mono); font-size: 12px; }
+.slip {
+  position: absolute; left: 50%; bottom: 0; width: min(320px, 86%); transform: translate(-50%, 110%);
+  background: var(--sheet); border-radius: 12px 12px 0 0; box-shadow: var(--lift4); padding: 12px 14px 16px; display: grid; grid-template-columns: 32px 1fr; gap: 10px; align-items: center;
+  transition: transform .7s var(--spring); font-size: 13px;
+}
+.ge-5 .slip { transform: translate(-50%, 0); }
+.slip .tile { background: var(--signal); color: var(--sheet); }
+.slip small { color: var(--ink-3); display: block; font-family: var(--f-mono); }
+.ge-5 .chain { margin-bottom: 76px; }
+
+/* Peaks */
+.chart text { font-family: var(--f-mono); font-size: 10.5px; fill: var(--ink-3); }
+.chart .grid { stroke: var(--hair); }
+.chart .base { fill: none; stroke: var(--ink-3); stroke-width: 1.5; transition: opacity .4s; }
+.chart .spring { fill: none; stroke: var(--ink); stroke-width: 2; opacity: 0; transition: opacity .5s; }
+.ge-1 .chart .spring { opacity: 1; }
+.ge-1 .chart .base { opacity: .45; }
+.chart .reach { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1.5; opacity: 0; transition: opacity .5s; }
+.ge-2 .chart .reach { opacity: 1; }
+.chart .floor { fill: none; stroke: var(--signal); stroke-width: 1.5; opacity: 0; transition: opacity .5s; }
+.ge-3 .chart .floor { opacity: 1; }
+.chart .design { stroke: var(--ink-2); stroke-dasharray: 5 4; opacity: 0; transition: opacity .5s; }
+.ge-3 .chart .design { opacity: 1; }
+.chart .lab { opacity: 0; transition: opacity .5s; }
+.at-0 .chart .lab.l0, .ge-1 .chart .lab.l1, .ge-2 .chart .lab.l2, .ge-3 .chart .lab.l3 { opacity: 1; }
+.chart .lab text { fill: var(--ink-2); }
+.chartleg { display: flex; flex-wrap: wrap; gap: 14px; font-size: 12px; color: var(--ink-2); margin-top: 6px; }
+.chartleg i { display: inline-block; width: 14px; height: 3px; border-radius: 2px; vertical-align: 3px; margin-right: 6px; }
+.ladder {
+  position: absolute; top: 12px; left: 12px; bottom: 12px; width: min(260px, 70%); background: var(--sheet); border-radius: 14px; box-shadow: var(--lift4);
+  padding: 16px; transform: translateX(calc(-100% - 24px)); transition: transform .6s var(--spring); display: grid; align-content: start; gap: 10px;
+}
+.ge-4 .ladder { transform: none; }
+.ladder ol { margin: 0; padding: 0; list-style: none; display: grid; gap: 6px; }
+.ladder li { display: grid; grid-template-columns: 32px 1fr; gap: 10px; align-items: center; font-size: 13px; }
+.never { border-top: 1px solid var(--hair); padding-top: 10px; display: grid; grid-template-columns: 32px 1fr; gap: 10px; align-items: center; font-size: 13px; opacity: .35; transition: opacity .4s; }
+.never .tile { color: var(--signal); }
+.ge-5 .never { opacity: 1; }
+
+/* Numbers */
+.figs { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 12px; }
+.fig { border: 0; text-align: left; background: var(--sheet); border-radius: 12px; box-shadow: var(--lift1); padding: 16px; display: grid; grid-template-columns: auto minmax(0,1fr); gap: 2px 14px; align-items: center; cursor: pointer; transition: transform .35s var(--spring), box-shadow .25s; }
+.fig:hover { transform: translateY(-3px); box-shadow: var(--lift3); }
+.fig .tile { grid-row: span 2; width: 40px; height: 40px; }
+.fig .v { font-family: var(--f-mono); font-size: 26px; font-weight: 500; letter-spacing: -0.03em; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.fig .u { font-size: 13px; color: var(--ink-2); }
+
+/* Decisions */
+table.dec { width: 100%; border-collapse: collapse; background: var(--sheet); border-radius: 12px; box-shadow: var(--lift1); overflow: hidden; font-size: 14px; min-width: 640px; }
+table.dec th { text-align: left; font-weight: 500; font-size: 12px; color: var(--ink-3); padding: 12px 14px; border-bottom: 1px solid var(--hair); }
+table.dec td { padding: 12px 14px; border-bottom: 1px solid var(--hair); vertical-align: middle; }
+table.dec tr:last-child td { border-bottom: 0; }
+table.dec td:first-child { font-weight: 600; white-space: nowrap; }
+table.dec td:first-child .ic { margin-right: 8px; color: var(--ink-2); }
+table.dec td.over { color: var(--ink-3); text-decoration: line-through; text-decoration-color: var(--hair-2); }
+table.dec td.why { color: var(--ink-2); }
+table.dec tbody tr { cursor: pointer; transition: background .2s; }
+table.dec tbody tr:hover { background: var(--hair); }
+
+.ninety { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 12px; margin-top: 24px; }
+.ninety .card { padding: 14px; display: flex; gap: 12px; align-items: center; font-size: 14px; }
+
+/* Drill-down sheet and talk panel */
+.scrim { position: fixed; inset: 0; z-index: 40; background: var(--scrim); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); opacity: 0; transition: opacity .3s; }
+.scrim.open { opacity: 1; }
+.layer {
+  position: fixed; inset: 0; z-index: 41; display: flex; justify-content: center; align-items: flex-start; gap: 10px; overflow-y: auto;
+  padding: calc(env(safe-area-inset-top, 0px) + 56px) max(16px, env(safe-area-inset-right, 0px)) calc(env(safe-area-inset-bottom, 0px) + 40px) max(16px, env(safe-area-inset-left, 0px));
+  pointer-events: none;
+}
+.layer > * { pointer-events: auto; }
+.sheet {
+  width: min(560px, 100%); background: var(--sheet); border-radius: 18px; box-shadow: var(--lift4); padding: 24px 26px 26px;
+  display: grid; gap: 18px; transform: translateY(24px) scale(.98); opacity: 0; transition: transform .5s var(--spring), opacity .25s;
+}
+.talk {
+  width: 280px; flex: none; background: var(--sheet); border-radius: 18px; box-shadow: var(--lift4); padding: 20px; display: grid; gap: 14px; align-content: start;
+  transform: translateX(40px); opacity: 0; transition: transform .55s var(--spring) .05s, opacity .25s .05s;
+}
+.layer.open .sheet, .layer.open .talk { transform: none; opacity: 1; }
+.sheet-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.crumbs { display: flex; flex-wrap: wrap; gap: 4px; font-size: 12px; color: var(--ink-3); min-width: 0; }
+.crumbs button { border: 0; background: none; padding: 0; color: var(--ink-3); cursor: pointer; }
+.crumbs button:hover { color: var(--ink); }
+.crumbs .curc { color: var(--ink); }
+.sheet-head { display: flex; gap: 14px; align-items: center; }
+.sheet-head .tile { width: 48px; height: 48px; border-radius: 12px; }
+.sheet h2 { font-size: 24px; letter-spacing: -0.02em; }
+.sheet .purpose { font-size: 16px; color: var(--ink-2); }
+.how { display: flex; gap: 10px; align-items: flex-start; background: var(--ground); border-radius: 12px; padding: 12px 14px; font-size: 14.5px; }
+.how .ic { color: var(--accent); margin-top: 2px; }
+.def { display: grid; grid-template-columns: 70px minmax(0,1fr); gap: 10px 14px; font-size: 14px; align-items: baseline; }
+.def dt { color: var(--ink-3); font-size: 12px; }
+.def dd { margin: 0; color: var(--ink-2); }
+.def ul { margin: 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: 6px; }
+.def li { font-family: var(--f-mono); font-size: 12px; background: var(--ground); border-radius: 6px; padding: 2px 8px; color: var(--ink); }
+.nums { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 8px; }
+.nums div { border: 1px solid var(--hair); border-radius: 10px; padding: 10px 12px; }
+.nums b { display: block; font-family: var(--f-mono); font-size: 18px; font-weight: 500; letter-spacing: -0.02em; }
+.nums span { font-size: 12px; color: var(--ink-3); }
+.rel { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.rel .chip { background: var(--ground); box-shadow: none; }
+.point { display: grid; gap: 6px; }
+.point p { font-size: 18px; font-weight: 600; letter-spacing: -0.01em; line-height: 1.3; }
+.qa { display: grid; gap: 12px; border-top: 1px solid var(--hair); padding-top: 12px; }
+.qa .lbl { display: inline-flex; gap: 6px; align-items: center; }
+.qa .q { font-weight: 600; font-size: 13.5px; }
+.qa .a { font-size: 13px; color: var(--ink-2); margin-top: 2px; }
+
+
+/* Animated architecture diagram */
+.archbox { overflow-x: auto; margin-inline: -8px; padding: 8px; scrollbar-width: thin; }
+.arch { position: relative; aspect-ratio: 1100 / 680; min-width: 880px; border-radius: 18px; background: var(--well); box-shadow: inset 0 1px 2px rgba(0,0,0,.05); }
+.arch > svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.arch .band { fill: var(--hair); }
+.arch .collab, .arch .bandlab { font-family: var(--f-sans); font-size: 12px; fill: var(--ink-3); }
+.edge { fill: none; stroke: var(--ink-3); stroke-width: 2.4; stroke-linecap: round; stroke-dasharray: 0.1 9; animation: flow 1.1s linear infinite; transition: opacity .3s, stroke .3s; }
+@keyframes flow { to { stroke-dashoffset: -9.1; } }
+.arch.flowing .edge { opacity: .22; }
+.arch.flowing .edge.on { opacity: 1; stroke: var(--accent); stroke-width: 2.8; }
+.arch.flowing .edge.live { stroke-width: 3.4; }
+.arch.hovering .edge { opacity: .12; }
+.arch.hovering .edge.hl { opacity: 1; stroke: var(--ink); }
+.elabel { font-family: var(--f-mono); font-size: 11px; fill: var(--ink-2); paint-order: stroke; stroke: var(--well); stroke-width: 5px; stroke-linejoin: round; opacity: 0; transition: opacity .3s; pointer-events: none; }
+.arch.flowing .elabel.on { opacity: 1; }
+.arch.hovering .elabel { opacity: 0; }
+.arch.hovering .elabel.hl { opacity: 1; }
+.packet rect { fill: var(--accent); }
+.packet text { font-family: var(--f-mono); font-size: 11px; fill: var(--sheet); }
+.node {
+  position: absolute; transform: translate(-50%, -50%); width: 122px; border: 0; cursor: pointer; text-align: left;
+  display: grid; grid-template-columns: 28px minmax(0,1fr); gap: 0 8px; align-items: center; padding: 7px 9px 7px 7px;
+  background: var(--sheet); border-radius: 10px; box-shadow: var(--lift1); transition: transform .35s var(--spring), box-shadow .25s, opacity .3s;
+}
+.node:hover { transform: translate(-50%, calc(-50% - 3px)); box-shadow: var(--lift3); }
+.node .tile { width: 28px; height: 28px; border-radius: 7px; grid-row: span 2; }
+.node b { font-size: 12.5px; font-weight: 600; line-height: 1.2; }
+.node small { font-size: 10.5px; color: var(--ink-3); line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.node.wide { width: 150px; }
+.node.iso { box-shadow: var(--lift1), 0 0 0 1.5px var(--hair-2); background-image: repeating-linear-gradient(135deg, transparent 0 6px, var(--hair) 6px 7px); }
+.arch.flowing .node:not(.in) { opacity: .55; }
+.node.live { box-shadow: var(--lift3), 0 0 0 1.5px var(--accent); }
+.node.live .tile { background: var(--accent); color: var(--sheet); }
+.arch.hovering .node:not(.hl) { opacity: .4; }
+.flowsteps { list-style: none; margin: 14px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.flowsteps button { border: 0; background: var(--sheet); box-shadow: var(--lift1); border-radius: 8px; padding: 6px 10px; font-size: 12.5px; color: var(--ink-2); cursor: pointer; display: inline-flex; gap: 8px; align-items: center; transition: box-shadow .2s, color .2s; }
+.flowsteps button span { font-family: var(--f-mono); color: var(--ink-3); font-size: 11.5px; }
+.flowsteps button.cur { color: var(--ink); box-shadow: var(--lift2), 0 0 0 1.5px var(--accent); }
+.flowsteps button.cur span { color: var(--accent); }
+.archtools { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+@media (prefers-reduced-motion: reduce) { .edge { animation: none; stroke-dasharray: 0.1 7; } }
+
+@media (max-width: 1000px) {
+  .stackgrid { grid-template-columns: 1fr; }
+  .layer { flex-direction: column; align-items: center; }
+  .talk { width: min(560px, 100%); transform: translateY(20px); }
+  .hops { grid-template-columns: repeat(4, minmax(0,1fr)); }
+}
+@media (max-width: 860px) {
+  .cols { grid-template-columns: 1fr; gap: 24px; }
+  .prose { position: static; }
+  .figs, .ninety { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 640px) {
+  .iso-stage { height: auto; }
+  .iso { position: static; transform: none; display: flex; flex-direction: column-reverse; gap: 10px; }
+  .plate { position: relative; left: auto; top: auto; width: 100%; height: auto; transform: none !important; }
+  .stack-tools { display: none; }
+  .pipe { grid-template-columns: 1fr 1fr; }
+  .hops { grid-template-columns: 1fr 1fr; }
+  .figs, .ninety, .versus { grid-template-columns: 1fr; }
+  .stage { padding: 16px; }
+  .sheet { padding: 20px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition-duration: .01ms !important; animation-duration: .01ms !important; }
+  html { scroll-behavior: auto; }
+}
+</style>
+
+<nav class="nav" aria-label="Sections">
+  <a class="brand" href="#top"><i data-i="house"></i>HomeFinder</a>
+  <a href="#arch">Architecture</a>
+  <a href="#grammar">Layers</a>
+  <a href="#numbers">Numbers</a>
+  <a href="#pipeline">Pipeline</a>
+  <a href="#search">Search</a>
+  <a href="#geo">Geo</a>
+  <a href="#alerts">Alerts</a>
+  <a href="#peaks">Peaks</a>
+  <a href="#decisions">Decisions</a>
+</nav>
+
+<main class="wrap" id="top">
+  <header class="mast">
+    <h1>HomeFinder</h1>
+    <div class="facts">
+      <div class="fact"><span class="tile"><i data-i="users"></i></span><b>100M</b><span>monthly users</span></div>
+      <div class="fact"><span class="tile"><i data-i="house"></i></span><b>200M</b><span>properties</span></div>
+      <div class="fact"><span class="tile"><i data-i="rss"></i></span><b>800+</b><span>MLS feeds</span></div>
+    </div>
+    <div class="hint">
+      <span><i data-i="mouse-pointer-click"></i>Click anything to open it</span>
+      <span><kbd>←</kbd><kbd>→</kbd> Step through a walk</span>
+      <span><kbd>Esc</kbd> Back</span>
+    </div>
+  </header>
+
+  <section class="block" id="arch">
+    <div class="sec-head">
+      <h2>Architecture</h2>
+      <div class="archtools">
+        <div class="tabs" role="tablist" aria-label="Flows" id="flowTabs"></div>
+        <button class="iconbtn" id="flowPlay" type="button"><i data-i="pause"></i><span>Pause</span></button>
+      </div>
+    </div>
+    <p class="sec-lead" id="flowLead"></p>
+    <div class="archbox"><div class="arch" id="archMap"><svg id="archSvg" viewBox="0 0 1100 680" aria-hidden="true"></svg></div></div>
+    <ol class="flowsteps" id="flowSteps"></ol>
+    <p class="flowdesc" id="flowDesc"></p>
+    <p class="note-cloud"><i data-i="cloud"></i>Open-source building blocks, so it runs on any cloud. GCP shown where a managed service fits.</p>
+  </section>
+
+  <section class="block" id="grammar">
+    <div class="sec-head">
+      <h2>The system</h2>
+      <div class="tabs" role="tablist" aria-label="Views">
+        <button role="tab" id="tab-layers" aria-selected="true" aria-controls="pane-layers">Layers</button>
+        <button role="tab" id="tab-nouns" aria-selected="false" aria-controls="pane-nouns">Concepts</button>
+        <button role="tab" id="tab-verbs" aria-selected="false" aria-controls="pane-verbs">Who does what</button>
+      </div>
+    </div>
+    <p class="sec-lead" id="grammar-lead"></p>
+
+    <div role="tabpanel" id="pane-layers" aria-labelledby="tab-layers">
+      <div class="stackgrid">
+        <div class="iso-stage">
+          <div class="stack-tools"><button class="iconbtn" id="explode" type="button" aria-pressed="false"><i data-i="layers"></i><span>Spread</span></button></div>
+          <div class="iso" id="iso"></div>
+        </div>
+        <div class="tablebox">
+          <table class="spec" id="layerTable">
+            <thead><tr><th>Layer</th><th>Holds</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div role="tabpanel" id="pane-nouns" aria-labelledby="tab-nouns" hidden><div class="concepts" id="concepts"></div></div>
+    <div role="tabpanel" id="pane-verbs" aria-labelledby="tab-verbs" hidden><div class="tablebox"><table class="matrix" id="matrix"></table></div></div>
+  </section>
+
+  <section class="block" id="numbers">
+    <div class="sec-head"><h2>Numbers</h2></div>
+    <p class="sec-lead">Huge reads, tiny writes, heavy photos. Assumptions, not sourced figures.</p>
+    <div class="figs" id="figs"></div>
+  </section>
+
+  <section class="block walk" id="pipeline">
+    <div class="cols">
+      <div class="prose">
+        <span class="when"><i data-i="clock"></i>Architecture · 7 min</span>
+        <h2>MLS pipeline</h2>
+        <p class="key">800 feeds → ~15 adapters → 1 golden record</p>
+        <ol class="steps"></ol>
+      </div>
+      <div class="stage-wrap">
+        <div class="stage-tools"><button class="iconbtn play" type="button"><i data-i="play"></i><span>Play</span></button></div>
+        <div class="stage">
+          <div class="pipe">
+            <button class="card" data-act="0" data-drill="sources"><span class="tile"><i data-i="plug"></i></span>Connect</button>
+            <button class="card" data-act="1" data-drill="lake"><span class="tile"><i data-i="hard-drive-download"></i></span>Land</button>
+            <button class="card" data-act="2" data-drill="ingest"><span class="tile"><i data-i="arrow-left-right"></i></span>Normalize</button>
+            <button class="card" data-act="3" data-drill="ingest"><span class="tile"><i data-i="list-checks"></i></span>Validate</button>
+            <button class="card" data-act="4" data-drill="property"><span class="tile"><i data-i="git-merge"></i></span>Resolve</button>
+          </div>
+          <div class="rec" id="rec"></div>
+          <div class="fan">
+            <button class="chip" data-drill="opensearch"><i data-i="scan-search"></i>Index</button>
+            <button class="chip" data-drill="redis"><i data-i="zap"></i>Cache purge</button>
+            <button class="chip" data-drill="alerts"><i data-i="bell-ring"></i>Alerts</button>
+            <button class="chip" data-drill="avm"><i data-i="badge-dollar-sign"></i>AVM</button>
+            <button class="chip" data-drill="lake"><i data-i="archive"></i>Lake</button>
+          </div>
+        </div>
+        <div class="cap"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="block walk" id="search">
+    <div class="cols">
+      <div class="prose">
+        <span class="when"><i data-i="clock"></i>Deep dive · 14 min</span>
+        <h2>Search in 200 ms</h2>
+        <p class="key">25k QPS · p95 &lt; 200 ms</p>
+        <ol class="steps"></ol>
+      </div>
+      <div class="stage-wrap">
+        <div class="stage-tools"><button class="iconbtn play" type="button"><i data-i="play"></i><span>Play</span></button></div>
+        <div class="stage">
+          <div class="ms"><span class="big" id="msv">15</span><span class="of">of 200 ms</span></div>
+          <div class="budget" id="budget"></div>
+          <div class="ticks"><span>0</span><span>50</span><span>100</span><span>150</span><span>200 ms</span></div>
+          <div class="hops" id="hops"></div>
+          <div class="card branch"><i data-i="zap" class="m"></i><b>~40% stop at the cache</b></div>
+        </div>
+        <div class="cap"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="block walk" id="geo">
+    <div class="cols">
+      <div class="prose">
+        <span class="when"><i data-i="clock"></i>Deep dive</span>
+        <h2>Geometry at write time</h2>
+        <p class="key">1M writes vs 400M reads a day</p>
+        <ol class="steps"></ol>
+      </div>
+      <div class="stage-wrap">
+        <div class="stage-tools"><button class="iconbtn play" type="button"><i data-i="play"></i><span>Play</span></button></div>
+        <div class="stage" style="padding:12px">
+          <svg class="hexsvg" id="hexsvg" viewBox="0 0 560 360" role="img" aria-label="H3 hexagon grid with a map viewport: interior cells use a term filter, the boundary ring gets an exact check"></svg>
+          <div class="card result" id="geoResult"></div>
+        </div>
+        <div class="hexlegend">
+          <span><i style="background:var(--accent-soft);box-shadow:inset 0 0 0 1px var(--accent)"></i>Interior: term filter</span>
+          <span><i style="background:var(--signal-soft);box-shadow:inset 0 0 0 1px var(--signal)"></i>Ring: exact check</span>
+          <span><i style="background:var(--ink);border-radius:50%"></i>Listing</span>
+        </div>
+        <div class="cap"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="block walk" id="alerts">
+    <div class="cols">
+      <div class="prose">
+        <span class="when"><i data-i="clock"></i>Event-driven</span>
+        <h2>Saved-search alerts</h2>
+        <p class="key">Index the queries. Stream the listings.</p>
+        <ol class="steps"></ol>
+      </div>
+      <div class="stage-wrap">
+        <div class="stage-tools"><button class="iconbtn play" type="button"><i data-i="play"></i><span>Play</span></button></div>
+        <div class="stage">
+          <div class="versus">
+            <div class="card bad" data-act="0"><span class="tile"><i data-i="rotate-ccw"></i></span><span><span class="lbl">Poll</span><br><span class="num">50k QPS</span></span></div>
+            <div class="card" data-act="1 2 3 4 5"><span class="tile"><i data-i="radio-tower"></i></span><span><span class="lbl">Stream</span><br><span class="num">~12 /s</span></span></div>
+          </div>
+          <div class="chain">
+            <button class="card" data-act="1" data-drill="event"><span class="tile"><i data-i="activity"></i></span><span>property.changed</span><small>by property_id</small></button>
+            <button class="card" data-act="2" data-drill="alerts"><span class="tile"><i data-i="filter"></i></span><span>Classify</span><small>~30% matter</small></button>
+            <button class="card" data-act="3" data-drill="cell"><span class="tile"><i data-i="hexagon"></i></span><span>Match by H3 cell</span><small>~20 GB RAM</small></button>
+            <button class="card" data-act="4" data-drill="dynamo"><span class="tile"><i data-i="copy-check"></i></span><span>Dedupe</span><small>KV store + TTL</small></button>
+            <button class="card" data-act="5" data-drill="notification"><span class="tile"><i data-i="smartphone"></i></span><span>Push · email · in-app</span><small>p95 &lt; 60 s</small></button>
+          </div>
+          <div class="slip"><span class="tile"><i data-i="trending-down"></i></span><span><b>Price drop on a saved home</b><small>$549,900 → $529,000</small></span></div>
+        </div>
+        <div class="cap"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="block walk" id="peaks">
+    <div class="cols">
+      <div class="prose">
+        <span class="when"><i data-i="clock"></i>Scaling · 6 min</span>
+        <h2>Spring peaks</h2>
+        <p class="key">2× reads · flat writes · 99.95%</p>
+        <ol class="steps"></ol>
+      </div>
+      <div class="stage-wrap">
+        <div class="stage-tools"><button class="iconbtn play" type="button"><i data-i="play"></i><span>Play</span></button></div>
+        <div class="stage" style="padding:16px 12px 12px">
+          <svg class="chart" id="chart" viewBox="0 0 600 320" role="img" aria-label="Search QPS over one week: normal, spring, what reaches the index, and the scheduled floor"></svg>
+          <div class="ladder">
+            <span class="lbl">Give up, cheapest first</span>
+            <ol>
+              <li><span class="tile"><i data-i="clock"></i></span>Cache 60 s → 5 min</li>
+              <li><span class="tile"><i data-i="list-ordered"></i></span>Skip personal re-rank</li>
+              <li><span class="tile"><i data-i="calendar"></i></span>Precomputed values only</li>
+              <li><span class="tile"><i data-i="pause"></i></span>Pause batch and digests</li>
+            </ol>
+            <div class="never"><span class="tile"><i data-i="shield"></i></span><span><b>Never:</b> search, listings, contact agent, mortgage</span></div>
+          </div>
+        </div>
+        <div class="chartleg">
+          <span><i style="background:var(--ink-3)"></i>Normal</span>
+          <span><i style="background:var(--ink)"></i>Spring</span>
+          <span><i style="background:var(--accent)"></i>Reaches index</span>
+          <span><i style="background:var(--signal)"></i>Scheduled floor</span>
+          <span>Illustrative shape</span>
+        </div>
+        <div class="cap"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="block" id="decisions">
+    <div class="sec-head"><h2>Seven decisions</h2></div>
+    <p class="sec-lead">What I chose, what I gave up.</p>
+    <div class="tablebox"><table class="dec" id="dec"><thead><tr><th>Area</th><th>Chose</th><th>Over</th><th>Because</th></tr></thead><tbody></tbody></table></div>
+    <div class="ninety">
+      <div class="card"><span class="tile"><i data-i="flask-conical"></i></span>Pilot 3 MLSs end to end</div>
+      <div class="card"><span class="tile"><i data-i="gauge"></i></span>Load-test search</div>
+      <div class="card"><span class="tile"><i data-i="handshake"></i></span>Agree feed SLOs</div>
+    </div>
+  </section>
+</main>
+
+<div class="scrim" id="scrim" hidden></div>
+<div class="layer" id="layer" hidden role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+  <article class="sheet" id="sheet"></article>
+  <aside class="talk" id="talk" aria-label="Talking points"></aside>
+</div>
+
+<script>
+(function () {
+"use strict";
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+/* Lucide 0.460 (ISC), only the icons this page uses */
+const ICONS = {"activity":"<path d=\"M22 12h-2.48a2 2 0 0 0-1.93 1.46l-2.35 8.36a.25.25 0 0 1-.48 0L9.24 2.18a.25.25 0 0 0-.48 0l-2.35 8.36A2 2 0 0 1 4.49 12H2\"/>","archive":"<rect width=\"20\" height=\"5\" x=\"2\" y=\"3\" rx=\"1\"/> <path d=\"M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8\"/> <path d=\"M10 12h4\"/>","arrow-left-right":"<path d=\"M8 3 4 7l4 4\"/> <path d=\"M4 7h16\"/> <path d=\"m16 21 4-4-4-4\"/> <path d=\"M20 17H4\"/>","arrow-up-down":"<path d=\"m21 16-4 4-4-4\"/> <path d=\"M17 20V4\"/> <path d=\"m3 8 4-4 4 4\"/> <path d=\"M7 4v16\"/>","badge-dollar-sign":"<path d=\"M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.77 4.78 4 4 0 0 1-6.75 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.76Z\"/> <path d=\"M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8\"/> <path d=\"M12 18V6\"/>","bell":"<path d=\"M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9\"/> <path d=\"M10.3 21a1.94 1.94 0 0 0 3.4 0\"/>","bell-ring":"<path d=\"M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9\"/> <path d=\"M10.3 21a1.94 1.94 0 0 0 3.4 0\"/> <path d=\"M4 2C2.8 3.7 2 5.7 2 8\"/> <path d=\"M22 8c0-2.3-.8-4.3-2-6\"/>","bookmark":"<path d=\"m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z\"/>","boxes":"<path d=\"M2.97 12.92A2 2 0 0 0 2 14.63v3.24a2 2 0 0 0 .97 1.71l3 1.8a2 2 0 0 0 2.06 0L12 19v-5.5l-5-3-4.03 2.42Z\"/> <path d=\"m7 16.5-4.74-2.85\"/> <path d=\"m7 16.5 5-3\"/> <path d=\"M7 16.5v5.17\"/> <path d=\"M12 13.5V19l3.97 2.38a2 2 0 0 0 2.06 0l3-1.8a2 2 0 0 0 .97-1.71v-3.24a2 2 0 0 0-.97-1.71L17 10.5l-5 3Z\"/> <path d=\"m17 16.5-5-3\"/> <path d=\"m17 16.5 4.74-2.85\"/> <path d=\"M17 16.5v5.17\"/> <path d=\"M7.97 4.42A2 2 0 0 0 7 6.13v4.37l5 3 5-3V6.13a2 2 0 0 0-.97-1.71l-3-1.8a2 2 0 0 0-2.06 0l-3 1.8Z\"/> <path d=\"M12 8 7.26 5.15\"/> <path d=\"m12 8 4.74-2.85\"/> <path d=\"M12 13.5V8\"/>","calendar":"<path d=\"M8 2v4\"/> <path d=\"M16 2v4\"/> <rect width=\"18\" height=\"18\" x=\"3\" y=\"4\" rx=\"2\"/> <path d=\"M3 10h18\"/>","clock":"<circle cx=\"12\" cy=\"12\" r=\"10\"/> <polyline points=\"12 6 12 12 16 14\"/>","cloud":"<path d=\"M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z\"/>","copy-check":"<path d=\"m12 15 2 2 4-4\"/> <rect width=\"14\" height=\"14\" x=\"8\" y=\"8\" rx=\"2\" ry=\"2\"/> <path d=\"M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2\"/>","database":"<ellipse cx=\"12\" cy=\"5\" rx=\"9\" ry=\"3\"/> <path d=\"M3 5V19A9 3 0 0 0 21 19V5\"/> <path d=\"M3 12A9 3 0 0 0 21 12\"/>","door-open":"<path d=\"M13 4h3a2 2 0 0 1 2 2v14\"/> <path d=\"M2 20h3\"/> <path d=\"M13 20h9\"/> <path d=\"M10 12v.01\"/> <path d=\"M13 4.562v16.157a1 1 0 0 1-1.242.97L5 20V5.562a2 2 0 0 1 1.515-1.94l4-1A2 2 0 0 1 13 4.561Z\"/>","file-text":"<path d=\"M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z\"/> <path d=\"M14 2v4a2 2 0 0 0 2 2h4\"/> <path d=\"M10 9H8\"/> <path d=\"M16 13H8\"/> <path d=\"M16 17H8\"/>","filter":"<polygon points=\"22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3\"/>","flask-conical":"<path d=\"M10 2v7.527a2 2 0 0 1-.211.896L4.72 20.55a1 1 0 0 0 .9 1.45h12.76a1 1 0 0 0 .9-1.45l-5.069-10.127A2 2 0 0 1 14 9.527V2\"/> <path d=\"M8.5 2h7\"/> <path d=\"M7 16h10\"/>","gauge":"<path d=\"m12 14 4-4\"/> <path d=\"M3.34 19a10 10 0 1 1 17.32 0\"/>","git-merge":"<circle cx=\"18\" cy=\"18\" r=\"3\"/> <circle cx=\"6\" cy=\"6\" r=\"3\"/> <path d=\"M6 21V9a9 9 0 0 0 9 9\"/>","globe":"<circle cx=\"12\" cy=\"12\" r=\"10\"/> <path d=\"M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20\"/> <path d=\"M2 12h20\"/>","hammer":"<path d=\"m15 12-8.373 8.373a1 1 0 1 1-3-3L12 9\"/> <path d=\"m18 15 4-4\"/> <path d=\"m21.5 11.5-1.914-1.914A2 2 0 0 1 19 8.172V7l-2.26-2.26a6 6 0 0 0-4.202-1.756L9 2.96l.92.82A6.18 6.18 0 0 1 12 8.4V10l2 2h1.172a2 2 0 0 1 1.414.586L18.5 14.5\"/>","handshake":"<path d=\"m11 17 2 2a1 1 0 1 0 3-3\"/> <path d=\"m14 14 2.5 2.5a1 1 0 1 0 3-3l-3.88-3.88a3 3 0 0 0-4.24 0l-.88.88a1 1 0 1 1-3-3l2.81-2.81a5.79 5.79 0 0 1 7.06-.87l.47.28a2 2 0 0 0 1.42.25L21 4\"/> <path d=\"m21 3 1 11h-2\"/> <path d=\"M3 3 2 14l6.5 6.5a1 1 0 1 0 3-3\"/> <path d=\"M3 4h8\"/>","hard-drive":"<line x1=\"22\" x2=\"2\" y1=\"12\" y2=\"12\"/> <path d=\"M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z\"/> <line x1=\"6\" x2=\"6.01\" y1=\"16\" y2=\"16\"/> <line x1=\"10\" x2=\"10.01\" y1=\"16\" y2=\"16\"/>","hard-drive-download":"<path d=\"M12 2v8\"/> <path d=\"m16 6-4 4-4-4\"/> <rect width=\"20\" height=\"8\" x=\"2\" y=\"14\" rx=\"2\"/> <path d=\"M6 18h.01\"/> <path d=\"M10 18h.01\"/>","hexagon":"<path d=\"M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z\"/>","house":"<path d=\"M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8\"/> <path d=\"M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z\"/>","image":"<rect width=\"18\" height=\"18\" x=\"3\" y=\"3\" rx=\"2\" ry=\"2\"/> <circle cx=\"9\" cy=\"9\" r=\"2\"/> <path d=\"m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21\"/>","key-round":"<path d=\"M2.586 17.414A2 2 0 0 0 2 18.828V21a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h1a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h.172a2 2 0 0 0 1.414-.586l.814-.814a6.5 6.5 0 1 0-4-4z\"/> <circle cx=\"16.5\" cy=\"7.5\" r=\".5\" fill=\"currentColor\"/>","landmark":"<line x1=\"3\" x2=\"21\" y1=\"22\" y2=\"22\"/> <line x1=\"6\" x2=\"6\" y1=\"18\" y2=\"11\"/> <line x1=\"10\" x2=\"10\" y1=\"18\" y2=\"11\"/> <line x1=\"14\" x2=\"14\" y1=\"18\" y2=\"11\"/> <line x1=\"18\" x2=\"18\" y1=\"18\" y2=\"11\"/> <polygon points=\"12 2 20 7 4 7\"/>","layers":"<path d=\"m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z\"/> <path d=\"m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65\"/> <path d=\"m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65\"/>","list-checks":"<path d=\"m3 17 2 2 4-4\"/> <path d=\"m3 7 2 2 4-4\"/> <path d=\"M13 6h8\"/> <path d=\"M13 12h8\"/> <path d=\"M13 18h8\"/>","list-ordered":"<path d=\"M10 12h11\"/> <path d=\"M10 18h11\"/> <path d=\"M10 6h11\"/> <path d=\"M4 10h2\"/> <path d=\"M4 6h1v4\"/> <path d=\"M6 18H4c0-1 2-2 2-3s-1-1.5-2-1\"/>","map-pin":"<path d=\"M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0\"/> <circle cx=\"12\" cy=\"10\" r=\"3\"/>","memory-stick":"<path d=\"M6 19v-3\"/> <path d=\"M10 19v-3\"/> <path d=\"M14 19v-3\"/> <path d=\"M18 19v-3\"/> <path d=\"M8 11V9\"/> <path d=\"M16 11V9\"/> <path d=\"M12 11V9\"/> <path d=\"M2 15h20\"/> <path d=\"M2 7a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v1.1a2 2 0 0 0 0 3.837V17a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-5.1a2 2 0 0 0 0-3.837Z\"/>","mic":"<path d=\"M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z\"/> <path d=\"M19 10v2a7 7 0 0 1-14 0v-2\"/> <line x1=\"12\" x2=\"12\" y1=\"19\" y2=\"22\"/>","monitor-smartphone":"<path d=\"M18 8V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h8\"/> <path d=\"M10 19v-3.96 3.15\"/> <path d=\"M7 19h5\"/> <rect width=\"6\" height=\"10\" x=\"16\" y=\"12\" rx=\"2\"/>","mouse-pointer-click":"<path d=\"M14 4.1 12 6\"/> <path d=\"m5.1 8-2.9-.8\"/> <path d=\"m6 12-1.9 2\"/> <path d=\"M7.2 2.2 8 5.1\"/> <path d=\"M9.037 9.69a.498.498 0 0 1 .653-.653l11 4.5a.5.5 0 0 1-.074.949l-4.349 1.041a1 1 0 0 0-.74.739l-1.04 4.35a.5.5 0 0 1-.95.074z\"/>","pause":"<rect x=\"14\" y=\"4\" width=\"4\" height=\"16\" rx=\"1\"/> <rect x=\"6\" y=\"4\" width=\"4\" height=\"16\" rx=\"1\"/>","pen-line":"<path d=\"M12 20h9\"/> <path d=\"M16.376 3.622a1 1 0 0 1 3.002 3.002L7.368 18.635a2 2 0 0 1-.855.506l-2.872.838a.5.5 0 0 1-.62-.62l.838-2.872a2 2 0 0 1 .506-.854z\"/>","play":"<polygon points=\"6 3 20 12 6 21 6 3\"/>","plug":"<path d=\"M12 22v-5\"/> <path d=\"M9 8V2\"/> <path d=\"M15 8V2\"/> <path d=\"M18 8v5a4 4 0 0 1-4 4h-4a4 4 0 0 1-4-4V8Z\"/>","radio-tower":"<path d=\"M4.9 16.1C1 12.2 1 5.8 4.9 1.9\"/> <path d=\"M7.8 4.7a6.14 6.14 0 0 0-.8 7.5\"/> <circle cx=\"12\" cy=\"9\" r=\"2\"/> <path d=\"M16.2 4.8c2 2 2.26 5.11.8 7.47\"/> <path d=\"M19.1 1.9a9.96 9.96 0 0 1 0 14.1\"/> <path d=\"M9.5 18h5\"/> <path d=\"m8 22 4-11 4 11\"/>","rotate-ccw":"<path d=\"M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8\"/> <path d=\"M3 3v5h5\"/>","rss":"<path d=\"M4 11a9 9 0 0 1 9 9\"/> <path d=\"M4 4a16 16 0 0 1 16 16\"/> <circle cx=\"5\" cy=\"19\" r=\"1\"/>","scale":"<path d=\"m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z\"/> <path d=\"m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z\"/> <path d=\"M7 21h10\"/> <path d=\"M12 3v18\"/> <path d=\"M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2\"/>","scan-search":"<path d=\"M3 7V5a2 2 0 0 1 2-2h2\"/> <path d=\"M17 3h2a2 2 0 0 1 2 2v2\"/> <path d=\"M21 17v2a2 2 0 0 1-2 2h-2\"/> <path d=\"M7 21H5a2 2 0 0 1-2-2v-2\"/> <circle cx=\"12\" cy=\"12\" r=\"3\"/> <path d=\"m16 16-1.9-1.9\"/>","search":"<circle cx=\"11\" cy=\"11\" r=\"8\"/> <path d=\"m21 21-4.3-4.3\"/>","send":"<path d=\"M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z\"/> <path d=\"m21.854 2.147-10.94 10.939\"/>","shield":"<path d=\"M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z\"/>","sliders-horizontal":"<line x1=\"21\" x2=\"14\" y1=\"4\" y2=\"4\"/> <line x1=\"10\" x2=\"3\" y1=\"4\" y2=\"4\"/> <line x1=\"21\" x2=\"12\" y1=\"12\" y2=\"12\"/> <line x1=\"8\" x2=\"3\" y1=\"12\" y2=\"12\"/> <line x1=\"21\" x2=\"16\" y1=\"20\" y2=\"20\"/> <line x1=\"12\" x2=\"3\" y1=\"20\" y2=\"20\"/> <line x1=\"14\" x2=\"14\" y1=\"2\" y2=\"6\"/> <line x1=\"8\" x2=\"8\" y1=\"10\" y2=\"14\"/> <line x1=\"16\" x2=\"16\" y1=\"18\" y2=\"22\"/>","smartphone":"<rect width=\"14\" height=\"20\" x=\"5\" y=\"2\" rx=\"2\" ry=\"2\"/> <path d=\"M12 18h.01\"/>","tag":"<path d=\"M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.42 0l6.58-6.58a2.426 2.426 0 0 0 0-3.42z\"/> <circle cx=\"7.5\" cy=\"7.5\" r=\".5\" fill=\"currentColor\"/>","trending-down":"<polyline points=\"22 17 13.5 8.5 8.5 13.5 2 7\"/> <polyline points=\"16 17 22 17 22 11\"/>","users":"<path d=\"M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2\"/> <circle cx=\"9\" cy=\"7\" r=\"4\"/> <path d=\"M22 21v-2a4 4 0 0 0-3-3.87\"/> <path d=\"M16 3.13a4 4 0 0 1 0 7.75\"/>","workflow":"<rect width=\"8\" height=\"8\" x=\"3\" y=\"3\" rx=\"2\"/> <path d=\"M7 11v4a2 2 0 0 0 2 2h4\"/> <rect width=\"8\" height=\"8\" x=\"13\" y=\"13\" rx=\"2\"/>","x":"<path d=\"M18 6 6 18\"/> <path d=\"m6 6 12 12\"/>","zap":"<path d=\"M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z\"/>"};
+const ic = (n, cls = "") => ICONS[n] ? `<svg class="ic ${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[n]}</svg>` : "";
+const paintIcons = root => $$("i[data-i]", root).forEach(el => { el.outerHTML = ic(el.dataset.i, el.className); });
+
+/* ---------- Every drillable thing ----------
+   i icon · k kind · t title · p purpose · s state · a actions · op how it works · n numbers · pt key point · qa [question, answer cue] · rel */
+const D = {
+  clients: { i: "monitor-smartphone", k: "Clients", t: "Web, iOS, Android", p: "Search the map, open listings, save searches.", s: "Viewport, filters, favorites", a: ["search", "pan", "save", "contact"], op: "Tile-snapped requests, so neighbors share cache.", n: [["100M", "MAU"], ["20M", "DAU"], ["35M", "spring Sunday"]], pt: "SSR for SEO", qa: [["Why server-side rendering?", "Listing pages drive organic traffic. Crawlable, fast first paint."]], rel: ["cdn", "gateway", "maps"] },
+  cdn: { i: "globe", k: "Edge", t: "CDN + WAF", p: "Serve every cacheable byte from the edge.", s: "Pages, tiles (30–60 s), photos · e.g. Cloud CDN + Cloud Armor", a: ["serve", "revalidate", "block bots"], op: "Origin hiccup? Serve stale while refreshing.", n: [["~170 Gbps", "peak egress"], [">95%", "photo hits"], ["~90%", "of bytes"]], pt: "Photos are the bytes", qa: [["Biggest cost?", "Photos. Archive originals: ~$160k → ~$30k a month."]], rel: ["media", "redis", "n-egress"] },
+  media: { i: "image", k: "Edge", t: "Media pipeline", p: "Device-sized photos, tours, video.", s: "Originals archived, sizes hot", a: ["resize", "transcode", "dedupe"], op: "Same photo twice? Stored once by content hash.", n: [["7.5 PB", "originals"], ["~1.5 PB", "sizes, hot"]], pt: "Tours are just media", qa: [["Do you build 3D tours?", "No. Embed a vendor; store and serve the assets."]], rel: ["cdn", "n-photos"] },
+  gateway: { i: "door-open", k: "Gateway", t: "API gateway / BFF", p: "One front door.", s: "Rate limits, flags, priority classes", a: ["auth", "rate limit", "SSR", "shed"], op: "Overload sheds low priority first.", n: [["10 ms", "p95 budget"]], pt: "Shedding lives here", qa: [["What triggers shedding?", "CPU, queue depth, p95. Manual override."]], rel: ["peaks-ladder", "search"] },
+  search: { i: "search", k: "Service", t: "Search", p: "Any shape, any filter, under 200 ms.", s: "Stateless", a: ["H3 cover", "query", "re-rank", "hydrate"], op: "One shard group → top 500 → re-rank 200 → hydrate.", n: [["~25k", "peak QPS"], ["40k", "design"], ["200 ms", "p95"], ["300 ms", "1k-pin map"]], pt: "Buy the engine, build the index", qa: [["Is 70 ms for OpenSearch real?", "A target. Load-test on production-shaped data."], ["How does ranking work?", "Filters + quality score, then a 20 ms re-rank. No protected-class features."]], rel: ["opensearch", "redis", "features", "cell", "maps"] },
+  maps: { i: "map-pin", k: "Concept", t: "Map pins", p: "1,000+ pins in under 300 ms.", s: "Clusters zoomed out, pins zoomed in", a: ["snap to tiles", "cluster", "GPU render"], op: "Zoomed out: ~200 clusters, not 40k pins.", n: [["16 B", "per pin"], ["~24 KB", "1,500 pins"], ["~40 ms", "tile hit"]], pt: "Payload problem, not query problem", qa: [["What about 10,000 pins?", "Cap ~2,000. Switch to clusters or a list."]], rel: ["cell", "cdn", "search"] },
+  property: { i: "house", k: "Service · concept", t: "Property", p: "One identity per physical home.", s: "property_id = county FIPS + APN", a: ["resolve", "merge", "upsert", "emit"], op: "Two MLSs, same house → one property_id.", n: [["200M", "properties"], ["~2 TB", "golden records"]], pt: "One place to write a fact", qa: [["No parcel number?", "Address + proximity. Low confidence → review queue."]], rel: ["postgres", "event", "listing", "ingest"] },
+  avm: { i: "badge-dollar-sign", k: "Service", t: "Valuation (AVM)", p: "A value for all 200M homes.", s: "Nightly values in Redis", a: ["score nightly", "re-estimate"], op: "Nightly batch on spot. Live re-estimate under 1 s.", n: [["~55", "CPU-hours / night"], ["< 1 s", "re-estimate"]], pt: "Build it: the differentiator", qa: [["Training leakage?", "Iceberg time travel: train on what we knew then."]], rel: ["features", "lake", "redis"] },
+  agents: { i: "handshake", k: "Service", t: "Agent marketplace", p: "Connect buyers with agents.", s: "Agents, leads", a: ["contact agent", "route lead"], op: "Strongly consistent. Never shed.", n: [], pt: "The revenue event", qa: [["Is the CRM in scope?", "No. We route leads into it."]], rel: ["gateway", "peaks-ladder"] },
+  mortgage: { i: "landmark", k: "Service · isolated", t: "Mortgage", p: "Pre-approval and rate comparison.", s: "Encrypted Postgres in its own GCP project", a: ["pre-approve", "compare", "consent"], op: "One region, field encryption, every access logged.", n: [], pt: "We're not the lender", qa: [["Why isolate it?", "Small blast radius, clean audit boundary."]], rel: ["build"] },
+  alerts: { i: "bell-ring", k: "Service", t: "Saved-search alerts", p: "Matching homes to the buyer in under 60 s.", s: "30M searches indexed by H3 cell", a: ["classify", "match", "dedupe", "deliver"], op: "Change → cell → candidates → filters → one push.", n: [["30M", "searches"], ["~20 GB", "in RAM"], ["15M", "matches / day"], ["< 60 s", "p95"]], pt: "Index the queries, stream the listings", qa: [["Why not the percolator?", "Fine for v1. Custom gives predictable latency."], ["Safety net?", "Nightly re-run of the last 24 h. Dedupe blocks doubles."]], rel: ["savedsearch", "cell", "dynamo", "notification", "n-alerts"] },
+  opensearch: { i: "scan-search", k: "Store", t: "OpenSearch", p: "Filters, geo and facets in ms.", s: "Hot 20 GB (8 shards) · warm 400 GB (16) · self-run on GKE or Elastic Cloud", a: ["query", "versioned index", "alias swap"], op: "Rebuild behind an alias. Rollback = one swap.", n: [["~20 GB", "hot"], ["~400 GB", "warm"], ["~27", "nodes at 40k"]], pt: "The searchable set is small", qa: [["One index, filtered on status?", "400 GB hot instead of 20. Doesn't fit in RAM."], ["Hot spots?", "Shard by traffic. NYC and LA get their own."]], rel: ["searchdoc", "search", "n-index"] },
+  redis: { i: "zap", k: "Store", t: "Redis", p: "Sub-millisecond reads.", s: "Query cache, cards, AVM, features · e.g. Memorystore", a: ["MGET", "purge on event"], op: "Key = normalized query + tile → ~40% hits.", n: [["~40%", "cache hit"], ["5 ms", "budget"]], pt: "Tiles are shared, viewports aren't", qa: [["How does it stay fresh?", "Purge on event. 30–60 s TTL for pins."]], rel: ["search", "event"] },
+  postgres: { i: "database", k: "Store", t: "PostgreSQL", p: "The only place a property fact is written.", s: "~2 TB, partitioned by property_id · e.g. AlloyDB or Cloud SQL", a: ["upsert + outbox", "detail reads"], op: "Record + outbox in one transaction → Debezium → Kafka.", n: [["~12/s", "writes"], ["~500/s", "bursts"], ["< 1 s", "replica lag"]], pt: "Writes are tiny, correctness is hard", qa: [["Why not event sourcing?", "Replay already exists. Current state stays simple."], ["Why one writer region?", "Tiny writes, no conflicts. West coast pays +60–70 ms."]], rel: ["event", "property", "lake"] },
+  dynamo: { i: "key-round", k: "Store", t: "Key-value store", p: "Remember what was sent.", s: "Idempotency keys + TTL · e.g. Bigtable", a: ["check-and-set", "expire"], op: "Three searches match → one push.", n: [], pt: "Dedupe with auto-expiry", qa: [], rel: ["notification", "alerts"] },
+  lake: { i: "archive", k: "Store", t: "Lake (object storage + Iceberg)", p: "Raw payloads and 30 years of history.", s: "Raw zone · Iceberg by state/year · e.g. GCS + BigLake", a: ["land", "replay", "time travel"], op: "Mapping bug? Replay, don't re-pull.", n: [["tens of TB", "history"]], pt: "Everything is rebuildable", qa: [], rel: ["ingest", "avm"] },
+  features: { i: "sliders-horizontal", k: "Store", t: "Feature store", p: "Inputs for re-rank and AVM.", s: "~50 features, Redis-backed", a: ["read", "refresh on event"], op: "Past the deadline? Skip it.", n: [["~50", "features"], ["20 ms", "re-rank"]], pt: "Personalization is optional", qa: [["Fair housing?", "No protected classes or proxies. Disparate-impact tests."]], rel: ["search", "avm"] },
+  kafka: { i: "radio-tower", k: "Events", t: "Kafka", p: "Every change to every read model.", s: "4 topics, schema registry · e.g. Managed Service for Apache Kafka", a: ["publish", "consume", "replay"], op: "Keyed by property_id → ordered. Versions → safe replay.", n: [["~12/s", "average"], ["~500/s", "bursts"]], pt: "One write path, many read models", qa: [["Schema changes?", "Registry + compatibility checks in CI. Dead-letter queues."]], rel: ["event", "postgres", "opensearch", "alerts"] },
+  sources: { i: "rss", k: "Sources", t: "MLS feeds + public data", p: "Where every fact comes from.", s: "800+ MLSs, counties, schools, crime", a: ["poll", "nightly key pull"], op: "800 MLSs run on ~15 vendor platforms → ~15 adapters.", n: [["800+", "feeds"], ["~15", "adapters"], ["1M", "updates / day"]], pt: "Own the supply", qa: [["Why not one aggregator?", "Some are competitors (Bridge is Zillow's). Own normalization."]], rel: ["feed", "ingest", "build"] },
+  ingest: { i: "filter", k: "Ingest", t: "Ingest pipeline", p: "800 messy feeds → one canonical model.", s: "Versioned mappings, quarantine, review queue", a: ["connect", "land", "normalize", "validate", "resolve"], op: "Fails validation? Quarantine. Last good version stays live.", n: [["99.9%", "accuracy"], ["5 min", "p95 freshness"]], pt: "New MLS = config, not deploy", qa: [["How do you catch deletes?", "Nightly full-key diff per feed."], ["How do you measure 99.9%?", "Reconcile vs source, provenance, sampled audits."]], rel: ["pipeline", "feed", "property", "lake"] },
+  listing: { i: "tag", k: "Concept", t: "Listing", p: "An offer on a property.", s: "Status, price, version, MLS id", a: ["list", "reprice", "pend", "sell"], op: "Price cut → searchable + one alert in ~1 min.", n: [["~5M", "active"]], pt: "House ≠ offer", qa: [], rel: ["property", "searchdoc", "event"] },
+  feed: { i: "plug", k: "Concept", t: "Feed", p: "One MLS's changes, at its own pace.", s: "Cursor, mapping version, SLO", a: ["poll", "land", "replay", "reconcile"], op: "Each poll moves the cursor. Nightly diff catches deletes.", n: [["1–15 min", "cadence"]], pt: "Can't be fresher than the source", qa: [["How do you spot a broken feed?", "Alert on silence. Storm guard on 5× spikes."]], rel: ["sources", "ingest"] },
+  searchdoc: { i: "file-text", k: "Concept", t: "Search document", p: "A 4 KB doc built for filtering.", s: "Filters, H3 r5/r7/r9, district, version", a: ["index", "reject stale"], op: "Late, older event? Its version loses.", n: [["~4 KB", "per doc"], ["1–2 s", "to searchable"]], pt: "Display data stays out", qa: [], rel: ["opensearch", "cell"] },
+  cell: { i: "hexagon", k: "Concept", t: "H3 cell", p: "One grid for search, maps and alerts.", s: "64-bit id, resolution, parent", a: ["cover", "roll up", "look up"], op: "Interior = term filter. Only the ring pays for geometry.", n: [["~250 km²", "res 5"], ["~5 km²", "res 7"], ["~0.1 km²", "res 9"]], pt: "One grid everywhere", qa: [["Why not geo_shape?", "Used on the ring only. Everywhere = slow and uncacheable."]], rel: ["geo", "maps", "alerts"] },
+  savedsearch: { i: "bookmark", k: "Concept", t: "Saved search", p: "Tell me when a match appears.", s: "~40 cells + compiled filters", a: ["save", "match", "mute"], op: "Saved → cells → posting lists. Same DSL as search.", n: [["30M", "searches"], ["~40", "cells each"]], pt: "Search and alerts agree", qa: [["Manhattan?", "~200k candidates, ~10 ms."]], rel: ["alerts", "cell"] },
+  notification: { i: "bell", k: "Concept", t: "Notification", p: "Deliver once, at a good time.", s: "Key, TTL, quiet hours, caps", a: ["dedupe", "merge", "send", "digest"], op: "Three matches, one push.", n: [["< 60 s", "p95"]], pt: "TCPA and CAN-SPAM", qa: [], rel: ["dynamo", "alerts"] },
+  event: { i: "activity", k: "Concept", t: "property.changed", p: "A fact changed.", s: "Key property_id, version, schema", a: ["publish", "consume", "replay"], op: "Replay from zero rebuilds any read model.", n: [], pt: "The index is a projection", qa: [], rel: ["kafka", "postgres"] },
+  "n-qps": { i: "gauge", k: "Number", t: "~25k search QPS", p: "20M × 20 searches = 400M a day.", s: "4.6k avg × 2.5 evening × 2 spring", a: [], op: "2× wrong? Add replicas.", n: [["4.6k", "average"], ["12k", "evening"], ["25k", "spring"], ["40k", "design"]], pt: "Map pans count as searches", qa: [], rel: ["search", "peaks"] },
+  "n-egress": { i: "image", k: "Number", t: "~170 Gbps egress", p: "9k views/s × 15 photos × 150 KB.", s: "≈ 20 GB/s at peak", a: [], op: "CDN only, above 95% hit rate.", n: [["9k/s", "listing views"], ["150 KB", "per photo"]], pt: "A top cost line", qa: [], rel: ["cdn", "media"] },
+  "n-writes": { i: "pen-line", k: "Number", t: "12 writes / s", p: "1M updates ÷ 86,400 s.", s: "Bursts near 500/s", a: [], op: "Reads outnumber writes 1,000 to 1.", n: [["1M", "per day"], ["~500/s", "bursts"]], pt: "Correctness, not throughput", qa: [], rel: ["ingest", "postgres"] },
+  "n-index": { i: "memory-stick", k: "Number", t: "~20 GB hot index", p: "5M active listings × 4 KB.", s: "All 200M would be ~400 GB", a: [], op: "Fits in RAM → every region holds a copy.", n: [["5M", "active"], ["4 KB", "per doc"]], pt: "The biggest single win", qa: [], rel: ["opensearch"] },
+  "n-photos": { i: "hard-drive", k: "Number", t: "7.5 PB of photos", p: "100M homes × 25 photos × 3 MB.", s: "~99% of all bytes", a: [], op: "Originals → archive tier.", n: [["~$160k", "standard / mo"], ["~$30k", "archive / mo"]], pt: "Cost is a media problem", qa: [], rel: ["media", "cdn"] },
+  "n-alerts": { i: "bell-ring", k: "Number", t: "15M matches / day", p: "~300k changes × ~50 searches each.", s: "Highly skewed", a: [], op: "Polling: 50k QPS. Streaming: ~12/s.", n: [["~300k", "changes"], ["~50", "matches each"]], pt: "Flip the query", qa: [], rel: ["alerts"] },
+  "peaks-ladder": { i: "trending-down", k: "Scaling", t: "Degradation ladder", p: "Bend, don't break.", s: "Flags + shedding at the gateway", a: ["longer TTL", "skip re-rank", "precomputed", "pause batch"], op: "Cheapest loss first. Core paths never shed.", n: [], pt: "Rate cut? Viral story? Bend.", qa: [], rel: ["gateway", "peaks"] },
+  build: { i: "hammer", k: "Decision", t: "Build vs buy", p: "Build where accuracy is the product.", s: "Build: normalization, ranking, geo, AVM · Buy: infra, maps, notifications · Partner: mortgage", a: [], op: "Every vendor behind our own interface.", n: [], pt: "Relevance is product, engine is commodity", qa: [], rel: ["sources", "mortgage", "avm"] }
+};
+const SECTION_LINKS = { pipeline: ["#pipeline", "Pipeline walk"], geo: ["#geo", "Geo walk"], peaks: ["#peaks", "Peaks walk"] };
+
+/* ---------- Layers ---------- */
+const LAYERS = [
+  { n: "Sources + ingest", c: ["sources", "ingest"], holds: "800+ feeds → canonical model", ground: true },
+  { n: "Events", c: ["kafka", "event"], holds: "property.changed", i: "radio-tower" },
+  { n: "Data", c: ["postgres", "opensearch", "redis", "dynamo", "lake", "features"], holds: "1 golden record, many read models", i: "database" },
+  { n: "Services", c: ["search", "property", "avm", "agents", "mortgage", "alerts"], holds: "Search, property, AVM, agents, mortgage, alerts", i: "boxes" },
+  { n: "Gateway", c: ["gateway"], holds: "Auth, limits, SSR, shedding", i: "door-open" },
+  { n: "Edge", c: ["cdn", "media"], holds: "Pages, tiles, photos", i: "globe" },
+  { n: "Clients", c: ["clients", "maps"], holds: "Web, iOS, Android", i: "monitor-smartphone" }
+];
+LAYERS[0].i = "rss";
+const short = id => ({ sources: "MLS feeds", ingest: "Ingest", kafka: "Kafka", event: "property.changed", postgres: "Postgres", opensearch: "OpenSearch", redis: "Redis", dynamo: "KV store", lake: "Lake", features: "Features", search: "Search", property: "Property", avm: "AVM", agents: "Agents", mortgage: "Mortgage", alerts: "Alerts", gateway: "Gateway", cdn: "CDN", media: "Media", clients: "Apps", maps: "Map pins" }[id] || D[id].t);
+
+const iso = $("#iso");
+const tbody = $("#layerTable tbody");
+LAYERS.forEach((L, i) => {
+  const pl = document.createElement("div");
+  pl.className = "plate" + (L.ground ? " ground" : "");
+  pl.style.setProperty("--i", i);
+  pl.dataset.i = i;
+  pl.innerHTML = `<div class="pl">${esc(L.n)}</div><div class="chips">${L.c.map(id => `<button class="chip" type="button" data-drill="${id}">${ic(D[id].i)}${esc(short(id))}</button>`).join("")}</div>`;
+  iso.appendChild(pl);
+  const tr = document.createElement("tr");
+  tr.className = "row"; tr.dataset.i = i; tr.tabIndex = 0;
+  tr.innerHTML = `<td>${ic(L.i)}${esc(L.n)}</td><td>${esc(L.holds)}</td>`;
+  tbody.prepend(tr);
+});
+let selLayer = -1;
+const hotLayer = (i, on) => $$(`.plate[data-i="${i}"], #layerTable tr[data-i="${i}"]`).forEach(el => el.classList.toggle("hot", on));
+function selectLayer(i) {
+  selLayer = selLayer === i ? -1 : i;
+  $$(".plate, #layerTable tr.row").forEach(el => el.classList.toggle("sel", +el.dataset.i === selLayer));
+  iso.classList.toggle("focus", selLayer >= 0);
+}
+$$(".plate, #layerTable tr.row").forEach(el => {
+  el.addEventListener("mouseenter", () => hotLayer(el.dataset.i, true));
+  el.addEventListener("mouseleave", () => hotLayer(el.dataset.i, false));
+  el.addEventListener("click", e => { if (!e.target.closest("[data-drill]")) selectLayer(+el.dataset.i); });
+  el.addEventListener("keydown", e => { if (e.key === "Enter" && el.tagName === "TR") selectLayer(+el.dataset.i); });
+});
+$("#explode").addEventListener("click", e => {
+  const b = e.currentTarget, on = b.getAttribute("aria-pressed") !== "true";
+  b.setAttribute("aria-pressed", on);
+  $("span", b).textContent = on ? "Stack" : "Spread";
+  $$(".plate").forEach(p => p.style.setProperty("--gap", on ? "92px" : "68px"));
+});
+
+/* ---------- Concepts ---------- */
+const NOUNS = ["feed", "property", "listing", "event", "searchdoc", "cell", "savedsearch", "notification"];
+$("#concepts").innerHTML = NOUNS.map(id => `<button class="concept" type="button" data-drill="${id}"><span class="tile">${ic(D[id].i, "m")}</span><h3>${esc(D[id].t)}</h3><p>${esc(D[id].p)}</p></button>`).join("");
+
+/* ---------- Who does what ---------- */
+const VERBS = ["Ingest", "Resolve", "Publish", "Index", "Query", "Match", "Deliver", "Replay"];
+const M = { feed: ["Ingest", "Replay"], property: ["Resolve", "Publish", "Query"], listing: ["Ingest", "Resolve", "Publish", "Query"], event: ["Publish", "Index", "Match", "Replay"], searchdoc: ["Index", "Query", "Replay"], cell: ["Index", "Query", "Match"], savedsearch: ["Query", "Match"], notification: ["Match", "Deliver"] };
+$("#matrix").innerHTML = `<thead><tr><th></th>${VERBS.map(v => `<th>${v}</th>`).join("")}</tr></thead><tbody>${NOUNS.map(id =>
+  `<tr><th scope="row" data-drill="${id}" tabindex="0">${ic(D[id].i)}${esc(D[id].t)}</th>${VERBS.map(v => M[id].includes(v) ? `<td class="on" title="${esc(D[id].t)} · ${v}"><span class="dot"></span></td>` : `<td><span class="dot no"></span></td>`).join("")}</tr>`
+).join("")}</tbody>`;
+
+const LEADS = { layers: "Data flows up. Requests flow down.", nouns: "Eight concepts, one purpose each.", verbs: "Read a row: what a concept does. Read a column: who takes part." };
+function setTab(name) {
+  ["nouns", "verbs", "layers"].forEach(n => { $("#tab-" + n).setAttribute("aria-selected", n === name); $("#pane-" + n).hidden = n !== name; });
+  $("#grammar-lead").textContent = LEADS[name];
+  try { localStorage.setItem("hf-tab", name); } catch (e) {}
+}
+["nouns", "verbs", "layers"].forEach(n => $("#tab-" + n).addEventListener("click", () => setTab(n)));
+let savedTab = "layers";
+try { savedTab = localStorage.getItem("hf-tab") || "layers"; } catch (e) {}
+setTab(LEADS[savedTab] ? savedTab : "layers");
+
+/* ---------- Numbers ---------- */
+const FIGS = [["n-qps", "~25k", "search QPS at peak"], ["n-egress", "~170 Gbps", "photo egress"], ["n-writes", "12/s", "MLS writes"], ["n-index", "~20 GB", "hot index"], ["n-photos", "7.5 PB", "photo originals"], ["n-alerts", "15M", "alert matches / day"]];
+$("#figs").innerHTML = FIGS.map(f => `<button class="fig" type="button" data-drill="${f[0]}"><span class="tile">${ic(D[f[0]].i, "m")}</span><span class="v">${f[1]}</span><span class="u">${esc(f[2])}</span></button>`).join("");
+
+/* ---------- Decisions ---------- */
+const DEC = [
+  ["rss", "Feeds", "Own adapters + neutral aggregators", "One aggregator", "No competitor dependency", "sources"],
+  ["database", "Truth", "Golden record + events", "Full event sourcing", "Simple state, replay still works", "postgres"],
+  ["hexagon", "Geo", "Precomputed H3 cells", "Shape queries per search", "1M writes vs 400M reads", "cell"],
+  ["scan-search", "Index", "20 GB hot + 400 GB warm", "One 200M-doc index", "Fits in RAM everywhere", "opensearch"],
+  ["bell-ring", "Alerts", "Reverse search on the stream", "Polling", "50k QPS → ~12/s", "alerts"],
+  ["scale", "Consistency", "Stale search, strong leads", "Strong everywhere", "Latency + availability", "agents"],
+  ["globe", "Regions", "Active-active reads, one writer", "Multi-writer", "Tiny writes, no conflicts", "postgres"]
+];
+$("#dec tbody").innerHTML = DEC.map(d => `<tr data-drill="${d[5]}" tabindex="0"><td>${ic(d[0])}${d[1]}</td><td>${esc(d[2])}</td><td class="over">${esc(d[3])}</td><td class="why">${esc(d[4])}</td></tr>`).join("");
+
+/* ---------- Walks ---------- */
+const REC = [
+  `<div class="hd">Raw row · Austin MLS via RETS</div><span class="k">L_Status</span> "A"<br><span class="k">L_AskingPrice</span> "549900"<br><span class="k">L_Address</span> "1204 s 3rd st"<br><span class="k">LM_Int1_3</span> 3`,
+  `<div class="hd">Landed, untouched</div><span class="new">gs://raw/actris/2026/10/27/4471920.json</span><br><span class="k">cursor</span> 14:02:11Z<br><span class="k">immutable · versioned</span>`,
+  `<div class="hd">RESO Data Dictionary</div><span class="k">StandardStatus</span> <span class="new">Active</span><br><span class="k">ListPrice</span> <span class="new">549900</span><br><span class="k">BedroomsTotal</span> <span class="new">3</span>`,
+  `<div class="hd">Validated</div><span class="k">address</span> <span class="new">1204 S 3RD ST, AUSTIN TX 78704</span><br><span class="k">geo</span> <span class="new">30.2521, -97.7556</span><br><span class="k">rules</span> ✓ ✓ ✓ <span class="k">· else</span> <span class="bad">quarantine</span>`,
+  `<div class="hd">Resolved, one transaction</div><span class="k">property_id</span> <span class="new">48453-0101040412</span><br><span class="k">duplicate</span> merged<br><span class="k">emit</span> <span class="new">property.changed</span> v18`,
+  `<div class="hd">Fanned out</div><span class="k">index</span> 1–2 s · <span class="k">cache</span> purged<br><span class="k">alerts</span> matched · <span class="k">AVM, lake</span> updated`
+];
+const HOPS = [["Edge", "globe", 15, "cdn"], ["Gateway", "door-open", 10, "gateway"], ["Cache", "zap", 5, "redis"], ["OpenSearch", "scan-search", 70, "opensearch"], ["Re-rank", "arrow-up-down", 20, "features"], ["Hydrate", "layers", 15, "redis"], ["Return", "send", 25, "clients"]];
+const WALKS = {
+  pipeline: [
+    { t: "Connect", desc: "Most of the 800 MLSs run on a handful of vendor platforms, so about 15 adapters cover them all. Each MLS is just config: credentials, cadence, field mappings.", cue: ["~15 adapters", "RESO · RETS · FTP", "1–15 min"], d: "sources" },
+    { t: "Land", desc: "The untouched payload goes to object storage first. It's our audit trail, and when a mapping bug shows up we replay instead of re-pulling from the MLS.", cue: ["raw → GCS", "fix = replay"], d: "lake" },
+    { t: "Normalize", desc: "A versioned mapping per MLS turns vendor fields into the RESO Data Dictionary. Onboarding a new MLS needs no code deploy.", cue: ["RESO dictionary", "config, not code"], d: "ingest" },
+    { t: "Validate", desc: "Standardize the address, geocode it, run sanity rules. A bad record is quarantined with a reason, and the last good version stays live.", cue: ["address", "geocode", "bad → quarantine"], d: "ingest" },
+    { t: "Resolve", desc: "County FIPS + parcel number gives a stable property_id. Duplicates from overlapping MLSs merge field by field, then upsert and outbox commit together.", cue: ["FIPS + APN", "merge dupes", "upsert + outbox"], d: "property" },
+    { t: "Fan out", desc: "property.changed goes to five independent consumers. Each can replay from any offset, and a nightly reconcile catches deletes the feeds missed.", cue: ["5 consumers", "nightly reconcile"], d: "kafka" }
+  ],
+  search: [
+    { t: "Edge", desc: "The CDN terminates TLS close to the user. Because requests snap to map tiles, many of them are cacheable right here.", cue: ["TLS at the PoP", "cacheable GETs"], d: "cdn" },
+    { t: "Gateway", desc: "Auth, rate limits, and query normalization: sorted filters, rounded prices. That normalization is what makes the cache work.", cue: ["auth", "rate limit", "normalize"], d: "gateway" },
+    { t: "Cache", desc: "Redis keyed on normalized query + tile, not the raw viewport. About 40% of searches end here in roughly 30 ms.", cue: ["query + tile key", "~40% stop"], d: "redis" },
+    { t: "OpenSearch", desc: "The biggest slice. Geography routing means a metro query hits one shard group, never all of them, and geometry was done at write time.", cue: ["one shard group", "top 500"], d: "opensearch" },
+    { t: "Re-rank", desc: "A small model re-orders the top 200. It runs under a deadline; if the request is already slow, we skip it. No protected-class features.", cue: ["top 200", "deadline or skip"], d: "features" },
+    { t: "Hydrate", desc: "The index returns ids only. Card data comes from Redis in one MGET, so index docs stay small and cards change without reindexing.", cue: ["one MGET"], d: "redis" },
+    { t: "Return", desc: "160 ms planned. The last 40 ms is held back for GC pauses, cross-zone hops and bad days.", cue: ["160 planned", "40 spare"], d: "search" }
+  ],
+  geo: [
+    { t: "Listing arrives", desc: "At write time, 1M times a day, the listing's point gets its H3 cells at three resolutions, stored on the search doc.", cue: ["cells r5 · r7 · r9"], d: "cell" },
+    { t: "Tag once", desc: "Point-in-polygon runs once for school district, ZIP and city. \"In this school district\" becomes a cheap term filter.", cue: ["district · ZIP · city"], d: "searchdoc" },
+    { t: "Map moves", desc: "At read time, 400M times a day, the client sends a viewport or a drawn shape plus a zoom level.", cue: ["viewport + zoom"], d: "maps" },
+    { t: "Interior cells", desc: "Cells fully inside the shape become a terms filter. No geometry, and the filter is cacheable.", cue: ["terms filter", "no geometry"], d: "cell" },
+    { t: "Boundary ring", desc: "Only cells that straddle the edge get an exact geo check, so just a thin ring pays for real geometry.", cue: ["exact check", "thin ring only"], d: "opensearch" },
+    { t: "Result", desc: "Price, beds and type are doc-value filters on top. The same cells drive map clusters and alert matching.", cue: ["+ price, beds, type"], d: "search" }
+  ],
+  alerts: [
+    { t: "Poll", desc: "Re-running 30M saved searches every 10 minutes is 50k QPS, more than all user search, and alerts are still 10 minutes stale.", cue: ["30M every 10 min", "50k QPS", "10 min late"], d: "n-alerts" },
+    { t: "Flip it", desc: "Index the searches instead, and stream each listing change through them. That's about 12 events a second.", cue: ["~12 events/s"], d: "alerts" },
+    { t: "Classify", desc: "Only buyer-relevant changes pass: new, price drop, back on market, open house. A feed suddenly sending 5× its normal volume is held.", cue: ["new · price drop · back", "storm guard"], d: "feed" },
+    { t: "Match", desc: "A listing sits in exactly one cell. That cell's posting list gives the candidate searches, then exact filters confirm. Typical cell: under 1 ms.", cue: ["1 cell → candidates", "< 1 ms"], d: "savedsearch" },
+    { t: "Dedupe", desc: "A conditional write on user + listing + change. Matches merge across searches; quiet hours and daily caps apply, overflow goes to a digest.", cue: ["user + listing + change", "caps · quiet hours"], d: "dynamo" },
+    { t: "Deliver", desc: "p95 under 60 seconds from ingest to phone. The MLS poll interval comes before that, outside our control.", cue: ["p95 < 60 s"], d: "notification" }
+  ],
+  peaks: [
+    { t: "Normal week", desc: "Evening peaks around 12k search QPS, a little higher at weekends.", cue: ["~12k QPS evenings"], d: "n-qps" },
+    { t: "Spring", desc: "Browsing roughly doubles, about 25k on a spring Sunday evening. MLS write volume barely moves: the spike is buyers, not data.", cue: ["~25k", "writes flat"], d: "n-qps" },
+    { t: "Absorb", desc: "The CDN serves ~90% of bytes and the cache answers ~40% of searches. What reaches the index is the blue area.", cue: ["CDN ~90% bytes", "cache ~40%"], d: "redis" },
+    { t: "Scale early", desc: "Load-test in February at 2× last year's peak, raise floors in March and every Friday, freeze changes on weekends. Autoscaling works above the floor.", cue: ["Feb load test 2×", "Friday floors", "weekend freeze"], d: "gateway" },
+    { t: "Bend", desc: "If the forecast is wrong, a rate cut or a viral story, give things up in order, cheapest first.", cue: ["cheapest first"], d: "peaks-ladder" },
+    { t: "Never shed", desc: "Search, listing pages, contact agent and mortgage keep working. Every region holds the full hot index, so losing one region doesn't take reads down.", cue: ["full index per region"], d: "peaks-ladder" }
+  ]
+};
+
+$("#budget").innerHTML = HOPS.map(h => `<i style="width:${h[2] / 2}%"></i>`).join("") + `<i class="head" style="width:20%"></i>`;
+$("#hops").innerHTML = HOPS.map((h, i) => `<button class="card hop" type="button" data-act="${i}" data-drill="${h[3]}"><span class="tile">${ic(h[1])}</span>${h[0]}<span class="v">${h[2]} ms</span></button>`).join("");
+
+(function buildHex() {
+  const svg = $("#hexsvg");
+  const R = 19, W = Math.sqrt(3) * R, VP = { x0: 130, y0: 78, x1: 430, y1: 278 };
+  let rnd = 7;
+  const rand = () => (rnd = (rnd * 16807) % 2147483647) / 2147483647;
+  const inVP = (x, y) => x >= VP.x0 && x <= VP.x1 && y >= VP.y0 && y <= VP.y1;
+  const pts2 = pts => pts.map(p => p.map(v => v.toFixed(1)).join(",")).join(" ");
+  const cells = [];
+  let html = "";
+  for (let r = 0; r * 1.5 * R < 360 + R; r++) {
+    for (let c = -1; c * W < 560 + W; c++) {
+      const cx = c * W + (r % 2 ? W / 2 : 0), cy = r * 1.5 * R, pts = [];
+      for (let k = 0; k < 6; k++) { const a = Math.PI / 180 * (60 * k - 30); pts.push([cx + R * Math.cos(a), cy + R * Math.sin(a)]); }
+      const ins = pts.filter(p => inVP(p[0], p[1])).length;
+      const kind = ins === 6 ? "int" : (ins > 0 || inVP(cx, cy)) ? "ring" : "out";
+      cells.push({ cx, cy, kind, pts });
+      html += `<polygon class="hex ${kind}" points="${pts2(pts)}"/>`;
+    }
+  }
+  const cellOf = (x, y) => { let b = null, bd = 1e9; cells.forEach(c => { const d = (c.cx - x) ** 2 + (c.cy - y) ** 2; if (d < bd) { bd = d; b = c; } }); return b; };
+  let pins = "", hits = 0;
+  const ringCells = cells.filter(c => c.kind === "ring").length, intCells = cells.filter(c => c.kind === "int").length;
+  for (let i = 0; i < 150; i++) {
+    const x = 20 + rand() * 520, y = 20 + rand() * 320, cell = cellOf(x, y);
+    const hit = cell.kind === "int" || (cell.kind === "ring" && inVP(x, y));
+    if (hit) hits++;
+    pins += `<circle class="pin ${hit ? "hit" : "miss"}${cell.kind === "ring" ? " chk" : ""}" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="3.2"/>`;
+  }
+  const home = cellOf(255, 170), hx = home.cx, hy = home.cy;
+  const nb = cells.filter(c => (c.cx - hx) ** 2 + (c.cy - hy) ** 2 < (W * 1.2) ** 2);
+  html += nb.map(c => `<polygon class="parent" points="${pts2(c.pts)}"/>`).join("") + `<polygon class="home" points="${pts2(home.pts)}"/>` + pins +
+    `<circle class="pin me" cx="${hx}" cy="${hy}" r="5"/>` +
+    `<rect class="vp" x="${VP.x0}" y="${VP.y0}" width="${VP.x1 - VP.x0}" height="${VP.y1 - VP.y0}" rx="4"/>` +
+    `<g class="tag t0" transform="translate(${hx + 16},${hy - 58})"><rect width="196" height="52" rx="8"/><text x="10" y="20"><tspan class="k">h3_r9</tspan> 8948e2b1a43ffff</text><text x="10" y="38"><tspan class="k">h3_r7</tspan> 8748e2b1affffff</text></g>` +
+    `<g class="tag t1" transform="translate(${hx + 16},${hy - 58})"><rect width="196" height="52" rx="8"/><text x="10" y="20"><tspan class="k">district</tspan> 4808130</text><text x="10" y="38"><tspan class="k">zip</tspan> 78704 <tspan class="k">city</tspan> Austin</text></g>`;
+  svg.innerHTML = html;
+  $("#geoResult").innerHTML = `<b>${hits} match</b> · geometry on ${ringCells} of ${ringCells + intCells} cells`;
+})();
+
+(function buildChart() {
+  const svg = $("#chart");
+  const X0 = 46, X1 = 588, Y0 = 18, Y1 = 280, MAX = 40000;
+  const x = h => X0 + (X1 - X0) * h / 168, y = v => Y1 - (Y1 - Y0) * v / MAX;
+  const dayPeak = [10000, 10000, 10200, 10400, 10200, 11200, 12000];
+  const bump = h => { const t = h % 24; return Math.min(1, Math.exp(-(((t - 20.5) / 3.4) ** 2)) + 0.55 * Math.exp(-(((t - 12.5) / 3) ** 2))); };
+  const val = (h, k) => 1500 * k + (dayPeak[Math.floor(h / 24) % 7] * k - 1500 * k) * bump(h);
+  const path = (k, f = 1) => { let d = ""; for (let h = 0; h <= 168; h += 1) d += (h ? "L" : "M") + x(h).toFixed(1) + " " + y(val(h, k) * f).toFixed(1); return d; };
+  let g = "";
+  [0, 10000, 20000, 30000, 40000].forEach(v => { g += `<line class="grid" x1="${X0}" x2="${X1}" y1="${y(v)}" y2="${y(v)}"/><text x="${X0 - 8}" y="${y(v) + 3.5}" text-anchor="end">${v ? v / 1000 + "k" : "0"}</text>`; });
+  ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].forEach((d, i) => { g += `<text x="${x(i * 24 + 12)}" y="${Y1 + 18}" text-anchor="middle">${d}</text>`; });
+  const reach = path(2, 0.6) + `L${x(168)} ${Y1} L${x(0)} ${Y1} Z`;
+  const fp = []; for (let d = 0; d < 7; d++) { const lvl = d >= 5 ? 32000 : d === 4 ? 27000 : 24000; fp.push([x(d * 24), y(lvl)], [x(d * 24 + 24), y(lvl)]); }
+  g += `<path class="reach" d="${reach}"/><path class="base" d="${path(1)}"/><path class="spring" d="${path(2)}"/><path class="floor" d="M${fp.map(p => p.map(v => v.toFixed(1)).join(" ")).join(" L")}"/>` +
+    `<line class="design" x1="${X0}" x2="${X1}" y1="${y(40000)}" y2="${y(40000)}"/>` +
+    `<g class="lab l0"><text x="${x(150)}" y="${y(12000) - 10}" text-anchor="middle">~12k</text></g>` +
+    `<g class="lab l1"><text x="${x(150)}" y="${y(24000) - 10}" text-anchor="middle">~25k</text></g>` +
+    `<g class="lab l2"><text x="${x(150)}" y="${y(14400) + 18}" text-anchor="middle">~15k to index</text></g>` +
+    `<g class="lab l3"><text x="${X1 - 4}" y="${y(40000) + 14}" text-anchor="end">design 40k</text></g>`;
+  svg.innerHTML = g;
+})();
+
+const walks = [];
+$$("section.walk").forEach(sec => {
+  const id = sec.id, steps = WALKS[id], stage = $(".stage", sec), cap = $(".cap", sec), ol = $(".steps", sec), play = $(".play", sec);
+  ol.innerHTML = steps.map((s, i) => `<li><button type="button" data-i="${i}">${esc(s.t)}</button><p class="sdesc">${esc(s.desc)}</p></li>`).join("");
+  let at = 0, timer = null;
+  function set(i) {
+    at = Math.max(0, Math.min(steps.length - 1, i));
+    stage.className = "stage " + ["at-" + at].concat(steps.map((_, k) => k <= at ? "ge-" + k : "")).join(" ").trim();
+    $$("[data-act]", stage).forEach(el => el.classList.toggle("act", el.dataset.act.split(" ").includes(String(at))));
+    $$(".steps li", sec).forEach((li, k) => li.classList.toggle("cur", k === at));
+    $$(".steps button", sec).forEach((b, k) => { b.classList.toggle("cur", k === at); b.classList.toggle("past", k < at); b.setAttribute("aria-current", k === at ? "step" : "false"); });
+    const s = steps[at];
+    cap.innerHTML = `<span class="n">${at + 1}/${steps.length}</span>${s.cue.map(c => `<span class="cue">${esc(c)}</span>`).join("")}<button class="go" type="button" data-drill="${s.d}">${ic(D[s.d].i)}${esc(D[s.d].t)}</button>`;
+    if (id === "pipeline") $("#rec").innerHTML = REC[at];
+    if (id === "search") {
+      const last = at === steps.length - 1;
+      $("#msv").textContent = last ? "160" : String(HOPS.slice(0, at + 1).reduce((a, h) => a + h[2], 0));
+      $$("#budget i").forEach((el, k) => { el.classList.toggle("on", k < at || (k === HOPS.length && last)); el.classList.toggle("act", k === at); });
+      $$("#hops .hop").forEach((el, k) => el.classList.toggle("seen", k < at));
+    }
+  }
+  function stop() { clearInterval(timer); timer = null; play.innerHTML = ic("play") + "<span>Play</span>"; }
+  function start() {
+    if (timer) return stop();
+    set(0); play.innerHTML = ic("pause") + "<span>Pause</span>";
+    timer = setInterval(() => { if (at >= steps.length - 1) return stop(); set(at + 1); }, reduced ? 3200 : 2300);
+  }
+  ol.addEventListener("click", e => { const b = e.target.closest("button"); if (b) { stop(); set(+b.dataset.i); } });
+  play.addEventListener("click", start);
+  stage.addEventListener("click", e => { if (!e.target.closest("[data-drill]")) { stop(); set(at + 1 > steps.length - 1 ? 0 : at + 1); } });
+  set(0);
+  walks.push({ sec, next: () => { stop(); set(at + 1); }, prev: () => { stop(); set(at - 1); } });
+});
+
+/* ---------- Drill-down sheet ---------- */
+const layer = $("#layer"), scrim = $("#scrim"), sheet = $("#sheet"), talk = $("#talk");
+let trail = [], lastFocus = null;
+function render() {
+  const id = trail[trail.length - 1], c = D[id];
+  const crumbs = `<button type="button" data-close>HomeFinder</button><span>/</span>` + trail.map((t, i) => i === trail.length - 1 ? `<span class="curc">${esc(D[t].t)}</span>` : `<button type="button" data-crumb="${i}">${esc(D[t].t)}</button><span>/</span>`).join("");
+  const rel = (c.rel || []).map(r => SECTION_LINKS[r] ? `<a class="chip" href="${SECTION_LINKS[r][0]}" data-close>${ic("play")}${SECTION_LINKS[r][1]}</a>` : D[r] ? `<button class="chip" type="button" data-drill="${r}" data-push>${ic(D[r].i)}${esc(D[r].t)}</button>` : "").join("");
+  sheet.innerHTML = `
+    <div class="sheet-top"><nav class="crumbs" aria-label="Trail">${crumbs}</nav><button class="iconbtn closebtn" type="button" data-close aria-label="Close">${ic("x")}<kbd>Esc</kbd></button></div>
+    <div class="sheet-head"><span class="tile">${ic(c.i, "l")}</span><div><div class="lbl">${esc(c.k)}</div><h2 id="sheetTitle">${esc(c.t)}</h2></div></div>
+    <p class="purpose">${esc(c.p)}</p>
+    <div class="how">${ic("workflow")}${ic("activity").replace("ic ", "ic ") && ""}<span>${esc(c.op)}</span></div>
+    <dl class="def"><dt>Holds</dt><dd>${esc(c.s)}</dd>${c.a.length ? `<dt>Does</dt><dd><ul>${c.a.map(a => `<li>${esc(a)}</li>`).join("")}</ul></dd>` : ""}</dl>
+    ${c.n.length ? `<div class="nums">${c.n.map(n => `<div><b>${esc(n[0])}</b><span>${esc(n[1])}</span></div>`).join("")}</div>` : ""}
+    ${rel ? `<div class="rel">${rel}</div>` : ""}`;
+  talk.innerHTML = `
+    <div class="point"><span class="lbl">Key point</span><p>${esc(c.pt)}</p></div>
+    ${c.qa.length ? `<div class="qa"><span class="lbl">${ic("mic")}If they ask</span>${c.qa.map(q => `<div><div class="q">${esc(q[0])}</div><div class="a">${esc(q[1])}</div></div>`).join("")}</div>` : ""}`;
+  try { history.replaceState(null, "", "#x-" + id); } catch (e) {}
+}
+function open(id, push) {
+  if (!D[id]) return;
+  if (layer.hidden) {
+    lastFocus = document.activeElement; trail = [id];
+    scrim.hidden = false; layer.hidden = false;
+    requestAnimationFrame(() => { scrim.classList.add("open"); layer.classList.add("open"); });
+  } else if (push) { if (trail[trail.length - 1] !== id) trail.push(id); }
+  else trail = [id];
+  render();
+  $(".closebtn", sheet).focus({ preventScroll: true });
+  layer.scrollTop = 0;
+}
+function close() {
+  if (layer.hidden) return;
+  scrim.classList.remove("open"); layer.classList.remove("open");
+  setTimeout(() => { scrim.hidden = true; layer.hidden = true; }, reduced ? 0 : 260);
+  trail = [];
+  try { history.replaceState(null, "", location.pathname + location.search); } catch (e) {}
+  if (lastFocus && lastFocus.focus) lastFocus.focus({ preventScroll: true });
+}
+function back() { if (trail.length > 1) { trail.pop(); render(); } else close(); }
+
+document.addEventListener("click", e => {
+  const crumb = e.target.closest("[data-crumb]");
+  if (crumb) { trail = trail.slice(0, +crumb.dataset.crumb + 1); render(); return; }
+  if (e.target.closest("[data-close]")) { close(); return; }
+  const d = e.target.closest("[data-drill]");
+  if (d) { e.stopPropagation(); open(d.dataset.drill, d.hasAttribute("data-push") || !layer.hidden); return; }
+  if (!layer.hidden && !e.target.closest(".sheet, .talk")) close();
+});
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape") { if (!layer.hidden) { e.preventDefault(); back(); } else if (selLayer >= 0) selectLayer(selLayer); return; }
+  if (e.key === "Enter") { const d = e.target.closest && e.target.closest("tr[data-drill], th[data-drill]"); if (d) { open(d.dataset.drill); return; } }
+  if (!layer.hidden) {
+    if (e.key === "Tab") { const f = $$("button, a[href]", layer); if (!f.length) return; const first = f[0], last = f[f.length - 1]; if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); } else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); } }
+    return;
+  }
+  if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
+  if (e.target.closest && e.target.closest("input, textarea, [role=tablist]")) return;
+  const mid = innerHeight / 2;
+  const w = walks.find(w => { const r = w.sec.getBoundingClientRect(); return r.top < mid && r.bottom > mid; });
+  if (!w) return;
+  e.preventDefault();
+  e.key === "ArrowRight" ? w.next() : w.prev();
+});
+function fromHash() { const h = location.hash.slice(1); if (h.startsWith("x-") && D[h.slice(2)]) open(h.slice(2)); }
+addEventListener("hashchange", fromHash);
+
+
+/* ---------- Animated architecture diagram ---------- */
+(function arch() {
+  const map = $("#archMap"), svg = $("#archSvg"), NS = "http://www.w3.org/2000/svg";
+  const N = {
+    clients: [80, 190, "web · iOS · Android"], cdn: [230, 190, "pages · tiles · photos"], media: [230, 330, "resize · tours"],
+    gateway: [380, 190, "auth · limits · SSR"], mortgage: [380, 340, "isolated"],
+    search: [560, 120, "< 200 ms p95"], property: [560, 230, "golden record"], agents: [560, 330, "leads"], avm: [560, 430, "200M values"],
+    opensearch: [790, 120, "hot 20 GB"], redis: [790, 230, "~40% hits"],
+    alerts: [1010, 340, "30M searches"], dynamo: [1010, 450, "dedupe + TTL"],
+    sources: [80, 600, "800+ MLS feeds"], ingest: [300, 600, "~15 adapters"], postgres: [540, 600, "1 writer"], kafka: [790, 510, "property.changed"], lake: [1010, 600, "GCS + Iceberg"]
+  };
+  const NAME = { clients: "Apps", cdn: "CDN", media: "Media", gateway: "Gateway", mortgage: "Mortgage", search: "Search", property: "Property", agents: "Agents", avm: "Valuation", opensearch: "OpenSearch", redis: "Redis", alerts: "Alerts", dynamo: "KV store", sources: "MLS feeds", ingest: "Ingest", postgres: "PostgreSQL", kafka: "Kafka", lake: "Data lake" };
+  const E = {
+    "clients-cdn": "GET /search", "cdn-gateway": "cache miss", "cdn-media": "photos", "gateway-search": "query", "gateway-property": "detail page",
+    "gateway-agents": "contact agent", "gateway-mortgage": "pre-approve", "search-redis": "cache + cards", "search-opensearch": "cells + filters",
+    "sources-ingest": "poll 1–15 min", "ingest-lake": "raw payload", "ingest-postgres": "upsert + outbox", "postgres-kafka": "property.changed",
+    "kafka-opensearch": "reindex", "kafka-redis": "purge", "kafka-alerts": "match", "kafka-avm": "refresh value", "kafka-lake": "history",
+    "alerts-dynamo": "seen?", "alerts-clients": "push"
+  };
+  const EDESC = {"clients-cdn": "The app asks for results for a tile-snapped viewport, so neighbors share cache entries.", "cdn-gateway": "Only a cache miss reaches the origin.", "gateway-search": "Auth, rate limit, then the normalized query goes to the search service.", "search-redis": "Check the query + tile cache first; card data also comes from here in one batch.", "search-opensearch": "H3 cells plus filters, routed to one shard group. Top 500, then a light re-rank.", "sources-ingest": "Each MLS is polled on a cursor every 1 to 15 minutes.", "ingest-lake": "The raw payload lands in object storage untouched, so any fix is a replay.", "ingest-postgres": "Normalized, validated and resolved, then upserted with an outbox row in one transaction.", "postgres-kafka": "Debezium publishes the outbox as property.changed, keyed by property_id.", "kafka-opensearch": "The search doc is reindexed with the listing's version; stale events lose.", "kafka-redis": "Cached cards and pages for that property are purged.", "kafka-avm": "The home value is refreshed for the changed property.", "kafka-alerts": "The listing's cell finds candidate saved searches; filters confirm the match.", "alerts-dynamo": "Have we already told this buyer about this change? One conditional write decides.", "alerts-clients": "One push, email or in-app message, under 60 seconds from ingest."};
+  const ROUTE = {
+    "ingest-lake": "M300 600 C300 672 1010 672 1010 600",
+    "kafka-opensearch": "M790 510 C905 510 905 120 790 120",
+    "alerts-clients": "M1010 340 C1082 330 1082 34 960 34 L200 34 C110 34 80 110 80 190"
+  };
+  const FLOWS = {
+    update: { t: "Listing update", lead: "A price change in one MLS reaches every read model.", seq: ["sources-ingest", "ingest-lake", "ingest-postgres", "postgres-kafka", "kafka-opensearch", "kafka-redis", "kafka-avm", "kafka-alerts"] },
+    search: { t: "Search", lead: "A map search, edge to index and back, inside 200 ms.", seq: ["clients-cdn", "cdn-gateway", "gateway-search", "search-redis", "search-opensearch"] },
+    alert: { t: "Alert", lead: "A price drop on a buyer's phone in under 60 seconds.", seq: ["postgres-kafka", "kafka-alerts", "alerts-dynamo", "alerts-clients"] },
+    all: { t: "Everything", lead: "Requests come in on top. Data flows in from the bottom.", seq: [] }
+  };
+  const path = (k) => {
+    if (ROUTE[k]) return ROUTE[k];
+    const [a, b] = k.split("-"), [x1, y1] = N[a], [x2, y2] = N[b], dx = x2 - x1, dy = y2 - y1;
+    return Math.abs(dx) >= Math.abs(dy) ? `M${x1} ${y1} C${x1 + dx / 2} ${y1} ${x2 - dx / 2} ${y2} ${x2} ${y2}` : `M${x1} ${y1} C${x1} ${y1 + dy / 2} ${x2} ${y2 - dy / 2} ${x2} ${y2}`;
+  };
+  let g = `<rect class="band" x="16" y="552" width="1068" height="116" rx="14"/><text class="bandlab" x="34" y="572">Write path · 1M updates a day</text>`;
+  [[80, "Clients"], [230, "Edge"], [380, "Gateway"], [560, "Services"], [790, "Data"], [1010, "Async"]].forEach(([x, t]) => { g += `<text class="collab" x="${x}" y="64" text-anchor="middle">${t}</text>`; });
+  Object.keys(E).forEach(k => { g += `<path class="edge" data-e="${k}" d="${path(k)}"/>`; });
+  g += `<g id="elabels"></g><g id="packets"></g>`;
+  svg.innerHTML = g;
+  const lab = $("#elabels", svg);
+  $$(".edge", svg).forEach(p => {
+    const k = p.dataset.e, L = p.getTotalLength(), m = p.getPointAtLength(L / 2);
+    const t = document.createElementNS(NS, "text");
+    t.setAttribute("class", "elabel"); t.dataset.e = k; t.setAttribute("x", m.x); t.setAttribute("y", m.y - 9); t.setAttribute("text-anchor", "middle");
+    t.textContent = E[k]; lab.appendChild(t);
+  });
+  Object.keys(N).forEach(id => {
+    const [x, y, sub] = N[id], b = document.createElement("button");
+    b.type = "button"; b.className = "node" + (id === "kafka" ? " wide" : "") + (id === "mortgage" ? " iso" : "");
+    b.dataset.drill = id; b.dataset.n = id;
+    b.style.left = (x / 1100 * 100) + "%"; b.style.top = (y / 680 * 100) + "%";
+    b.innerHTML = `<span class="tile">${ic(D[id].i)}</span><b>${esc(NAME[id])}</b><small>${esc(sub)}</small>`;
+    b.addEventListener("mouseenter", () => hover(id, true)); b.addEventListener("mouseleave", () => hover(id, false));
+    b.addEventListener("focus", () => hover(id, true)); b.addEventListener("blur", () => hover(id, false));
+    map.appendChild(b);
+  });
+  function hover(id, on) {
+    map.classList.toggle("hovering", on);
+    $$(".edge, .elabel", svg).forEach(el => { const [a, b] = el.dataset.e.split("-"); el.classList.toggle("hl", on && (a === id || b === id)); });
+    const near = new Set([id]); if (on) Object.keys(E).forEach(k => { const [a, b] = k.split("-"); if (a === id) near.add(b); if (b === id) near.add(a); });
+    $$(".node", map).forEach(n => n.classList.toggle("hl", on && near.has(n.dataset.n)));
+  }
+
+  /* flows and packets */
+  const tabs = $("#flowTabs"), steps = $("#flowSteps"), packets = $("#packets", svg), playBtn = $("#flowPlay");
+  tabs.innerHTML = Object.keys(FLOWS).map(f => `<button role="tab" type="button" data-f="${f}">${FLOWS[f].t}</button>`).join("");
+  let flow = "update", idx = 0, t0 = 0, playing = !reduced, raf = 0;
+  const STEP = 1100, GAP = 350;
+  function setFlow(f) {
+    flow = f; idx = 0; t0 = performance.now();
+    const seq = FLOWS[f].seq, inNodes = new Set();
+    seq.forEach(k => k.split("-").forEach(n => inNodes.add(n)));
+    $$("button", tabs).forEach(b => b.setAttribute("aria-selected", b.dataset.f === f));
+    $("#flowLead").textContent = FLOWS[f].lead;
+    map.classList.toggle("flowing", seq.length > 0);
+    $$(".edge, .elabel", svg).forEach(el => el.classList.toggle("on", seq.includes(el.dataset.e)));
+    $$(".node", map).forEach(n => n.classList.toggle("in", inNodes.has(n.dataset.n)));
+    steps.innerHTML = seq.map((k, i) => { const [a, b] = k.split("-"); return `<li><button type="button" data-s="${i}"><span>${i + 1}</span>${esc(NAME[a])} → ${esc(NAME[b])} · ${esc(E[k])}</button></li>`; }).join("");
+    playBtn.hidden = !seq.length;
+    mark();
+    packets.innerHTML = "";
+  }
+  function mark() {
+    const seq = FLOWS[flow].seq, k = seq[idx];
+    $$("button", steps).forEach((b, i) => b.classList.toggle("cur", i === idx));
+    const fd = $("#flowDesc"), txt = k ? EDESC[k] : "Hover a component to see what it talks to. Click it to open it.";
+    if (fd.textContent !== txt) { fd.textContent = txt; fd.classList.remove("fade"); void fd.offsetWidth; fd.classList.add("fade"); }
+    $$(".edge", svg).forEach(el => el.classList.toggle("live", el.dataset.e === k));
+    const live = k ? k.split("-") : [];
+    $$(".node", map).forEach(n => n.classList.toggle("live", live[1] === n.dataset.n || (live[0] === n.dataset.n && false)));
+  }
+  function packet(k, p) {
+    let el = $(".packet", packets);
+    if (!el) {
+      el = document.createElementNS(NS, "g"); el.setAttribute("class", "packet");
+      el.innerHTML = `<rect rx="9" height="18" y="-9"/><text y="4" x="9"></text>`; packets.appendChild(el);
+    }
+    const tx = $("text", el); if (tx.textContent !== E[k]) { tx.textContent = E[k]; $("rect", el).setAttribute("width", tx.getComputedTextLength() + 18); }
+    const pathEl = $(`.edge[data-e="${k}"]`, svg), L = pathEl.getTotalLength(), pt = pathEl.getPointAtLength(L * p);
+    const w = +$("rect", el).getAttribute("width");
+    el.setAttribute("transform", `translate(${pt.x - w / 2},${pt.y})`);
+    el.style.opacity = p > 0.92 ? (1 - p) / 0.08 : 1;
+  }
+  function tick(now) {
+    raf = requestAnimationFrame(tick);
+    const seq = FLOWS[flow].seq;
+    if (!seq.length || !playing) return;
+    const e = Math.max(0, now - t0), per = STEP + GAP;
+    let i = Math.floor(e / per);
+    if (i >= seq.length) { if (e > seq.length * per + 900) { t0 = now; i = 0; } else { packets.innerHTML = ""; return; } }
+    if (i !== idx) { idx = i; mark(); }
+    const p = Math.min(1, (e - i * per) / STEP);
+    packet(seq[i], p);
+  }
+  tabs.addEventListener("click", e => { const b = e.target.closest("[data-f]"); if (b) setFlow(b.dataset.f); });
+  steps.addEventListener("click", e => {
+    const b = e.target.closest("[data-s]"); if (!b) return;
+    idx = +b.dataset.s; t0 = performance.now() - idx * (STEP + GAP); mark();
+    if (!playing) packet(FLOWS[flow].seq[idx], 0.5);
+  });
+  playBtn.addEventListener("click", () => {
+    playing = !playing;
+    playBtn.innerHTML = playing ? ic("pause") + "<span>Pause</span>" : ic("play") + "<span>Play</span>";
+    if (playing) t0 = performance.now() - idx * (STEP + GAP);
+  });
+  if (!playing) playBtn.innerHTML = ic("play") + "<span>Play</span>";
+  setFlow("update");
+  if (!playing) packet(FLOWS.update.seq[0], 0.5);
+  raf = requestAnimationFrame(tick);
+})();
+
+paintIcons(document);
+fromHash();
+
+const navLinks = $$(".nav a[href^='#']:not(.brand)");
+const io = new IntersectionObserver(entries => {
+  entries.forEach(en => { if (en.isIntersecting) navLinks.forEach(a => a.classList.toggle("here", a.getAttribute("href") === "#" + en.target.id)); });
+}, { rootMargin: "-45% 0px -50% 0px" });
+$$("section.block").forEach(s => io.observe(s));
+})();
+</script>
