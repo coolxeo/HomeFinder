@@ -1,7 +1,4 @@
-<!doctype html>
-<html lang="en">
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 <title>HomeFinder System Explorer</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -87,6 +84,11 @@ button { font: inherit; color: inherit; }
 .nav a { white-space: nowrap; text-decoration: none; color: var(--ink-2); font-size: 13px; padding: 6px 11px; border-radius: 999px; display: inline-flex; gap: 6px; align-items: center; transition: background .2s, color .2s; }
 .nav a:hover { color: var(--ink); background: var(--hair); }
 .nav a.here { color: var(--ink); background: var(--sheet); box-shadow: var(--lift1); }
+.nav .themebtn { border: 0; background: none; width: 30px; height: 30px; border-radius: 999px; display: inline-grid; place-items: center; color: var(--ink-2); cursor: pointer; flex: none; margin-left: 2px; }
+.nav .themebtn:hover { background: var(--hair); color: var(--ink); }
+/* Notes: helper text is hidden unless the presenter turns notes on */
+:root:not(.notes) :is(.hint, .sec-lead, .picks small, .ledger-top span, .legend .hintx, .dfoot .xt, .dpick .xt, .flowdesc, .note-cloud, .sdesc, .when, .prose .key, .chartleg, .hexlegend) { display: none !important; }
+.nav .themebtn[aria-pressed="true"] { color: var(--accent); }
 .nav .brand { font-weight: 600; color: var(--ink); padding-right: 12px; }
 
 /* Masthead */
@@ -117,8 +119,8 @@ section.block { padding-block: 64px; border-top: 1px solid var(--hair); }
 
 /* Isometric stack */
 .stackgrid { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 32px; align-items: center; }
-.iso-stage { position: relative; height: 640px; }
-.iso { position: absolute; left: 50%; top: 50%; transform-style: preserve-3d; transform: rotateX(57deg) rotateZ(-36deg); }
+.iso-stage { position: relative; height: 560px; }
+.iso { position: absolute; left: 50%; top: 52%; transform-style: preserve-3d; transform: rotateX(57deg) rotateZ(-36deg); }
 .plate {
   --z: calc((var(--i) - 3) * var(--gap, 68px));
   position: absolute; width: 330px; height: 180px; left: -165px; top: -90px; border-radius: 14px;
@@ -150,6 +152,7 @@ table.spec th { text-align: left; font-weight: 500; color: var(--ink-3); font-si
 table.spec td { padding: 10px 8px; border-bottom: 1px solid var(--hair); vertical-align: middle; color: var(--ink-2); }
 table.spec td:first-child { color: var(--ink); font-weight: 600; white-space: nowrap; }
 table.spec td:first-child .ic { margin-right: 8px; color: var(--ink-2); }
+table.spec td.st { font-family: var(--f-mono); font-size: 12px; color: var(--ink-3); }
 table.spec tr.row { cursor: pointer; transition: background .2s; }
 table.spec tr.row:hover td, table.spec tr.row.hot td { background: var(--hair); }
 table.spec tr.row.sel td:first-child { color: var(--accent); }
@@ -282,34 +285,17 @@ table.matrix td.on { background: var(--accent-soft); }
 .slip small { color: var(--ink-3); display: block; font-family: var(--f-mono); }
 .ge-5 .chain { margin-bottom: 76px; }
 
-/* Peaks */
-.chart text { font-family: var(--f-mono); font-size: 10.5px; fill: var(--ink-3); }
-.chart .grid { stroke: var(--hair); }
-.chart .base { fill: none; stroke: var(--ink-3); stroke-width: 1.5; transition: opacity .4s; }
-.chart .spring { fill: none; stroke: var(--ink); stroke-width: 2; opacity: 0; transition: opacity .5s; }
-.ge-1 .chart .spring { opacity: 1; }
-.ge-1 .chart .base { opacity: .45; }
-.chart .reach { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1.5; opacity: 0; transition: opacity .5s; }
-.ge-2 .chart .reach { opacity: 1; }
-.chart .floor { fill: none; stroke: var(--signal); stroke-width: 1.5; opacity: 0; transition: opacity .5s; }
-.ge-3 .chart .floor { opacity: 1; }
-.chart .design { stroke: var(--ink-2); stroke-dasharray: 5 4; opacity: 0; transition: opacity .5s; }
-.ge-3 .chart .design { opacity: 1; }
-.chart .lab { opacity: 0; transition: opacity .5s; }
-.at-0 .chart .lab.l0, .ge-1 .chart .lab.l1, .ge-2 .chart .lab.l2, .ge-3 .chart .lab.l3 { opacity: 1; }
-.chart .lab text { fill: var(--ink-2); }
-.chartleg { display: flex; flex-wrap: wrap; gap: 14px; font-size: 12px; color: var(--ink-2); margin-top: 6px; }
-.chartleg i { display: inline-block; width: 14px; height: 3px; border-radius: 2px; vertical-align: 3px; margin-right: 6px; }
-.ladder {
-  position: absolute; top: 12px; left: 12px; bottom: 12px; width: min(260px, 70%); background: var(--sheet); border-radius: 14px; box-shadow: var(--lift4);
-  padding: 16px; transform: translateX(calc(-100% - 24px)); transition: transform .6s var(--spring); display: grid; align-content: start; gap: 10px;
-}
-.ge-4 .ladder { transform: none; }
-.ladder ol { margin: 0; padding: 0; list-style: none; display: grid; gap: 6px; }
-.ladder li { display: grid; grid-template-columns: 32px 1fr; gap: 10px; align-items: center; font-size: 13px; }
-.never { border-top: 1px solid var(--hair); padding-top: 10px; display: grid; grid-template-columns: 32px 1fr; gap: 10px; align-items: center; font-size: 13px; opacity: .35; transition: opacity .4s; }
-.never .tile { color: var(--signal); }
-.ge-5 .never { opacity: 1; }
+/* Cost */
+.bill { display: flex; gap: 3px; height: 44px; margin: 18px 0 6px; }
+.bill i { display: grid; place-items: center; height: 100%; border-radius: 6px; background: var(--ink-3); opacity: .9; font: 500 11px/1 var(--f-mono); font-style: normal; color: var(--sheet); overflow: hidden; transition: background .35s, opacity .35s, transform .45s var(--spring); }
+.stage:not(.at-0) .bill i { background: var(--hair-2); color: var(--ink-3); opacity: 1; }
+.stage .bill i.act { background: var(--accent); color: var(--sheet); transform: scaleY(1.12); }
+.billscale { display: flex; justify-content: space-between; font: 11px/1 var(--f-mono); color: var(--ink-3); }
+.billrows { margin-top: 18px; display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 4px 18px; }
+.billrows span { display: flex; justify-content: space-between; gap: 8px; font-size: 12.5px; color: var(--ink-3); padding: 4px 0; border-bottom: 1px solid var(--hair); transition: color .3s; }
+.billrows span b { font: 500 12px/1.4 var(--f-mono); }
+.stage.at-0 .billrows span, .billrows span.act { color: var(--ink); }
+.billrows span.act b { color: var(--accent); }
 
 /* Numbers */
 .figs { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 12px; }
@@ -319,20 +305,75 @@ table.matrix td.on { background: var(--accent-soft); }
 .fig .v { font-family: var(--f-mono); font-size: 26px; font-weight: 500; letter-spacing: -0.03em; line-height: 1.1; font-variant-numeric: tabular-nums; }
 .fig .u { font-size: 13px; color: var(--ink-2); }
 
-/* Decisions */
-table.dec { width: 100%; border-collapse: collapse; background: var(--sheet); border-radius: 12px; box-shadow: var(--lift1); overflow: hidden; font-size: 14px; min-width: 640px; }
-table.dec th { text-align: left; font-weight: 500; font-size: 12px; color: var(--ink-3); padding: 12px 14px; border-bottom: 1px solid var(--hair); }
-table.dec td { padding: 12px 14px; border-bottom: 1px solid var(--hair); vertical-align: middle; }
-table.dec tr:last-child td { border-bottom: 0; }
-table.dec td:first-child { font-weight: 600; white-space: nowrap; }
-table.dec td:first-child .ic { margin-right: 8px; color: var(--ink-2); }
-table.dec td.over { color: var(--ink-3); text-decoration: line-through; text-decoration-color: var(--hair-2); }
-table.dec td.why { color: var(--ink-2); }
-table.dec tbody tr { cursor: pointer; transition: background .2s; }
-table.dec tbody tr:hover { background: var(--hair); }
+/* Decisions: a ledger bar on top, then one column per area. Each card is a picked-1-of-N bar. */
+.ledger { background: var(--sheet); border-radius: 14px; box-shadow: var(--lift1); padding: 16px 18px; margin-bottom: 18px; display: grid; gap: 12px; }
+.ledger-top { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.ledger-top b { font-size: 15px; font-weight: 600; }
+.ledger-top span { font-size: 13px; color: var(--ink-3); }
+.lbar { display: flex; gap: 3px; height: 10px; }
+.lbar button { flex: 1; border: 0; padding: 0; border-radius: 3px; cursor: pointer; background: var(--c); transition: transform .25s var(--spring), opacity .2s; }
+.lbar button:hover, .lbar button:focus-visible { transform: scaleY(1.6); }
+.lbar button.dim { opacity: .18; }
+.legend { display: flex; gap: 6px; flex-wrap: wrap; }
+.legend button { border: 0; background: var(--ground); border-radius: 999px; padding: 5px 11px 5px 9px; font-size: 12.5px; color: var(--ink-2); cursor: pointer; display: inline-flex; align-items: center; gap: 7px; transition: background .2s, color .2s, box-shadow .2s; }
+.legend button i { width: 9px; height: 9px; border-radius: 3px; background: var(--c); }
+.legend button b { font-family: var(--f-mono); font-weight: 500; color: var(--ink-3); }
+.legend button[aria-pressed="true"] { background: var(--sheet); color: var(--ink); box-shadow: var(--lift2); }
+.legend .hintx { font-size: 12px; color: var(--ink-3); align-self: center; margin-left: auto; }
+
+.dcols { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 14px; align-items: start; }
+.dcols.c3 { grid-template-columns: repeat(3, minmax(0,1fr)); }
+.dcol { display: grid; gap: 8px; background: var(--well); border-radius: 14px; padding: 8px; }
+.dlane { display: flex; align-items: baseline; gap: 8px; padding: 4px 6px 2px; }
+.dlane b { font-size: 13.5px; font-weight: 600; }
+.dlane span { font: 12px/1 var(--f-mono); color: var(--ink-3); }
+.dcard { background: var(--sheet); border-radius: 12px; box-shadow: var(--lift1); transition: box-shadow .3s, transform .45s var(--spring), opacity .3s; }
+.dcard:hover { box-shadow: var(--lift2); }
+.dcard.open { box-shadow: var(--lift3); }
+.dcard.dim { opacity: .28; }
+.dcard.flash { animation: dflash 1.1s ease; }
+@keyframes dflash { 0%, 100% { transform: none; } 30% { transform: translateY(-4px); box-shadow: var(--lift3), 0 0 0 2px var(--accent); } }
+.dmain { all: unset; box-sizing: border-box; display: grid; gap: 9px; width: 100%; padding: 13px 14px 12px; cursor: pointer; border-radius: 12px; }
+.dmain:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.drow { display: flex; align-items: center; gap: 9px; }
+.dic { display: inline-grid; place-items: center; width: 24px; height: 24px; border-radius: 7px; background: var(--ground); color: var(--ink-2); flex: none; }
+.dic .ic { width: 14px; height: 14px; }
+.drow h3 { font-size: 14.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.drow .of { font-size: 12.5px; color: var(--ink-3); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.dpick { font-size: 13px; color: var(--ink-2); line-height: 1.35; }
+:root.notes .dpick { min-height: 2.7em; }
+.dpick b { color: var(--ink); font-weight: 500; }
+.dfoot { display: flex; justify-content: space-between; align-items: center; gap: 8px; min-height: 26px; }
+.dfoot .st { font-size: 12.5px; color: var(--ink-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dfoot .st .dot { display: inline-block; width: 8px; height: 8px; border-radius: 3px; background: var(--c); margin-right: 7px; vertical-align: 0; }
+.dchips { display: flex; align-items: center; gap: 0; flex: none; }
+.dnum { font-family: var(--f-mono); font-size: 11.5px; color: var(--ink-2); background: var(--ground); border-radius: 999px; padding: 3px 8px; margin-right: 6px; white-space: nowrap; }
+.ring { position: relative; width: 26px; height: 26px; display: grid; place-items: center; font: 600 10.5px/1 var(--f-sans); color: var(--ink-2); }
+.ring svg { position: absolute; inset: 0; transform: rotate(-90deg); }
+.ring circle { fill: var(--ground); stroke: none; }
+.ring path { fill: none; stroke: var(--ink-2); stroke-width: 1.6; stroke-linecap: round; }
+.ring span { position: relative; }
+.dmore { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .4s var(--spring); }
+.dcard.open .dmore { grid-template-rows: 1fr; }
+.dmore > div { overflow: hidden; }
+.dopts { list-style: none; margin: 0; padding: 4px 14px 0; display: grid; gap: 8px; border-top: 1px solid var(--hair); padding-top: 12px; }
+.dopts li { display: grid; grid-template-columns: 18px 1fr; gap: 2px 8px; font-size: 13px; line-height: 1.35; }
+.dopts li .ic { width: 14px; height: 14px; margin-top: 2px; color: var(--ink-3); }
+.dopts li.win .ic { color: var(--c); }
+.dopts li b { font-weight: 600; }
+.dopts li.lose b { color: var(--ink-2); font-weight: 500; }
+.dopts li p { grid-column: 2; color: var(--ink-3); font-size: 12.5px; }
+.dswitch { margin: 12px 14px 0; padding: 9px 11px; border-radius: 9px; background: var(--ground); font-size: 12.5px; color: var(--ink-2); line-height: 1.4; }
+.dswitch b { color: var(--ink); font-weight: 600; }
+.dgo { margin: 10px 14px 14px; }
 
 .ninety { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 12px; margin-top: 24px; }
 .ninety .card { padding: 14px; display: flex; gap: 12px; align-items: center; font-size: 14px; }
+.picks { margin: 0 0 24px; }
+.picks a.card { text-decoration: none; color: inherit; }
+.picks a.card:hover { box-shadow: var(--lift3); }
+.picks small { display: block; color: var(--ink-3); font-size: 12px; }
+.ninety-h { margin-top: 28px; }
 
 /* Drill-down sheet and talk panel */
 .scrim { position: fixed; inset: 0; z-index: 40; background: var(--scrim); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); opacity: 0; transition: opacity .3s; }
@@ -361,6 +402,13 @@ table.dec tbody tr:hover { background: var(--hair); }
 .sheet-head .tile { width: 48px; height: 48px; border-radius: 12px; }
 .sheet h2 { font-size: 24px; letter-spacing: -0.02em; }
 .sheet .purpose { font-size: 16px; color: var(--ink-2); }
+.learn { border-top: 1px solid var(--hair); padding-top: 18px; display: grid; gap: 14px; }
+.learn h3 { font-size: 15px; display: flex; align-items: center; gap: 8px; }
+.learn h3 .ic { color: var(--accent); }
+.learn > div { display: grid; grid-template-columns: 130px 1fr; gap: 4px 16px; }
+.learn .lbl { padding-top: 2px; }
+.learn p { font-size: 14.5px; line-height: 1.6; color: var(--ink-2); max-width: 64ch; }
+@media (max-width: 640px) { .learn > div { grid-template-columns: 1fr; } }
 .how { display: flex; gap: 10px; align-items: flex-start; background: var(--ground); border-radius: 12px; padding: 12px 14px; font-size: 14.5px; }
 .how .ic { color: var(--accent); margin-top: 2px; }
 .def { display: grid; grid-template-columns: 70px minmax(0,1fr); gap: 10px 14px; font-size: 14px; align-items: baseline; }
@@ -425,10 +473,12 @@ table.dec tbody tr:hover { background: var(--hair); }
 @media (prefers-reduced-motion: reduce) { .edge { animation: none; stroke-dasharray: 0.1 7; } }
 
 @media (max-width: 1000px) {
+  .dcols, .dcols.c3 { grid-template-columns: repeat(2, minmax(0,1fr)); }
   .stackgrid { grid-template-columns: 1fr; }
   .layer { flex-direction: column; align-items: center; }
   .talk { width: min(560px, 100%); transform: translateY(20px); }
   .hops { grid-template-columns: repeat(4, minmax(0,1fr)); }
+  .billrows { grid-template-columns: repeat(2, minmax(0,1fr)); }
 }
 @media (max-width: 860px) {
   .cols { grid-template-columns: 1fr; gap: 24px; }
@@ -436,6 +486,8 @@ table.dec tbody tr:hover { background: var(--hair); }
   .figs, .ninety { grid-template-columns: 1fr 1fr; }
 }
 @media (max-width: 640px) {
+  .dcols, .dcols.c3 { grid-template-columns: minmax(0,1fr); }
+  .legend .hintx { display: none; }
   .iso-stage { height: auto; }
   .iso { position: static; transform: none; display: flex; flex-direction: column-reverse; gap: 10px; }
   .plate { position: relative; left: auto; top: auto; width: 100%; height: auto; transform: none !important; }
@@ -454,6 +506,7 @@ table.dec tbody tr:hover { background: var(--hair); }
 
 <nav class="nav" aria-label="Sections">
   <a class="brand" href="#top"><i data-i="house"></i>HomeFinder</a>
+  <a href="#decisions">Decisions</a>
   <a href="#arch">Architecture</a>
   <a href="#grammar">Layers</a>
   <a href="#numbers">Numbers</a>
@@ -461,8 +514,9 @@ table.dec tbody tr:hover { background: var(--hair); }
   <a href="#search">Search</a>
   <a href="#geo">Geo</a>
   <a href="#alerts">Alerts</a>
-  <a href="#peaks">Peaks</a>
-  <a href="#decisions">Decisions</a>
+  <a href="#cost">Cost</a>
+  <button class="themebtn" id="notesBtn" type="button" aria-pressed="false" aria-label="Show notes" title="Show notes"></button>
+  <button class="themebtn" id="themeBtn" type="button" aria-label="Theme: system"></button>
 </nav>
 
 <main class="wrap" id="top">
@@ -480,6 +534,30 @@ table.dec tbody tr:hover { background: var(--hair); }
     </div>
   </header>
 
+  <section class="block" id="decisions">
+    <div class="sec-head">
+      <h2>Decisions</h2>
+      <div class="tabs" role="tablist" aria-label="Decision sets">
+        <button role="tab" id="dtab-gcp" aria-selected="true" aria-controls="dcols">Tech choices</button>
+        <button role="tab" id="dtab-design" aria-selected="false" aria-controls="dcols">Design choices</button>
+      </div>
+    </div>
+    <p class="sec-lead">GCP-native, kept light: managed where the protocol is open, proprietary only behind an adapter.</p>
+    <div class="ninety picks">
+      <a class="card" href="#pipeline"><span class="tile"><i data-i="workflow"></i></span><span><small>Architecture · 8 min</small>MLS integration + pipeline</span></a>
+      <a class="card" href="#search"><span class="tile"><i data-i="map-pin"></i></span><span><small>Deep dive · 15 min</small>Geospatial property search</span></a>
+      <a class="card" href="#cost"><span class="tile"><i data-i="badge-dollar-sign"></i></span><span><small>Scaling · 7 min</small>Cost optimization</span></a>
+    </div>
+    <div class="ledger" id="ledger"></div>
+    <div class="dcols" id="dcols"></div>
+    <p class="lbl ninety-h">First 90 days</p>
+    <div class="ninety" style="margin-top:8px">
+      <div class="card"><span class="tile"><i data-i="flask-conical"></i></span>Pilot 3 MLSs end to end</div>
+      <div class="card"><span class="tile"><i data-i="gauge"></i></span>Load-test search</div>
+      <div class="card"><span class="tile"><i data-i="handshake"></i></span>Agree feed SLOs</div>
+    </div>
+  </section>
+
   <section class="block" id="arch">
     <div class="sec-head">
       <h2>Architecture</h2>
@@ -492,21 +570,17 @@ table.dec tbody tr:hover { background: var(--hair); }
     <div class="archbox"><div class="arch" id="archMap"><svg id="archSvg" viewBox="0 0 1100 680" aria-hidden="true"></svg></div></div>
     <ol class="flowsteps" id="flowSteps"></ol>
     <p class="flowdesc" id="flowDesc"></p>
-    <p class="note-cloud"><i data-i="cloud"></i>Open-source building blocks, so it runs on any cloud. GCP shown where a managed service fits.</p>
+    <p class="note-cloud"><i data-i="cloud"></i>GCP-native, kept light: AlloyDB, Memorystore for Valkey, Pub/Sub, Cloud Tasks, BigQuery, Cloud Run. OpenSearch on GKE is the one stateful build.</p>
   </section>
 
   <section class="block" id="grammar">
     <div class="sec-head">
-      <h2>The system</h2>
-      <div class="tabs" role="tablist" aria-label="Views">
-        <button role="tab" id="tab-layers" aria-selected="true" aria-controls="pane-layers">Layers</button>
-        <button role="tab" id="tab-nouns" aria-selected="false" aria-controls="pane-nouns">Concepts</button>
-        <button role="tab" id="tab-verbs" aria-selected="false" aria-controls="pane-verbs">Who does what</button>
-      </div>
+      <h2>How a listing moves</h2>
+      <button class="iconbtn" id="follow" type="button"><i data-i="play"></i><span>Follow a listing</span></button>
     </div>
-    <p class="sec-lead" id="grammar-lead"></p>
+    <p class="sec-lead">One MLS change, bottom to top: pulled, landed, stored, published, read. Click a layer or follow one through.</p>
 
-    <div role="tabpanel" id="pane-layers" aria-labelledby="tab-layers">
+    <div>
       <div class="stackgrid">
         <div class="iso-stage">
           <div class="stack-tools"><button class="iconbtn" id="explode" type="button" aria-pressed="false"><i data-i="layers"></i><span>Spread</span></button></div>
@@ -514,14 +588,12 @@ table.dec tbody tr:hover { background: var(--hair); }
         </div>
         <div class="tablebox">
           <table class="spec" id="layerTable">
-            <thead><tr><th>Layer</th><th>Holds</th></tr></thead>
+            <thead><tr><th>Layer</th><th>What happens to the listing</th><th>Stored in</th></tr></thead>
             <tbody></tbody>
           </table>
         </div>
       </div>
     </div>
-    <div role="tabpanel" id="pane-nouns" aria-labelledby="tab-nouns" hidden><div class="concepts" id="concepts"></div></div>
-    <div role="tabpanel" id="pane-verbs" aria-labelledby="tab-verbs" hidden><div class="tablebox"><table class="matrix" id="matrix"></table></div></div>
   </section>
 
   <section class="block" id="numbers">
@@ -554,7 +626,7 @@ table.dec tbody tr:hover { background: var(--hair); }
             <button class="chip" data-drill="redis"><i data-i="zap"></i>Cache purge</button>
             <button class="chip" data-drill="alerts"><i data-i="bell-ring"></i>Alerts</button>
             <button class="chip" data-drill="avm"><i data-i="badge-dollar-sign"></i>AVM</button>
-            <button class="chip" data-drill="lake"><i data-i="archive"></i>Lake</button>
+            <button class="chip" data-drill="bigquery"><i data-i="archive"></i>BigQuery</button>
           </div>
         </div>
         <div class="cap"></div>
@@ -627,7 +699,7 @@ table.dec tbody tr:hover { background: var(--hair); }
             <button class="card" data-act="1" data-drill="event"><span class="tile"><i data-i="activity"></i></span><span>property.changed</span><small>by property_id</small></button>
             <button class="card" data-act="2" data-drill="alerts"><span class="tile"><i data-i="filter"></i></span><span>Classify</span><small>~30% matter</small></button>
             <button class="card" data-act="3" data-drill="cell"><span class="tile"><i data-i="hexagon"></i></span><span>Match by H3 cell</span><small>~20 GB RAM</small></button>
-            <button class="card" data-act="4" data-drill="dynamo"><span class="tile"><i data-i="copy-check"></i></span><span>Dedupe</span><small>KV store + TTL</small></button>
+            <button class="card" data-act="4" data-drill="dynamo"><span class="tile"><i data-i="copy-check"></i></span><span>Dedupe</span><small>Valkey SET NX + TTL</small></button>
             <button class="card" data-act="5" data-drill="notification"><span class="tile"><i data-i="smartphone"></i></span><span>Push · email · in-app</span><small>p95 &lt; 60 s</small></button>
           </div>
           <div class="slip"><span class="tile"><i data-i="trending-down"></i></span><span><b>Price drop on a saved home</b><small>$549,900 → $529,000</small></span></div>
@@ -637,49 +709,25 @@ table.dec tbody tr:hover { background: var(--hair); }
     </div>
   </section>
 
-  <section class="block walk" id="peaks">
+  <section class="block walk" id="cost">
     <div class="cols">
       <div class="prose">
-        <span class="when"><i data-i="clock"></i>Scaling · 6 min</span>
-        <h2>Spring peaks</h2>
-        <p class="key">2× reads · flat writes · 99.95%</p>
+        <span class="when"><i data-i="clock"></i>Scaling · 7 min</span>
+        <h2>Cost optimization</h2>
+        <p class="key">One line item at a time, biggest first · they add up to 100%</p>
         <ol class="steps"></ol>
       </div>
       <div class="stage-wrap">
         <div class="stage-tools"><button class="iconbtn play" type="button"><i data-i="play"></i><span>Play</span></button></div>
-        <div class="stage" style="padding:16px 12px 12px">
-          <svg class="chart" id="chart" viewBox="0 0 600 320" role="img" aria-label="Search QPS over one week: normal, spring, what reaches the index, and the scheduled floor"></svg>
-          <div class="ladder">
-            <span class="lbl">Give up, cheapest first</span>
-            <ol>
-              <li><span class="tile"><i data-i="clock"></i></span>Cache 60 s → 5 min</li>
-              <li><span class="tile"><i data-i="list-ordered"></i></span>Skip personal re-rank</li>
-              <li><span class="tile"><i data-i="calendar"></i></span>Precomputed values only</li>
-              <li><span class="tile"><i data-i="pause"></i></span>Pause batch and digests</li>
-            </ol>
-            <div class="never"><span class="tile"><i data-i="shield"></i></span><span><b>Never:</b> search, listings, contact agent, mortgage</span></div>
-          </div>
+        <div class="stage">
+          <div class="ms"><span class="big" id="billv">100%</span><span class="of" id="billof">the monthly bill</span></div>
+          <div class="bill" id="bill"></div>
+          <div class="billscale"><span>0%</span><span>100%</span></div>
+          <div class="billrows" id="billrows"></div>
         </div>
-        <div class="chartleg">
-          <span><i style="background:var(--ink-3)"></i>Normal</span>
-          <span><i style="background:var(--ink)"></i>Spring</span>
-          <span><i style="background:var(--accent)"></i>Reaches index</span>
-          <span><i style="background:var(--signal)"></i>Scheduled floor</span>
-          <span>Illustrative shape</span>
-        </div>
+        <div class="chartleg"><span>Illustrative shares of one monthly bill, not a forecast</span></div>
         <div class="cap"></div>
       </div>
-    </div>
-  </section>
-
-  <section class="block" id="decisions">
-    <div class="sec-head"><h2>Seven decisions</h2></div>
-    <p class="sec-lead">What I chose, what I gave up.</p>
-    <div class="tablebox"><table class="dec" id="dec"><thead><tr><th>Area</th><th>Chose</th><th>Over</th><th>Because</th></tr></thead><tbody></tbody></table></div>
-    <div class="ninety">
-      <div class="card"><span class="tile"><i data-i="flask-conical"></i></span>Pilot 3 MLSs end to end</div>
-      <div class="card"><span class="tile"><i data-i="gauge"></i></span>Load-test search</div>
-      <div class="card"><span class="tile"><i data-i="handshake"></i></span>Agree feed SLOs</div>
     </div>
   </section>
 </main>
@@ -699,7 +747,7 @@ const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;",
 const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 /* Lucide 0.460 (ISC), only the icons this page uses */
-const ICONS = {"activity":"<path d=\"M22 12h-2.48a2 2 0 0 0-1.93 1.46l-2.35 8.36a.25.25 0 0 1-.48 0L9.24 2.18a.25.25 0 0 0-.48 0l-2.35 8.36A2 2 0 0 1 4.49 12H2\"/>","archive":"<rect width=\"20\" height=\"5\" x=\"2\" y=\"3\" rx=\"1\"/> <path d=\"M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8\"/> <path d=\"M10 12h4\"/>","arrow-left-right":"<path d=\"M8 3 4 7l4 4\"/> <path d=\"M4 7h16\"/> <path d=\"m16 21 4-4-4-4\"/> <path d=\"M20 17H4\"/>","arrow-up-down":"<path d=\"m21 16-4 4-4-4\"/> <path d=\"M17 20V4\"/> <path d=\"m3 8 4-4 4 4\"/> <path d=\"M7 4v16\"/>","badge-dollar-sign":"<path d=\"M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.77 4.78 4 4 0 0 1-6.75 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.76Z\"/> <path d=\"M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8\"/> <path d=\"M12 18V6\"/>","bell":"<path d=\"M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9\"/> <path d=\"M10.3 21a1.94 1.94 0 0 0 3.4 0\"/>","bell-ring":"<path d=\"M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9\"/> <path d=\"M10.3 21a1.94 1.94 0 0 0 3.4 0\"/> <path d=\"M4 2C2.8 3.7 2 5.7 2 8\"/> <path d=\"M22 8c0-2.3-.8-4.3-2-6\"/>","bookmark":"<path d=\"m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z\"/>","boxes":"<path d=\"M2.97 12.92A2 2 0 0 0 2 14.63v3.24a2 2 0 0 0 .97 1.71l3 1.8a2 2 0 0 0 2.06 0L12 19v-5.5l-5-3-4.03 2.42Z\"/> <path d=\"m7 16.5-4.74-2.85\"/> <path d=\"m7 16.5 5-3\"/> <path d=\"M7 16.5v5.17\"/> <path d=\"M12 13.5V19l3.97 2.38a2 2 0 0 0 2.06 0l3-1.8a2 2 0 0 0 .97-1.71v-3.24a2 2 0 0 0-.97-1.71L17 10.5l-5 3Z\"/> <path d=\"m17 16.5-5-3\"/> <path d=\"m17 16.5 4.74-2.85\"/> <path d=\"M17 16.5v5.17\"/> <path d=\"M7.97 4.42A2 2 0 0 0 7 6.13v4.37l5 3 5-3V6.13a2 2 0 0 0-.97-1.71l-3-1.8a2 2 0 0 0-2.06 0l-3 1.8Z\"/> <path d=\"M12 8 7.26 5.15\"/> <path d=\"m12 8 4.74-2.85\"/> <path d=\"M12 13.5V8\"/>","calendar":"<path d=\"M8 2v4\"/> <path d=\"M16 2v4\"/> <rect width=\"18\" height=\"18\" x=\"3\" y=\"4\" rx=\"2\"/> <path d=\"M3 10h18\"/>","clock":"<circle cx=\"12\" cy=\"12\" r=\"10\"/> <polyline points=\"12 6 12 12 16 14\"/>","cloud":"<path d=\"M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z\"/>","copy-check":"<path d=\"m12 15 2 2 4-4\"/> <rect width=\"14\" height=\"14\" x=\"8\" y=\"8\" rx=\"2\" ry=\"2\"/> <path d=\"M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2\"/>","database":"<ellipse cx=\"12\" cy=\"5\" rx=\"9\" ry=\"3\"/> <path d=\"M3 5V19A9 3 0 0 0 21 19V5\"/> <path d=\"M3 12A9 3 0 0 0 21 12\"/>","door-open":"<path d=\"M13 4h3a2 2 0 0 1 2 2v14\"/> <path d=\"M2 20h3\"/> <path d=\"M13 20h9\"/> <path d=\"M10 12v.01\"/> <path d=\"M13 4.562v16.157a1 1 0 0 1-1.242.97L5 20V5.562a2 2 0 0 1 1.515-1.94l4-1A2 2 0 0 1 13 4.561Z\"/>","file-text":"<path d=\"M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z\"/> <path d=\"M14 2v4a2 2 0 0 0 2 2h4\"/> <path d=\"M10 9H8\"/> <path d=\"M16 13H8\"/> <path d=\"M16 17H8\"/>","filter":"<polygon points=\"22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3\"/>","flask-conical":"<path d=\"M10 2v7.527a2 2 0 0 1-.211.896L4.72 20.55a1 1 0 0 0 .9 1.45h12.76a1 1 0 0 0 .9-1.45l-5.069-10.127A2 2 0 0 1 14 9.527V2\"/> <path d=\"M8.5 2h7\"/> <path d=\"M7 16h10\"/>","gauge":"<path d=\"m12 14 4-4\"/> <path d=\"M3.34 19a10 10 0 1 1 17.32 0\"/>","git-merge":"<circle cx=\"18\" cy=\"18\" r=\"3\"/> <circle cx=\"6\" cy=\"6\" r=\"3\"/> <path d=\"M6 21V9a9 9 0 0 0 9 9\"/>","globe":"<circle cx=\"12\" cy=\"12\" r=\"10\"/> <path d=\"M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20\"/> <path d=\"M2 12h20\"/>","hammer":"<path d=\"m15 12-8.373 8.373a1 1 0 1 1-3-3L12 9\"/> <path d=\"m18 15 4-4\"/> <path d=\"m21.5 11.5-1.914-1.914A2 2 0 0 1 19 8.172V7l-2.26-2.26a6 6 0 0 0-4.202-1.756L9 2.96l.92.82A6.18 6.18 0 0 1 12 8.4V10l2 2h1.172a2 2 0 0 1 1.414.586L18.5 14.5\"/>","handshake":"<path d=\"m11 17 2 2a1 1 0 1 0 3-3\"/> <path d=\"m14 14 2.5 2.5a1 1 0 1 0 3-3l-3.88-3.88a3 3 0 0 0-4.24 0l-.88.88a1 1 0 1 1-3-3l2.81-2.81a5.79 5.79 0 0 1 7.06-.87l.47.28a2 2 0 0 0 1.42.25L21 4\"/> <path d=\"m21 3 1 11h-2\"/> <path d=\"M3 3 2 14l6.5 6.5a1 1 0 1 0 3-3\"/> <path d=\"M3 4h8\"/>","hard-drive":"<line x1=\"22\" x2=\"2\" y1=\"12\" y2=\"12\"/> <path d=\"M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z\"/> <line x1=\"6\" x2=\"6.01\" y1=\"16\" y2=\"16\"/> <line x1=\"10\" x2=\"10.01\" y1=\"16\" y2=\"16\"/>","hard-drive-download":"<path d=\"M12 2v8\"/> <path d=\"m16 6-4 4-4-4\"/> <rect width=\"20\" height=\"8\" x=\"2\" y=\"14\" rx=\"2\"/> <path d=\"M6 18h.01\"/> <path d=\"M10 18h.01\"/>","hexagon":"<path d=\"M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z\"/>","house":"<path d=\"M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8\"/> <path d=\"M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z\"/>","image":"<rect width=\"18\" height=\"18\" x=\"3\" y=\"3\" rx=\"2\" ry=\"2\"/> <circle cx=\"9\" cy=\"9\" r=\"2\"/> <path d=\"m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21\"/>","key-round":"<path d=\"M2.586 17.414A2 2 0 0 0 2 18.828V21a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h1a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h.172a2 2 0 0 0 1.414-.586l.814-.814a6.5 6.5 0 1 0-4-4z\"/> <circle cx=\"16.5\" cy=\"7.5\" r=\".5\" fill=\"currentColor\"/>","landmark":"<line x1=\"3\" x2=\"21\" y1=\"22\" y2=\"22\"/> <line x1=\"6\" x2=\"6\" y1=\"18\" y2=\"11\"/> <line x1=\"10\" x2=\"10\" y1=\"18\" y2=\"11\"/> <line x1=\"14\" x2=\"14\" y1=\"18\" y2=\"11\"/> <line x1=\"18\" x2=\"18\" y1=\"18\" y2=\"11\"/> <polygon points=\"12 2 20 7 4 7\"/>","layers":"<path d=\"m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z\"/> <path d=\"m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65\"/> <path d=\"m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65\"/>","list-checks":"<path d=\"m3 17 2 2 4-4\"/> <path d=\"m3 7 2 2 4-4\"/> <path d=\"M13 6h8\"/> <path d=\"M13 12h8\"/> <path d=\"M13 18h8\"/>","list-ordered":"<path d=\"M10 12h11\"/> <path d=\"M10 18h11\"/> <path d=\"M10 6h11\"/> <path d=\"M4 10h2\"/> <path d=\"M4 6h1v4\"/> <path d=\"M6 18H4c0-1 2-2 2-3s-1-1.5-2-1\"/>","map-pin":"<path d=\"M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0\"/> <circle cx=\"12\" cy=\"10\" r=\"3\"/>","memory-stick":"<path d=\"M6 19v-3\"/> <path d=\"M10 19v-3\"/> <path d=\"M14 19v-3\"/> <path d=\"M18 19v-3\"/> <path d=\"M8 11V9\"/> <path d=\"M16 11V9\"/> <path d=\"M12 11V9\"/> <path d=\"M2 15h20\"/> <path d=\"M2 7a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v1.1a2 2 0 0 0 0 3.837V17a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-5.1a2 2 0 0 0 0-3.837Z\"/>","mic":"<path d=\"M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z\"/> <path d=\"M19 10v2a7 7 0 0 1-14 0v-2\"/> <line x1=\"12\" x2=\"12\" y1=\"19\" y2=\"22\"/>","monitor-smartphone":"<path d=\"M18 8V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h8\"/> <path d=\"M10 19v-3.96 3.15\"/> <path d=\"M7 19h5\"/> <rect width=\"6\" height=\"10\" x=\"16\" y=\"12\" rx=\"2\"/>","mouse-pointer-click":"<path d=\"M14 4.1 12 6\"/> <path d=\"m5.1 8-2.9-.8\"/> <path d=\"m6 12-1.9 2\"/> <path d=\"M7.2 2.2 8 5.1\"/> <path d=\"M9.037 9.69a.498.498 0 0 1 .653-.653l11 4.5a.5.5 0 0 1-.074.949l-4.349 1.041a1 1 0 0 0-.74.739l-1.04 4.35a.5.5 0 0 1-.95.074z\"/>","pause":"<rect x=\"14\" y=\"4\" width=\"4\" height=\"16\" rx=\"1\"/> <rect x=\"6\" y=\"4\" width=\"4\" height=\"16\" rx=\"1\"/>","pen-line":"<path d=\"M12 20h9\"/> <path d=\"M16.376 3.622a1 1 0 0 1 3.002 3.002L7.368 18.635a2 2 0 0 1-.855.506l-2.872.838a.5.5 0 0 1-.62-.62l.838-2.872a2 2 0 0 1 .506-.854z\"/>","play":"<polygon points=\"6 3 20 12 6 21 6 3\"/>","plug":"<path d=\"M12 22v-5\"/> <path d=\"M9 8V2\"/> <path d=\"M15 8V2\"/> <path d=\"M18 8v5a4 4 0 0 1-4 4h-4a4 4 0 0 1-4-4V8Z\"/>","radio-tower":"<path d=\"M4.9 16.1C1 12.2 1 5.8 4.9 1.9\"/> <path d=\"M7.8 4.7a6.14 6.14 0 0 0-.8 7.5\"/> <circle cx=\"12\" cy=\"9\" r=\"2\"/> <path d=\"M16.2 4.8c2 2 2.26 5.11.8 7.47\"/> <path d=\"M19.1 1.9a9.96 9.96 0 0 1 0 14.1\"/> <path d=\"M9.5 18h5\"/> <path d=\"m8 22 4-11 4 11\"/>","rotate-ccw":"<path d=\"M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8\"/> <path d=\"M3 3v5h5\"/>","rss":"<path d=\"M4 11a9 9 0 0 1 9 9\"/> <path d=\"M4 4a16 16 0 0 1 16 16\"/> <circle cx=\"5\" cy=\"19\" r=\"1\"/>","scale":"<path d=\"m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z\"/> <path d=\"m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z\"/> <path d=\"M7 21h10\"/> <path d=\"M12 3v18\"/> <path d=\"M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2\"/>","scan-search":"<path d=\"M3 7V5a2 2 0 0 1 2-2h2\"/> <path d=\"M17 3h2a2 2 0 0 1 2 2v2\"/> <path d=\"M21 17v2a2 2 0 0 1-2 2h-2\"/> <path d=\"M7 21H5a2 2 0 0 1-2-2v-2\"/> <circle cx=\"12\" cy=\"12\" r=\"3\"/> <path d=\"m16 16-1.9-1.9\"/>","search":"<circle cx=\"11\" cy=\"11\" r=\"8\"/> <path d=\"m21 21-4.3-4.3\"/>","send":"<path d=\"M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z\"/> <path d=\"m21.854 2.147-10.94 10.939\"/>","shield":"<path d=\"M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z\"/>","sliders-horizontal":"<line x1=\"21\" x2=\"14\" y1=\"4\" y2=\"4\"/> <line x1=\"10\" x2=\"3\" y1=\"4\" y2=\"4\"/> <line x1=\"21\" x2=\"12\" y1=\"12\" y2=\"12\"/> <line x1=\"8\" x2=\"3\" y1=\"12\" y2=\"12\"/> <line x1=\"21\" x2=\"16\" y1=\"20\" y2=\"20\"/> <line x1=\"12\" x2=\"3\" y1=\"20\" y2=\"20\"/> <line x1=\"14\" x2=\"14\" y1=\"2\" y2=\"6\"/> <line x1=\"8\" x2=\"8\" y1=\"10\" y2=\"14\"/> <line x1=\"16\" x2=\"16\" y1=\"18\" y2=\"22\"/>","smartphone":"<rect width=\"14\" height=\"20\" x=\"5\" y=\"2\" rx=\"2\" ry=\"2\"/> <path d=\"M12 18h.01\"/>","tag":"<path d=\"M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.42 0l6.58-6.58a2.426 2.426 0 0 0 0-3.42z\"/> <circle cx=\"7.5\" cy=\"7.5\" r=\".5\" fill=\"currentColor\"/>","trending-down":"<polyline points=\"22 17 13.5 8.5 8.5 13.5 2 7\"/> <polyline points=\"16 17 22 17 22 11\"/>","users":"<path d=\"M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2\"/> <circle cx=\"9\" cy=\"7\" r=\"4\"/> <path d=\"M22 21v-2a4 4 0 0 0-3-3.87\"/> <path d=\"M16 3.13a4 4 0 0 1 0 7.75\"/>","workflow":"<rect width=\"8\" height=\"8\" x=\"3\" y=\"3\" rx=\"2\"/> <path d=\"M7 11v4a2 2 0 0 0 2 2h4\"/> <rect width=\"8\" height=\"8\" x=\"13\" y=\"13\" rx=\"2\"/>","x":"<path d=\"M18 6 6 18\"/> <path d=\"m6 6 12 12\"/>","zap":"<path d=\"M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z\"/>"};
+const ICONS = {"captions":"<rect width=\"18\" height=\"14\" x=\"3\" y=\"5\" rx=\"2\" ry=\"2\"/> <path d=\"M7 15h4M15 15h2M7 11h2M13 11h4\"/>","captions-off":"<path d=\"M10.5 5H19a2 2 0 0 1 2 2v8.5\"/> <path d=\"M17 11h-.5\"/> <path d=\"M19 19H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2\"/> <path d=\"m2 2 20 20\"/> <path d=\"M7 11h4\"/> <path d=\"M7 15h2.5\"/>","sun":"<circle cx=\"12\" cy=\"12\" r=\"4\"/> <path d=\"M12 2v2\"/> <path d=\"M12 20v2\"/> <path d=\"m4.93 4.93 1.41 1.41\"/> <path d=\"m17.66 17.66 1.41 1.41\"/> <path d=\"M2 12h2\"/> <path d=\"M20 12h2\"/> <path d=\"m6.34 17.66-1.41 1.41\"/> <path d=\"m19.07 4.93-1.41 1.41\"/>","moon":"<path d=\"M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z\"/>","sun-moon":"<path d=\"M12 8a2.83 2.83 0 0 0 4 4 4 4 0 1 1-4-4\"/> <path d=\"M12 2v2\"/> <path d=\"M12 20v2\"/> <path d=\"m4.9 4.9 1.4 1.4\"/> <path d=\"m17.7 17.7 1.4 1.4\"/> <path d=\"M2 12h2\"/> <path d=\"M20 12h2\"/> <path d=\"m6.3 17.7-1.4 1.4\"/> <path d=\"m19.1 4.9-1.4 1.4\"/>","check":"<path d=\"M20 6 9 17l-5-5\"/>","arrow-up-right":"<path d=\"M7 7h10v10\"/> <path d=\"M7 17 17 7\"/>","cpu":"<rect width=\"16\" height=\"16\" x=\"4\" y=\"4\" rx=\"2\"/> <rect width=\"6\" height=\"6\" x=\"9\" y=\"9\" rx=\"1\"/> <path d=\"M15 2v2\"/> <path d=\"M15 20v2\"/> <path d=\"M2 15h2\"/> <path d=\"M2 9h2\"/> <path d=\"M20 15h2\"/> <path d=\"M20 9h2\"/> <path d=\"M9 2v2\"/> <path d=\"M9 20v2\"/>","activity":"<path d=\"M22 12h-2.48a2 2 0 0 0-1.93 1.46l-2.35 8.36a.25.25 0 0 1-.48 0L9.24 2.18a.25.25 0 0 0-.48 0l-2.35 8.36A2 2 0 0 1 4.49 12H2\"/>","archive":"<rect width=\"20\" height=\"5\" x=\"2\" y=\"3\" rx=\"1\"/> <path d=\"M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8\"/> <path d=\"M10 12h4\"/>","arrow-left-right":"<path d=\"M8 3 4 7l4 4\"/> <path d=\"M4 7h16\"/> <path d=\"m16 21 4-4-4-4\"/> <path d=\"M20 17H4\"/>","arrow-up-down":"<path d=\"m21 16-4 4-4-4\"/> <path d=\"M17 20V4\"/> <path d=\"m3 8 4-4 4 4\"/> <path d=\"M7 4v16\"/>","badge-dollar-sign":"<path d=\"M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.77 4.78 4 4 0 0 1-6.75 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.76Z\"/> <path d=\"M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8\"/> <path d=\"M12 18V6\"/>","bell":"<path d=\"M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9\"/> <path d=\"M10.3 21a1.94 1.94 0 0 0 3.4 0\"/>","bell-ring":"<path d=\"M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9\"/> <path d=\"M10.3 21a1.94 1.94 0 0 0 3.4 0\"/> <path d=\"M4 2C2.8 3.7 2 5.7 2 8\"/> <path d=\"M22 8c0-2.3-.8-4.3-2-6\"/>","bookmark":"<path d=\"m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z\"/>","boxes":"<path d=\"M2.97 12.92A2 2 0 0 0 2 14.63v3.24a2 2 0 0 0 .97 1.71l3 1.8a2 2 0 0 0 2.06 0L12 19v-5.5l-5-3-4.03 2.42Z\"/> <path d=\"m7 16.5-4.74-2.85\"/> <path d=\"m7 16.5 5-3\"/> <path d=\"M7 16.5v5.17\"/> <path d=\"M12 13.5V19l3.97 2.38a2 2 0 0 0 2.06 0l3-1.8a2 2 0 0 0 .97-1.71v-3.24a2 2 0 0 0-.97-1.71L17 10.5l-5 3Z\"/> <path d=\"m17 16.5-5-3\"/> <path d=\"m17 16.5 4.74-2.85\"/> <path d=\"M17 16.5v5.17\"/> <path d=\"M7.97 4.42A2 2 0 0 0 7 6.13v4.37l5 3 5-3V6.13a2 2 0 0 0-.97-1.71l-3-1.8a2 2 0 0 0-2.06 0l-3 1.8Z\"/> <path d=\"M12 8 7.26 5.15\"/> <path d=\"m12 8 4.74-2.85\"/> <path d=\"M12 13.5V8\"/>","calendar":"<path d=\"M8 2v4\"/> <path d=\"M16 2v4\"/> <rect width=\"18\" height=\"18\" x=\"3\" y=\"4\" rx=\"2\"/> <path d=\"M3 10h18\"/>","clock":"<circle cx=\"12\" cy=\"12\" r=\"10\"/> <polyline points=\"12 6 12 12 16 14\"/>","cloud":"<path d=\"M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z\"/>","copy-check":"<path d=\"m12 15 2 2 4-4\"/> <rect width=\"14\" height=\"14\" x=\"8\" y=\"8\" rx=\"2\" ry=\"2\"/> <path d=\"M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2\"/>","database":"<ellipse cx=\"12\" cy=\"5\" rx=\"9\" ry=\"3\"/> <path d=\"M3 5V19A9 3 0 0 0 21 19V5\"/> <path d=\"M3 12A9 3 0 0 0 21 12\"/>","door-open":"<path d=\"M13 4h3a2 2 0 0 1 2 2v14\"/> <path d=\"M2 20h3\"/> <path d=\"M13 20h9\"/> <path d=\"M10 12v.01\"/> <path d=\"M13 4.562v16.157a1 1 0 0 1-1.242.97L5 20V5.562a2 2 0 0 1 1.515-1.94l4-1A2 2 0 0 1 13 4.561Z\"/>","file-text":"<path d=\"M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z\"/> <path d=\"M14 2v4a2 2 0 0 0 2 2h4\"/> <path d=\"M10 9H8\"/> <path d=\"M16 13H8\"/> <path d=\"M16 17H8\"/>","filter":"<polygon points=\"22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3\"/>","flask-conical":"<path d=\"M10 2v7.527a2 2 0 0 1-.211.896L4.72 20.55a1 1 0 0 0 .9 1.45h12.76a1 1 0 0 0 .9-1.45l-5.069-10.127A2 2 0 0 1 14 9.527V2\"/> <path d=\"M8.5 2h7\"/> <path d=\"M7 16h10\"/>","gauge":"<path d=\"m12 14 4-4\"/> <path d=\"M3.34 19a10 10 0 1 1 17.32 0\"/>","git-merge":"<circle cx=\"18\" cy=\"18\" r=\"3\"/> <circle cx=\"6\" cy=\"6\" r=\"3\"/> <path d=\"M6 21V9a9 9 0 0 0 9 9\"/>","globe":"<circle cx=\"12\" cy=\"12\" r=\"10\"/> <path d=\"M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20\"/> <path d=\"M2 12h20\"/>","hammer":"<path d=\"m15 12-8.373 8.373a1 1 0 1 1-3-3L12 9\"/> <path d=\"m18 15 4-4\"/> <path d=\"m21.5 11.5-1.914-1.914A2 2 0 0 1 19 8.172V7l-2.26-2.26a6 6 0 0 0-4.202-1.756L9 2.96l.92.82A6.18 6.18 0 0 1 12 8.4V10l2 2h1.172a2 2 0 0 1 1.414.586L18.5 14.5\"/>","handshake":"<path d=\"m11 17 2 2a1 1 0 1 0 3-3\"/> <path d=\"m14 14 2.5 2.5a1 1 0 1 0 3-3l-3.88-3.88a3 3 0 0 0-4.24 0l-.88.88a1 1 0 1 1-3-3l2.81-2.81a5.79 5.79 0 0 1 7.06-.87l.47.28a2 2 0 0 0 1.42.25L21 4\"/> <path d=\"m21 3 1 11h-2\"/> <path d=\"M3 3 2 14l6.5 6.5a1 1 0 1 0 3-3\"/> <path d=\"M3 4h8\"/>","hard-drive":"<line x1=\"22\" x2=\"2\" y1=\"12\" y2=\"12\"/> <path d=\"M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z\"/> <line x1=\"6\" x2=\"6.01\" y1=\"16\" y2=\"16\"/> <line x1=\"10\" x2=\"10.01\" y1=\"16\" y2=\"16\"/>","hard-drive-download":"<path d=\"M12 2v8\"/> <path d=\"m16 6-4 4-4-4\"/> <rect width=\"20\" height=\"8\" x=\"2\" y=\"14\" rx=\"2\"/> <path d=\"M6 18h.01\"/> <path d=\"M10 18h.01\"/>","hexagon":"<path d=\"M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z\"/>","house":"<path d=\"M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8\"/> <path d=\"M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z\"/>","image":"<rect width=\"18\" height=\"18\" x=\"3\" y=\"3\" rx=\"2\" ry=\"2\"/> <circle cx=\"9\" cy=\"9\" r=\"2\"/> <path d=\"m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21\"/>","key-round":"<path d=\"M2.586 17.414A2 2 0 0 0 2 18.828V21a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h1a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h.172a2 2 0 0 0 1.414-.586l.814-.814a6.5 6.5 0 1 0-4-4z\"/> <circle cx=\"16.5\" cy=\"7.5\" r=\".5\" fill=\"currentColor\"/>","landmark":"<line x1=\"3\" x2=\"21\" y1=\"22\" y2=\"22\"/> <line x1=\"6\" x2=\"6\" y1=\"18\" y2=\"11\"/> <line x1=\"10\" x2=\"10\" y1=\"18\" y2=\"11\"/> <line x1=\"14\" x2=\"14\" y1=\"18\" y2=\"11\"/> <line x1=\"18\" x2=\"18\" y1=\"18\" y2=\"11\"/> <polygon points=\"12 2 20 7 4 7\"/>","layers":"<path d=\"m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z\"/> <path d=\"m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65\"/> <path d=\"m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65\"/>","list-checks":"<path d=\"m3 17 2 2 4-4\"/> <path d=\"m3 7 2 2 4-4\"/> <path d=\"M13 6h8\"/> <path d=\"M13 12h8\"/> <path d=\"M13 18h8\"/>","list-ordered":"<path d=\"M10 12h11\"/> <path d=\"M10 18h11\"/> <path d=\"M10 6h11\"/> <path d=\"M4 10h2\"/> <path d=\"M4 6h1v4\"/> <path d=\"M6 18H4c0-1 2-2 2-3s-1-1.5-2-1\"/>","map-pin":"<path d=\"M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0\"/> <circle cx=\"12\" cy=\"10\" r=\"3\"/>","memory-stick":"<path d=\"M6 19v-3\"/> <path d=\"M10 19v-3\"/> <path d=\"M14 19v-3\"/> <path d=\"M18 19v-3\"/> <path d=\"M8 11V9\"/> <path d=\"M16 11V9\"/> <path d=\"M12 11V9\"/> <path d=\"M2 15h20\"/> <path d=\"M2 7a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v1.1a2 2 0 0 0 0 3.837V17a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-5.1a2 2 0 0 0 0-3.837Z\"/>","mic":"<path d=\"M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z\"/> <path d=\"M19 10v2a7 7 0 0 1-14 0v-2\"/> <line x1=\"12\" x2=\"12\" y1=\"19\" y2=\"22\"/>","monitor-smartphone":"<path d=\"M18 8V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h8\"/> <path d=\"M10 19v-3.96 3.15\"/> <path d=\"M7 19h5\"/> <rect width=\"6\" height=\"10\" x=\"16\" y=\"12\" rx=\"2\"/>","mouse-pointer-click":"<path d=\"M14 4.1 12 6\"/> <path d=\"m5.1 8-2.9-.8\"/> <path d=\"m6 12-1.9 2\"/> <path d=\"M7.2 2.2 8 5.1\"/> <path d=\"M9.037 9.69a.498.498 0 0 1 .653-.653l11 4.5a.5.5 0 0 1-.074.949l-4.349 1.041a1 1 0 0 0-.74.739l-1.04 4.35a.5.5 0 0 1-.95.074z\"/>","pause":"<rect x=\"14\" y=\"4\" width=\"4\" height=\"16\" rx=\"1\"/> <rect x=\"6\" y=\"4\" width=\"4\" height=\"16\" rx=\"1\"/>","pen-line":"<path d=\"M12 20h9\"/> <path d=\"M16.376 3.622a1 1 0 0 1 3.002 3.002L7.368 18.635a2 2 0 0 1-.855.506l-2.872.838a.5.5 0 0 1-.62-.62l.838-2.872a2 2 0 0 1 .506-.854z\"/>","play":"<polygon points=\"6 3 20 12 6 21 6 3\"/>","plug":"<path d=\"M12 22v-5\"/> <path d=\"M9 8V2\"/> <path d=\"M15 8V2\"/> <path d=\"M18 8v5a4 4 0 0 1-4 4h-4a4 4 0 0 1-4-4V8Z\"/>","radio-tower":"<path d=\"M4.9 16.1C1 12.2 1 5.8 4.9 1.9\"/> <path d=\"M7.8 4.7a6.14 6.14 0 0 0-.8 7.5\"/> <circle cx=\"12\" cy=\"9\" r=\"2\"/> <path d=\"M16.2 4.8c2 2 2.26 5.11.8 7.47\"/> <path d=\"M19.1 1.9a9.96 9.96 0 0 1 0 14.1\"/> <path d=\"M9.5 18h5\"/> <path d=\"m8 22 4-11 4 11\"/>","rotate-ccw":"<path d=\"M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8\"/> <path d=\"M3 3v5h5\"/>","rss":"<path d=\"M4 11a9 9 0 0 1 9 9\"/> <path d=\"M4 4a16 16 0 0 1 16 16\"/> <circle cx=\"5\" cy=\"19\" r=\"1\"/>","scale":"<path d=\"m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z\"/> <path d=\"m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z\"/> <path d=\"M7 21h10\"/> <path d=\"M12 3v18\"/> <path d=\"M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2\"/>","scan-search":"<path d=\"M3 7V5a2 2 0 0 1 2-2h2\"/> <path d=\"M17 3h2a2 2 0 0 1 2 2v2\"/> <path d=\"M21 17v2a2 2 0 0 1-2 2h-2\"/> <path d=\"M7 21H5a2 2 0 0 1-2-2v-2\"/> <circle cx=\"12\" cy=\"12\" r=\"3\"/> <path d=\"m16 16-1.9-1.9\"/>","search":"<circle cx=\"11\" cy=\"11\" r=\"8\"/> <path d=\"m21 21-4.3-4.3\"/>","send":"<path d=\"M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z\"/> <path d=\"m21.854 2.147-10.94 10.939\"/>","shield":"<path d=\"M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z\"/>","sliders-horizontal":"<line x1=\"21\" x2=\"14\" y1=\"4\" y2=\"4\"/> <line x1=\"10\" x2=\"3\" y1=\"4\" y2=\"4\"/> <line x1=\"21\" x2=\"12\" y1=\"12\" y2=\"12\"/> <line x1=\"8\" x2=\"3\" y1=\"12\" y2=\"12\"/> <line x1=\"21\" x2=\"16\" y1=\"20\" y2=\"20\"/> <line x1=\"12\" x2=\"3\" y1=\"20\" y2=\"20\"/> <line x1=\"14\" x2=\"14\" y1=\"2\" y2=\"6\"/> <line x1=\"8\" x2=\"8\" y1=\"10\" y2=\"14\"/> <line x1=\"16\" x2=\"16\" y1=\"18\" y2=\"22\"/>","smartphone":"<rect width=\"14\" height=\"20\" x=\"5\" y=\"2\" rx=\"2\" ry=\"2\"/> <path d=\"M12 18h.01\"/>","tag":"<path d=\"M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.42 0l6.58-6.58a2.426 2.426 0 0 0 0-3.42z\"/> <circle cx=\"7.5\" cy=\"7.5\" r=\".5\" fill=\"currentColor\"/>","trending-down":"<polyline points=\"22 17 13.5 8.5 8.5 13.5 2 7\"/> <polyline points=\"16 17 22 17 22 11\"/>","users":"<path d=\"M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2\"/> <circle cx=\"9\" cy=\"7\" r=\"4\"/> <path d=\"M22 21v-2a4 4 0 0 0-3-3.87\"/> <path d=\"M16 3.13a4 4 0 0 1 0 7.75\"/>","workflow":"<rect width=\"8\" height=\"8\" x=\"3\" y=\"3\" rx=\"2\"/> <path d=\"M7 11v4a2 2 0 0 0 2 2h4\"/> <rect width=\"8\" height=\"8\" x=\"13\" y=\"13\" rx=\"2\"/>","x":"<path d=\"M18 6 6 18\"/> <path d=\"m6 6 12 12\"/>","zap":"<path d=\"M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z\"/>"};
 const ic = (n, cls = "") => ICONS[n] ? `<svg class="ic ${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[n]}</svg>` : "";
 const paintIcons = root => $$("i[data-i]", root).forEach(el => { el.outerHTML = ic(el.dataset.i, el.className); });
 
@@ -707,55 +755,57 @@ const paintIcons = root => $$("i[data-i]", root).forEach(el => { el.outerHTML = 
    i icon · k kind · t title · p purpose · s state · a actions · op how it works · n numbers · pt key point · qa [question, answer cue] · rel */
 const D = {
   clients: { i: "monitor-smartphone", k: "Clients", t: "Web, iOS, Android", p: "Search the map, open listings, save searches.", s: "Viewport, filters, favorites", a: ["search", "pan", "save", "contact"], op: "Tile-snapped requests, so neighbors share cache.", n: [["100M", "MAU"], ["20M", "DAU"], ["35M", "spring Sunday"]], pt: "SSR for SEO", qa: [["Why server-side rendering?", "Listing pages drive organic traffic. Crawlable, fast first paint."]], rel: ["cdn", "gateway", "maps"] },
-  cdn: { i: "globe", k: "Edge", t: "CDN + WAF", p: "Serve every cacheable byte from the edge.", s: "Pages, tiles (30–60 s), photos · e.g. Cloud CDN + Cloud Armor", a: ["serve", "revalidate", "block bots"], op: "Origin hiccup? Serve stale while refreshing.", n: [["~170 Gbps", "peak egress"], [">95%", "photo hits"], ["~90%", "of bytes"]], pt: "Photos are the bytes", qa: [["Biggest cost?", "Photos. Archive originals: ~$160k → ~$30k a month."]], rel: ["media", "redis", "n-egress"] },
+  cdn: { i: "globe", k: "Edge", t: "CDN + WAF", p: "Serve every cacheable byte from the edge.", s: "Pages, tiles (30–60 s), photos · Cloud CDN + Cloud Armor on a global load balancer", a: ["serve", "revalidate", "block bots"], op: "Origin hiccup? Serve stale while refreshing.", n: [["~170 Gbps", "peak egress"], [">95%", "photo hits"], ["~90%", "of bytes"]], pt: "Photos are the bytes", qa: [["Biggest cost?", "Photos. Archive originals: ~$160k → ~$30k a month."]], rel: ["media", "redis", "n-egress"] },
   media: { i: "image", k: "Edge", t: "Media pipeline", p: "Device-sized photos, tours, video.", s: "Originals archived, sizes hot", a: ["resize", "transcode", "dedupe"], op: "Same photo twice? Stored once by content hash.", n: [["7.5 PB", "originals"], ["~1.5 PB", "sizes, hot"]], pt: "Tours are just media", qa: [["Do you build 3D tours?", "No. Embed a vendor; store and serve the assets."]], rel: ["cdn", "n-photos"] },
   gateway: { i: "door-open", k: "Gateway", t: "API gateway / BFF", p: "One front door.", s: "Rate limits, flags, priority classes", a: ["auth", "rate limit", "SSR", "shed"], op: "Overload sheds low priority first.", n: [["10 ms", "p95 budget"]], pt: "Shedding lives here", qa: [["What triggers shedding?", "CPU, queue depth, p95. Manual override."]], rel: ["peaks-ladder", "search"] },
   search: { i: "search", k: "Service", t: "Search", p: "Any shape, any filter, under 200 ms.", s: "Stateless", a: ["H3 cover", "query", "re-rank", "hydrate"], op: "One shard group → top 500 → re-rank 200 → hydrate.", n: [["~25k", "peak QPS"], ["40k", "design"], ["200 ms", "p95"], ["300 ms", "1k-pin map"]], pt: "Buy the engine, build the index", qa: [["Is 70 ms for OpenSearch real?", "A target. Load-test on production-shaped data."], ["How does ranking work?", "Filters + quality score, then a 20 ms re-rank. No protected-class features."]], rel: ["opensearch", "redis", "features", "cell", "maps"] },
   maps: { i: "map-pin", k: "Concept", t: "Map pins", p: "1,000+ pins in under 300 ms.", s: "Clusters zoomed out, pins zoomed in", a: ["snap to tiles", "cluster", "GPU render"], op: "Zoomed out: ~200 clusters, not 40k pins.", n: [["16 B", "per pin"], ["~24 KB", "1,500 pins"], ["~40 ms", "tile hit"]], pt: "Payload problem, not query problem", qa: [["What about 10,000 pins?", "Cap ~2,000. Switch to clusters or a list."]], rel: ["cell", "cdn", "search"] },
   property: { i: "house", k: "Service · concept", t: "Property", p: "One identity per physical home.", s: "property_id = county FIPS + APN", a: ["resolve", "merge", "upsert", "emit"], op: "Two MLSs, same house → one property_id.", n: [["200M", "properties"], ["~2 TB", "golden records"]], pt: "One place to write a fact", qa: [["No parcel number?", "Address + proximity. Low confidence → review queue."]], rel: ["postgres", "event", "listing", "ingest"] },
-  avm: { i: "badge-dollar-sign", k: "Service", t: "Valuation (AVM)", p: "A value for all 200M homes.", s: "Nightly values in Redis", a: ["score nightly", "re-estimate"], op: "Nightly batch on spot. Live re-estimate under 1 s.", n: [["~55", "CPU-hours / night"], ["< 1 s", "re-estimate"]], pt: "Build it: the differentiator", qa: [["Training leakage?", "Iceberg time travel: train on what we knew then."]], rel: ["features", "lake", "redis"] },
+  avm: { i: "badge-dollar-sign", k: "Service", t: "Valuation (AVM)", p: "A value for all 200M homes.", s: "XGBoost container · nightly scores in AlloyDB + Valkey", a: ["train on BigQuery", "score nightly", "re-estimate"], op: "Nightly batch on Spot VMs, only for homes that changed. Live re-estimate under 1 s.", n: [["~55", "CPU-hours / night"], ["< 1 s", "re-estimate"]], pt: "Build it: the differentiator", qa: [["Why not BigQuery ML?", "Day-one baseline in BQML. Production in a container: custom features, portable."], ["Why not Vertex AI?", "Proprietary endpoints. The same image runs on Cloud Run, GKE or anywhere."], ["Training leakage?", "Iceberg time travel: train on what we knew then."]], rel: ["bigquery", "features", "redis", "cost"] },
   agents: { i: "handshake", k: "Service", t: "Agent marketplace", p: "Connect buyers with agents.", s: "Agents, leads", a: ["contact agent", "route lead"], op: "Strongly consistent. Never shed.", n: [], pt: "The revenue event", qa: [["Is the CRM in scope?", "No. We route leads into it."]], rel: ["gateway", "peaks-ladder"] },
   mortgage: { i: "landmark", k: "Service · isolated", t: "Mortgage", p: "Pre-approval and rate comparison.", s: "Encrypted Postgres in its own GCP project", a: ["pre-approve", "compare", "consent"], op: "One region, field encryption, every access logged.", n: [], pt: "We're not the lender", qa: [["Why isolate it?", "Small blast radius, clean audit boundary."]], rel: ["build"] },
   alerts: { i: "bell-ring", k: "Service", t: "Saved-search alerts", p: "Matching homes to the buyer in under 60 s.", s: "30M searches indexed by H3 cell", a: ["classify", "match", "dedupe", "deliver"], op: "Change → cell → candidates → filters → one push.", n: [["30M", "searches"], ["~20 GB", "in RAM"], ["15M", "matches / day"], ["< 60 s", "p95"]], pt: "Index the queries, stream the listings", qa: [["Why not the percolator?", "Fine for v1. Custom gives predictable latency."], ["Safety net?", "Nightly re-run of the last 24 h. Dedupe blocks doubles."]], rel: ["savedsearch", "cell", "dynamo", "notification", "n-alerts"] },
-  opensearch: { i: "scan-search", k: "Store", t: "OpenSearch", p: "Filters, geo and facets in ms.", s: "Hot 20 GB (8 shards) · warm 400 GB (16) · self-run on GKE or Elastic Cloud", a: ["query", "versioned index", "alias swap"], op: "Rebuild behind an alias. Rollback = one swap.", n: [["~20 GB", "hot"], ["~400 GB", "warm"], ["~27", "nodes at 40k"]], pt: "The searchable set is small", qa: [["One index, filtered on status?", "400 GB hot instead of 20. Doesn't fit in RAM."], ["Hot spots?", "Shard by traffic. NYC and LA get their own."]], rel: ["searchdoc", "search", "n-index"] },
-  redis: { i: "zap", k: "Store", t: "Redis", p: "Sub-millisecond reads.", s: "Query cache, cards, AVM, features · e.g. Memorystore", a: ["MGET", "purge on event"], op: "Key = normalized query + tile → ~40% hits.", n: [["~40%", "cache hit"], ["5 ms", "budget"]], pt: "Tiles are shared, viewports aren't", qa: [["How does it stay fresh?", "Purge on event. 30–60 s TTL for pins."]], rel: ["search", "event"] },
-  postgres: { i: "database", k: "Store", t: "PostgreSQL", p: "The only place a property fact is written.", s: "~2 TB, partitioned by property_id · e.g. AlloyDB or Cloud SQL", a: ["upsert + outbox", "detail reads"], op: "Record + outbox in one transaction → Debezium → Kafka.", n: [["~12/s", "writes"], ["~500/s", "bursts"], ["< 1 s", "replica lag"]], pt: "Writes are tiny, correctness is hard", qa: [["Why not event sourcing?", "Replay already exists. Current state stays simple."], ["Why one writer region?", "Tiny writes, no conflicts. West coast pays +60–70 ms."]], rel: ["event", "property", "lake"] },
-  dynamo: { i: "key-round", k: "Store", t: "Key-value store", p: "Remember what was sent.", s: "Idempotency keys + TTL · e.g. Bigtable", a: ["check-and-set", "expire"], op: "Three searches match → one push.", n: [], pt: "Dedupe with auto-expiry", qa: [], rel: ["notification", "alerts"] },
-  lake: { i: "archive", k: "Store", t: "Lake (object storage + Iceberg)", p: "Raw payloads and 30 years of history.", s: "Raw zone · Iceberg by state/year · e.g. GCS + BigLake", a: ["land", "replay", "time travel"], op: "Mapping bug? Replay, don't re-pull.", n: [["tens of TB", "history"]], pt: "Everything is rebuildable", qa: [], rel: ["ingest", "avm"] },
-  features: { i: "sliders-horizontal", k: "Store", t: "Feature store", p: "Inputs for re-rank and AVM.", s: "~50 features, Redis-backed", a: ["read", "refresh on event"], op: "Past the deadline? Skip it.", n: [["~50", "features"], ["20 ms", "re-rank"]], pt: "Personalization is optional", qa: [["Fair housing?", "No protected classes or proxies. Disparate-impact tests."]], rel: ["search", "avm"] },
-  kafka: { i: "radio-tower", k: "Events", t: "Kafka", p: "Every change to every read model.", s: "4 topics, schema registry · e.g. Managed Service for Apache Kafka", a: ["publish", "consume", "replay"], op: "Keyed by property_id → ordered. Versions → safe replay.", n: [["~12/s", "average"], ["~500/s", "bursts"]], pt: "One write path, many read models", qa: [["Schema changes?", "Registry + compatibility checks in CI. Dead-letter queues."]], rel: ["event", "postgres", "opensearch", "alerts"] },
+  opensearch: { i: "scan-search", k: "Store", t: "OpenSearch", p: "Filters, geo and facets in ms.", s: "Hot 20 GB (8 shards) · warm 400 GB (16) · on GKE, Elastic Cloud as the buy fallback", a: ["query", "versioned index", "alias swap"], op: "Rebuild behind an alias. Rollback = one swap.", n: [["~20 GB", "hot"], ["~400 GB", "warm"], ["~27", "nodes at 40k"]], pt: "The searchable set is small", qa: [["Why not Vertex AI Search?", "Relevance black box, not geo-first. We need geo_shape and our own ranking."], ["One index, filtered on status?", "400 GB hot instead of 20. Doesn't fit in RAM."], ["Hot spots?", "Shard by traffic. NYC and LA get their own."]], rel: ["searchdoc", "search", "n-index"] },
+  redis: { i: "zap", k: "Store · buy", t: "Memorystore for Valkey", p: "Sub-millisecond reads.", s: "Query cache, cards, AVM values, features · Redis protocol, 99.99% with replicas", a: ["MGET", "purge on event"], op: "Key = normalized query + tile → ~40% hits.", n: [["~40%", "cache hit"], ["5 ms", "budget"], ["~50–100 GB", "hot set"]], pt: "Buy it: rebuildable, open protocol", qa: [["How does it stay fresh?", "Purge on event. 30–60 s TTL for pins."], ["Why not Dragonfly?", "Saves a few nodes at our size; failover and the pager become ours. Revisit at top-3 cost."], ["Why not Redis?", "Left BSD in 2024. Valkey: same API, BSD, Linux Foundation."]], rel: ["search", "event", "build"] },
+  postgres: { i: "database", k: "Store · buy", t: "AlloyDB", p: "The only place a property fact is written.", s: "~2 TB Postgres + PostGIS, partitioned by property_id · read pools · cross-region DR secondary", a: ["upsert + outbox", "PostGIS tagging", "detail reads"], op: "Record + outbox in one transaction → relay → Pub/Sub.", n: [["~12/s", "writes"], ["~500/s", "bursts"], ["< 1 s", "replica lag"]], pt: "Writes are tiny, correctness is hard", qa: [["Why not Spanner?", "Multi-region writes and 99.999% we don't need at 12 writes/s. We'd lose PostGIS."], ["Why not event sourcing?", "Replay already exists. Current state stays simple."], ["Why one writer region?", "Tiny writes, no conflicts. West coast pays +60–70 ms."]], rel: ["event", "property", "lake"] },
+  dynamo: { i: "key-round", k: "Store", t: "Dedupe keys", p: "Remember what was sent.", s: "SET NX + TTL on a small no-eviction Valkey instance", a: ["set if absent", "expire"], op: "Three searches match → one push.", n: [], pt: "Dedupe with auto-expiry, no extra database", qa: [["Why not Bigtable?", "One less service. SET NX with a TTL does the job at this size."]], rel: ["notification", "alerts", "redis"] },
+  lake: { i: "archive", k: "Store", t: "Lake (GCS + Iceberg)", p: "Raw payloads and 30 years of history.", s: "Raw zone on GCS · BigQuery tables for Apache Iceberg, by state/year", a: ["land", "replay", "time travel"], op: "Mapping bug? Replay, don't re-pull.", n: [["tens of TB", "history"]], pt: "Everything is rebuildable", qa: [["Why Iceberg?", "Open format: BigQuery, Spark or Trino read the same files."]], rel: ["ingest", "bigquery", "avm"] },
+  bigquery: { i: "layers", k: "Analytics", t: "BigQuery", p: "History, analytics and model training.", s: "Fed by a Pub/Sub BigQuery subscription · Iceberg tables · BigQuery GIS", a: ["subscribe", "train", "GIS analytics"], op: "Every change lands as a row. Zero pipeline code. Never on the request path.", n: [["~$6.25", "per TiB on-demand"], ["90 d", "→ ½ price storage"]], pt: "Off the request path", qa: [["Why not Datastream?", "Current state only. The subscription keeps full history."], ["Slots or on-demand?", "Baseline slots + autoscaling for ETL and training. On-demand for ad hoc."], ["BigQuery GIS?", "Heatmaps and AVM features like distance to transit. Never per search."]], rel: ["lake", "avm", "pubsub", "cost"] },
+  features: { i: "sliders-horizontal", k: "Store", t: "Feature store", p: "Inputs for re-rank and AVM.", s: "~50 features, Valkey-backed", a: ["read", "refresh on event"], op: "Past the deadline? Skip it.", n: [["~50", "features"], ["20 ms", "re-rank"]], pt: "Personalization is optional", qa: [["Fair housing?", "No protected classes or proxies. Disparate-impact tests."]], rel: ["search", "avm"] },
+  pubsub: { i: "radio-tower", k: "Events", t: "Pub/Sub", p: "Every change to every read model.", s: "Topic per event type · one subscription per consumer · dead-letter topics · behind our adapter", a: ["publish", "fan out", "seek replay"], op: "One topic, five subscriptions. A version check makes redelivery and replay safe.", n: [["~12/s", "average"], ["~500/s", "bursts"], ["31 days", "retention"]], pt: "12 events/s doesn't need Kafka", qa: [["Why not Kafka?", "12 events/s. Brokers and partitions for scale we don't have. The adapter keeps the exit open."], ["Why not Cloud Tasks?", "One task, one target. Five consumers = five tasks, and the producer changes for each new one."], ["Ordering?", "Version check at every sink. Ordering keys only keep publish order."]], rel: ["event", "tasks", "postgres", "opensearch", "alerts"] },
+  tasks: { i: "list-ordered", k: "Ingest", t: "Cloud Tasks", p: "Poll each MLS at the rate its contract allows.", s: "One queue per MLS · Cloud Scheduler fills it", a: ["rate limit", "retry with backoff", "pause a feed"], op: "Queue rate = MLS contract. A slow MLS can't starve the others.", n: [["~800", "queues"], ["≤ 500/s", "per queue"]], pt: "Pub/Sub fans out, Tasks throttles", qa: [["Why not just Pub/Sub?", "It can't rate-limit per source."]], rel: ["sources", "ingest", "pubsub"] },
   sources: { i: "rss", k: "Sources", t: "MLS feeds + public data", p: "Where every fact comes from.", s: "800+ MLSs, counties, schools, crime", a: ["poll", "nightly key pull"], op: "800 MLSs run on ~15 vendor platforms → ~15 adapters.", n: [["800+", "feeds"], ["~15", "adapters"], ["1M", "updates / day"]], pt: "Own the supply", qa: [["Why not one aggregator?", "Some are competitors (Bridge is Zillow's). Own normalization."]], rel: ["feed", "ingest", "build"] },
-  ingest: { i: "filter", k: "Ingest", t: "Ingest pipeline", p: "800 messy feeds → one canonical model.", s: "Versioned mappings, quarantine, review queue", a: ["connect", "land", "normalize", "validate", "resolve"], op: "Fails validation? Quarantine. Last good version stays live.", n: [["99.9%", "accuracy"], ["5 min", "p95 freshness"]], pt: "New MLS = config, not deploy", qa: [["How do you catch deletes?", "Nightly full-key diff per feed."], ["How do you measure 99.9%?", "Reconcile vs source, provenance, sampled audits."]], rel: ["pipeline", "feed", "property", "lake"] },
+  ingest: { i: "filter", k: "Ingest", t: "Ingest pipeline", p: "800 messy feeds → one canonical model.", s: "Cloud Run workers · versioned mappings, quarantine, review queue", a: ["connect", "land", "normalize", "validate", "resolve"], op: "Fails validation? Quarantine. Last good version stays live.", n: [["99.9%", "accuracy"], ["5 min", "p95 freshness"]], pt: "New MLS = config, not deploy", qa: [["How do you catch deletes?", "Nightly full-key diff per feed."], ["How do you measure 99.9%?", "Reconcile vs source, provenance, sampled audits."]], rel: ["pipeline", "feed", "property", "lake"] },
   listing: { i: "tag", k: "Concept", t: "Listing", p: "An offer on a property.", s: "Status, price, version, MLS id", a: ["list", "reprice", "pend", "sell"], op: "Price cut → searchable + one alert in ~1 min.", n: [["~5M", "active"]], pt: "House ≠ offer", qa: [], rel: ["property", "searchdoc", "event"] },
-  feed: { i: "plug", k: "Concept", t: "Feed", p: "One MLS's changes, at its own pace.", s: "Cursor, mapping version, SLO", a: ["poll", "land", "replay", "reconcile"], op: "Each poll moves the cursor. Nightly diff catches deletes.", n: [["1–15 min", "cadence"]], pt: "Can't be fresher than the source", qa: [["How do you spot a broken feed?", "Alert on silence. Storm guard on 5× spikes."]], rel: ["sources", "ingest"] },
+  feed: { i: "plug", k: "Concept", t: "Feed", p: "One MLS's changes, at its own pace.", s: "Cursor, mapping version, SLO", a: ["poll", "land", "replay", "reconcile"], op: "Each poll moves the cursor. Nightly diff catches deletes.", n: [["1–15 min", "cadence"]], pt: "Can't be fresher than the source", qa: [["How do you spot a broken feed?", "Alert on silence. Storm guard on 5× spikes."]], rel: ["sources", "tasks", "ingest"] },
   searchdoc: { i: "file-text", k: "Concept", t: "Search document", p: "A 4 KB doc built for filtering.", s: "Filters, H3 r5/r7/r9, district, version", a: ["index", "reject stale"], op: "Late, older event? Its version loses.", n: [["~4 KB", "per doc"], ["1–2 s", "to searchable"]], pt: "Display data stays out", qa: [], rel: ["opensearch", "cell"] },
   cell: { i: "hexagon", k: "Concept", t: "H3 cell", p: "One grid for search, maps and alerts.", s: "64-bit id, resolution, parent", a: ["cover", "roll up", "look up"], op: "Interior = term filter. Only the ring pays for geometry.", n: [["~250 km²", "res 5"], ["~5 km²", "res 7"], ["~0.1 km²", "res 9"]], pt: "One grid everywhere", qa: [["Why not geo_shape?", "Used on the ring only. Everywhere = slow and uncacheable."]], rel: ["geo", "maps", "alerts"] },
   savedsearch: { i: "bookmark", k: "Concept", t: "Saved search", p: "Tell me when a match appears.", s: "~40 cells + compiled filters", a: ["save", "match", "mute"], op: "Saved → cells → posting lists. Same DSL as search.", n: [["30M", "searches"], ["~40", "cells each"]], pt: "Search and alerts agree", qa: [["Manhattan?", "~200k candidates, ~10 ms."]], rel: ["alerts", "cell"] },
   notification: { i: "bell", k: "Concept", t: "Notification", p: "Deliver once, at a good time.", s: "Key, TTL, quiet hours, caps", a: ["dedupe", "merge", "send", "digest"], op: "Three matches, one push.", n: [["< 60 s", "p95"]], pt: "TCPA and CAN-SPAM", qa: [], rel: ["dynamo", "alerts"] },
-  event: { i: "activity", k: "Concept", t: "property.changed", p: "A fact changed.", s: "Key property_id, version, schema", a: ["publish", "consume", "replay"], op: "Replay from zero rebuilds any read model.", n: [], pt: "The index is a projection", qa: [], rel: ["kafka", "postgres"] },
-  "n-qps": { i: "gauge", k: "Number", t: "~25k search QPS", p: "20M × 20 searches = 400M a day.", s: "4.6k avg × 2.5 evening × 2 spring", a: [], op: "2× wrong? Add replicas.", n: [["4.6k", "average"], ["12k", "evening"], ["25k", "spring"], ["40k", "design"]], pt: "Map pans count as searches", qa: [], rel: ["search", "peaks"] },
+  event: { i: "activity", k: "Concept", t: "property.changed", p: "A fact changed.", s: "property_id, MLS ModificationTimestamp + sequence, CloudEvents envelope", a: ["publish", "consume", "replay"], op: "Each sink writes only if the version is newer. Replay rebuilds any read model.", n: [], pt: "The index is a projection", qa: [["Ordering key or timestamp?", "Timestamp version check is the guarantee. Ordering keys don't cover races, redelivery or replay."]], rel: ["pubsub", "postgres"] },
+  "n-qps": { i: "gauge", k: "Number", t: "~25k search QPS", p: "20M × 20 searches = 400M a day.", s: "4.6k avg × 2.5 evening × 2 spring", a: [], op: "2× wrong? Add replicas.", n: [["4.6k", "average"], ["12k", "evening"], ["25k", "spring"], ["40k", "design"]], pt: "Map pans count as searches", qa: [], rel: ["search", "opensearch"] },
   "n-egress": { i: "image", k: "Number", t: "~170 Gbps egress", p: "9k views/s × 15 photos × 150 KB.", s: "≈ 20 GB/s at peak", a: [], op: "CDN only, above 95% hit rate.", n: [["9k/s", "listing views"], ["150 KB", "per photo"]], pt: "A top cost line", qa: [], rel: ["cdn", "media"] },
   "n-writes": { i: "pen-line", k: "Number", t: "12 writes / s", p: "1M updates ÷ 86,400 s.", s: "Bursts near 500/s", a: [], op: "Reads outnumber writes 1,000 to 1.", n: [["1M", "per day"], ["~500/s", "bursts"]], pt: "Correctness, not throughput", qa: [], rel: ["ingest", "postgres"] },
-  "n-index": { i: "memory-stick", k: "Number", t: "~20 GB hot index", p: "5M active listings × 4 KB.", s: "All 200M would be ~400 GB", a: [], op: "Fits in RAM → every region holds a copy.", n: [["5M", "active"], ["4 KB", "per doc"]], pt: "The biggest single win", qa: [], rel: ["opensearch"] },
-  "n-photos": { i: "hard-drive", k: "Number", t: "7.5 PB of photos", p: "100M homes × 25 photos × 3 MB.", s: "~99% of all bytes", a: [], op: "Originals → archive tier.", n: [["~$160k", "standard / mo"], ["~$30k", "archive / mo"]], pt: "Cost is a media problem", qa: [], rel: ["media", "cdn"] },
+  "n-index": { i: "memory-stick", k: "Number", t: "~20 GB hot index", p: "5M active listings × 4 KB.", s: "All 200M would be ~400 GB", a: [], op: "Fits in RAM: fast queries, cheap DR standby.", n: [["5M", "active"], ["4 KB", "per doc"]], pt: "The biggest single win", qa: [], rel: ["opensearch"] },
+  "n-photos": { i: "hard-drive", k: "Number", t: "7.5 PB of photos", p: "100M homes × 25 photos × 3 MB.", s: "~99% of all bytes", a: [], op: "Originals → archive tier.", n: [["~$160k", "standard / mo"], ["~$30k", "archive / mo"]], pt: "Cost is a media problem", qa: [], rel: ["media", "cdn", "cost"] },
   "n-alerts": { i: "bell-ring", k: "Number", t: "15M matches / day", p: "~300k changes × ~50 searches each.", s: "Highly skewed", a: [], op: "Polling: 50k QPS. Streaming: ~12/s.", n: [["~300k", "changes"], ["~50", "matches each"]], pt: "Flip the query", qa: [], rel: ["alerts"] },
-  "peaks-ladder": { i: "trending-down", k: "Scaling", t: "Degradation ladder", p: "Bend, don't break.", s: "Flags + shedding at the gateway", a: ["longer TTL", "skip re-rank", "precomputed", "pause batch"], op: "Cheapest loss first. Core paths never shed.", n: [], pt: "Rate cut? Viral story? Bend.", qa: [], rel: ["gateway", "peaks"] },
-  build: { i: "hammer", k: "Decision", t: "Build vs buy", p: "Build where accuracy is the product.", s: "Build: normalization, ranking, geo, AVM · Buy: infra, maps, notifications · Partner: mortgage", a: [], op: "Every vendor behind our own interface.", n: [], pt: "Relevance is product, engine is commodity", qa: [], rel: ["sources", "mortgage", "avm"] }
+  "peaks-ladder": { i: "trending-down", k: "Scaling", t: "Degradation ladder", p: "Bend, don't break.", s: "Flags + shedding at the gateway", a: ["longer TTL", "skip re-rank", "precomputed", "pause batch"], op: "Cheapest loss first. Core paths never shed.", n: [], pt: "Rate cut? Viral story? Bend.", qa: [], rel: ["gateway"] },
+  build: { i: "hammer", k: "Decision", t: "Build vs buy", p: "Buy what's stateful and open; build what differentiates.", s: "Buy: AlloyDB, Memorystore, Pub/Sub, CDN, maps, notifications · Build: normalization, ranking on OpenSearch (GKE), AVM · Partner: mortgage", a: [], op: "Managed where the protocol is open. Proprietary only behind our adapter.", n: [], pt: "Relevance is product, engine is commodity", qa: [["Why run OpenSearch yourselves?", "Geo + ranking is the product. Elastic Cloud is the buy fallback."], ["When would you build the cache?", "When it's a top-3 cost or a hot key outgrows a shard: Dragonfly."]], rel: ["sources", "redis", "avm", "cost"] }
 };
-const SECTION_LINKS = { pipeline: ["#pipeline", "Pipeline walk"], geo: ["#geo", "Geo walk"], peaks: ["#peaks", "Peaks walk"] };
+/* Long-form explanations for each sheet; the same text is in speaker-notes-components.md */
+const LEARN = {"sources": {"what": "The supply. More than 800 MLSs, the regional databases where agents list homes, plus public data: county deeds and tax rolls, school boundaries, crime and permits.", "how": "Most MLSs sit on one of about fifteen vendor platforms and speak the RESO Web API, older ones still RETS. So we write one adapter per platform and treat each MLS as config: credentials, poll cadence, field mappings and display rules.", "why": "We own our adapters instead of buying everything from one aggregator, because some aggregators belong to competitors; Bridge Interactive is owned by Zillow. Where an MLS already distributes through a neutral aggregator, we use it.", "nums": "About 1M listing changes a day across all feeds. 1M divided by 86,400 seconds is roughly 12 a second on average, with bursts of a few hundred when a big MLS publishes a batch.", "risk": "Feeds go quiet, change schemas without notice, or send a storm of updates after a fix on their side. We alert on silence per feed and hold alerts if a feed's change rate jumps five times."}, "feed": {"what": "One MLS's stream of changes, pulled at its own pace. A feed has a cursor (the last modification timestamp we saw), a mapping version and a freshness target.", "how": "Every poll asks for records modified since the cursor, then moves the cursor forward. Once a night we pull the full list of active keys and diff it against ours, because many feeds never tell you about deletes.", "why": "Treating each MLS as its own feed means one slow or broken MLS never delays the others, and onboarding a new one is config, not code.", "nums": "Cadence is 1 to 15 minutes depending on the MLS contract. That poll interval is the floor on freshness; we can't be fresher than the source.", "risk": "Missed deletes and status changes are the classic accuracy bug; the nightly key diff catches them. A mapping bug is fixed by replaying raw payloads, not by re-pulling from the MLS."}, "tasks": {"what": "Cloud Tasks is Google's managed task queue. Each task is an HTTP call that the queue delivers to a target, with rate limits and retries.", "how": "Cloud Scheduler drops a job like 'pull Austin MLS since 10:42' into that MLS's queue every few minutes. The queue dispatches it to an Ingest worker on Cloud Run at the rate we set for that queue, and retries with backoff if the worker fails.", "why": "Each MLS contract caps how often we may call it. One queue per MLS gives each feed its own rate limit and concurrency, so a slow MLS can't starve the others. Pub/Sub can't rate-limit per source, which is why Tasks sits in front of ingest and Pub/Sub sits after it.", "nums": "About 800 queues, one per MLS. A queue can dispatch up to 500 tasks a second, far above what any MLS allows, so the limit we set is always the contract, not the product.", "risk": "If a worker keeps failing, tasks pile up and retry; we cap attempts and alert. Pausing a feed is just pausing its queue."}, "ingest": {"what": "Our own code: workers running on Cloud Run, one container image that holds the fifteen platform adapters.", "how": "A Cloud Tasks job wakes a worker. It calls the MLS API, saves the raw payload to GCS untouched, maps vendor fields to the RESO Data Dictionary using a versioned mapping file, validates and geocodes the address, resolves the listing to a property_id, and upserts AlloyDB together with an outbox row.", "why": "This is where data accuracy is won, so we build it. Keeping the raw payload means any mapping bug becomes a replay, not a re-pull from the MLS.", "nums": "Target: 99.9% field accuracy against the source and p95 under 5 minutes from MLS change to golden record, on top of the poll interval.", "risk": "A record that fails validation goes to quarantine with a reason, and the last good version stays live. We measure accuracy daily by sampling listings against the source."}, "property": {"what": "One identity per physical home, the property_id. It's both a concept and the service that owns the golden record.", "how": "property_id is built from the county FIPS code plus the parcel number (APN). If there's no parcel, we fall back to a normalized address plus geographic proximity. Two listings that land on the same property_id merge into one record, and per-field precedence rules pick values, usually the listing agent's home MLS.", "why": "Overlapping MLSs list the same house. Without one identity you show duplicates and conflicting prices.", "nums": "200M properties at about 10 KB each is roughly 2 TB of golden records.", "risk": "Low-confidence matches go to a review queue instead of merging automatically. Provenance is stored per field so we can explain every value."}, "listing": {"what": "An offer on a property: for sale, for rent, pending or sold, with a price, a status and an MLS id.", "how": "A property lives for decades; listings come and go on it. Each listing change updates the golden record and emits a property.changed event.", "why": "Separating the house from the offer keeps history clean: price history, days on market and past sales all hang off one property.", "nums": "About 5M active listings out of 200M properties. That small ratio is what makes the hot search index small.", "risk": "Status lag is the visible failure, a home shown as active after it went pending. Freshness SLOs per feed catch it."}, "event": {"what": "property.changed, the one business event. It says a fact about a property changed, carrying the property_id, the MLS ModificationTimestamp plus a sequence number, inside a CloudEvents envelope.", "how": "Every consumer stores the version it last applied and writes only if the incoming version is newer. A late or duplicate event simply loses.", "why": "Pub/Sub delivers at least once and can redeliver or be replayed. The version check makes every sink idempotent, which covers worker races, redelivery and replay. Ordering keys only keep publish order, and one poison message blocks its whole key.", "nums": "About 12 events a second on average.", "risk": "If two systems assign versions differently, you get flapping. The version always comes from the source MLS timestamp plus our sequence, never from the consumer's clock."}, "pubsub": {"what": "Google's managed publish-subscribe messaging. A topic receives events; each subscription gets its own copy.", "how": "An outbox relay publishes property.changed to one topic. Five subscriptions read it: the search indexer, cache purge, alert matcher, AVM refresh and a BigQuery subscription that writes rows directly. Each has a dead-letter topic for messages that keep failing.", "why": "At 12 events a second, Kafka means brokers and partitions sized for scale we don't have. Pub/Sub gives fan-out, seek-to-replay and dead letters fully managed. Producers go through our CloudEvents adapter, so moving to Kafka later is one module.", "nums": "About 12 events a second, bursts of a few hundred. Topic retention up to 31 days lets us seek back and replay.", "risk": "Messages can arrive twice or out of order; the version check handles that. A consumer that falls behind shows up as subscription backlog, which we alert on."}, "postgres": {"what": "AlloyDB, Google's managed PostgreSQL-compatible database. It's the only place a property fact is written: the golden record.", "how": "Ingest upserts the record and an outbox row in one transaction. A relay reads the outbox and publishes to Pub/Sub. PostGIS tags each home with its neighborhood, school district and other polygons at write time. Read pools serve detail pages that miss the cache, and a secondary cluster in another region is ready for disaster recovery.", "why": "It's about 2 TB and 12 writes a second from one region. We need transactions for record plus outbox, and PostGIS. Spanner sells multi-region writes and five nines we don't need, and we'd lose PostGIS. It speaks the Postgres protocol, so leaving is a migration, not a rewrite.", "nums": "200M times 10 KB is 2 TB. 12 writes a second average, bursts near 500. Replica lag under a second.", "risk": "Losing the primary region means promoting the secondary: minutes of write downtime, about a second of data at risk. Reads keep working from cache and CDN meanwhile."}, "lake": {"what": "Two things on Cloud Storage: a raw zone with every payload exactly as the MLS sent it, and history tables in Apache Iceberg format that BigQuery manages.", "how": "Ingest writes raw payloads first, partitioned by MLS and day. History lands through the BigQuery subscription into BigQuery tables for Apache Iceberg, partitioned by state and year: deeds, tax rolls, permits and listing events.", "why": "Everything downstream can be rebuilt from here. Iceberg is an open format, so BigQuery, Spark or Trino can read the same files, which follows our rule of open protocols. Time travel lets models train on what we knew at the time, which avoids leakage.", "nums": "Tens of terabytes compressed for 30 years of history.", "risk": "Raw data grows forever; lifecycle rules move old partitions to colder storage classes."}, "bigquery": {"what": "Google's serverless data warehouse. It holds history and analytics and trains the valuation model. It is never on the user request path.", "how": "A Pub/Sub BigQuery subscription writes every change as a row with no pipeline code. Analysts query it, BigQuery GIS builds market heatmaps and features like distance to transit, and BigQuery ML trains the day-one valuation baseline.", "why": "Datastream would mirror current state minutes behind; the subscription keeps every change, which price history and model training need. For cost, steady jobs like ETL and training run on a baseline slot reservation with autoscaling, while ad hoc analyst queries go on-demand.", "nums": "On-demand is about $6.25 per TiB scanned. Partitioning by date and clustering by H3 cuts bytes scanned. Tables untouched for 90 days drop to long-term storage at about half price.", "risk": "One bad query that scans everything can cost real money; we set per-user quotas and require partition filters."}, "redis": {"what": "Memorystore for Valkey, Google's managed in-memory store. Valkey is the open-source, BSD-licensed fork of Redis with the same API.", "how": "Search checks it first with a key made from the normalized query plus map tile. It also holds listing cards, AVM values and ranking features. When a property changes, the cache-purge subscriber deletes the affected keys; pins also carry a 30 to 60 second TTL.", "why": "It's rebuildable from AlloyDB and speaks an open protocol, so we buy it: Google runs replicas and failover at a 99.99% SLA. Dragonfly is faster per node but BSL-licensed and we'd own the pager; we'd revisit if the cache became a top-three cost. Redis itself left the BSD license in 2024.", "nums": "About 40% of searches stop here. The hot set is 50 to 100 GB at a few hundred thousand operations a second, small for a Valkey cluster. Budget is 5 ms.", "risk": "Stale prices after a change, handled by event purges, and stampedes when a hot key expires, handled by request coalescing and stale-while-revalidate."}, "dynamo": {"what": "Dedupe keys: a small, separate Valkey instance that remembers which notifications we already sent.", "how": "Before sending, the alert service runs SET NX on a key made of user, listing, change type and version, with a TTL of a few days. SET NX only succeeds if the key doesn't exist yet, so the first sender wins and every duplicate is dropped. The TTL makes keys expire on their own.", "why": "It answers one question, 'did we already send this?', in a millisecond. A separate database like Bigtable would be one more service to run for a job a small Valkey does at this size. It runs with eviction turned off so keys are never dropped early.", "nums": "About 15M matches a day; with a few days of TTL that's tens of millions of tiny keys, a few GB.", "risk": "If the instance is lost, the worst case is a duplicate push for recent changes, not a lost alert. That's the failure direction we prefer."}, "features": {"what": "A small feature store: about 50 inputs per listing used by the search re-rank and the valuation model.", "how": "Features are computed in BigQuery and refreshed on events, then served from Valkey so the re-rank can fetch them in one batch.", "why": "Personalization and re-rank are optional. If features aren't back before the 20 ms deadline, search skips the re-rank and returns the base order.", "nums": "About 50 features, 20 ms re-rank budget on the top 200 results.", "risk": "Fair housing: no protected-class attributes or proxies like neighborhood demographics, legal review of the feature list, and disparate-impact tests on each model release."}, "opensearch": {"what": "OpenSearch, the open-source search engine forked from Elasticsearch. We run it ourselves on GKE with the OpenSearch operator.", "how": "Two indexes. A hot index of about 5M active listings, around 20 GB, fits in memory. A warm index of all 200M properties, about 400 GB, sits on cheaper SSD nodes. Indexes are versioned behind an alias, so a rebuild is built on the side and swapped in, and rollback is one swap.", "why": "Geo filters, facets and custom ranking are the product, so this is our one stateful build. Vertex AI Search is a relevance black box and isn't geo-first. Elastic Cloud is the buy fallback with the same query model.", "nums": "25k peak queries a second, designed for 40k. At about 1,500 queries a second per node, 40k needs around 27 nodes.", "risk": "Hot spots in big metros: we shard by traffic, so New York and LA get their own shards and extra replicas. Index lag is watched as event-to-searchable time, target p95 under 30 seconds."}, "searchdoc": {"what": "The search document: a roughly 4 KB record built only for filtering and ranking.", "how": "It carries price, beds, baths, status, the H3 cell ids at three resolutions, district ids and a version. Display data like descriptions and photos stays out and is fetched from the cache when the card is shown.", "why": "Small documents mean the hot index fits in memory and queries stay fast.", "nums": "5M active docs times 4 KB is about 20 GB. New changes become searchable 1 to 2 seconds after the indexer receives them.", "risk": "A late, older event arriving after a newer one: the indexer uses external versioning, so the older version is rejected."}, "search": {"what": "The search service: stateless code on Cloud Run that turns a map viewport and filters into results in under 200 ms.", "how": "It converts the viewport into a set of H3 cells, checks the cache, then queries one OpenSearch shard group for the top 500, optionally re-ranks the top 200 with a small model, and hydrates cards from the cache.", "why": "We buy the engine and build the index and routing, because what goes into the index and how queries are shaped is where the speed and relevance come from.", "nums": "20M daily users times 20 searches is 400M a day, 4.6k a second on average. Times 2.5 for the evening peak and times 2 for spring weekends gives about 25k; we design for 40k. Budget: about 70 ms in OpenSearch out of 200.", "risk": "A slow shard drags p95. Routing a viewport to one shard group keeps p95 from being the slowest of many."}, "cell": {"what": "An H3 cell: a hexagon from Uber's global grid, identified by a 64-bit id, with parent and child cells at each resolution.", "how": "Every listing stores its cell at resolutions 5, 7 and 9. A viewport is covered by cells: interior cells become exact-match term filters, and only listings in the boundary ring get the expensive geometry check.", "why": "Term filters are cheap and cacheable; geometry on every document for every query is not. One grid serves search, map clustering and alerts.", "nums": "Resolution 5 is about 250 km², resolution 7 about 5 km², resolution 9 about a tenth of a km², a few city blocks.", "risk": "Cover resolution must follow zoom, or a viewport turns into thousands of cells. We cap covers at a few hundred."}, "maps": {"what": "Map pins: what the user actually sees, 1,000 or more pins on a map in under 300 ms.", "how": "Requests snap to map tiles so neighbors share cache entries. Zoomed out, the server returns about 200 clusters instead of tens of thousands of pins. Pins are a compact binary payload rendered on the GPU, and card details load on hover.", "why": "It's a payload problem more than a query problem; sending less is what makes it fast.", "nums": "About 16 bytes per pin, so 1,500 pins is roughly 24 KB. A cached tile returns in about 40 ms.", "risk": "Drawn polygons with too many points or huge result sets; we cap at about 2,000 results and switch to clusters or a list."}, "alerts": {"what": "The saved-search alert service: tells a buyer within a minute when a home matching their saved search appears or changes price.", "how": "Instead of re-running saved searches, we index the searches themselves by H3 cell. Each property.changed event looks up its cell, finds the candidate searches, applies their filters, dedupes, and sends one push.", "why": "Re-running 30M searches every 10 minutes would be 50k queries a second, more than all user traffic, and still 10 minutes late. Reverse search costs one lookup per change. The OpenSearch percolator is a valid first version; a custom in-memory index gives predictable latency.", "nums": "30M saved searches, about 20 GB in memory. About 15M matches a day. p95 under 60 seconds from ingest to phone.", "risk": "A node dies: Pub/Sub redelivers its messages to other nodes and a fresh node reloads its cells from AlloyDB in minutes. A nightly re-run of the last 24 hours is the safety net."}, "savedsearch": {"what": "A saved search: 'tell me when something like this appears'. Stored as about 40 cells plus compiled filters.", "how": "When saved, the search's area is converted to H3 cells and added to posting lists keyed by cell. It uses the same query language as live search, so alerts and search always agree.", "why": "Search and alerts disagreeing is the fastest way to lose trust; one DSL avoids it.", "nums": "30M saved searches, about 40 cells each.", "risk": "Huge areas like all of Manhattan create many candidates per change, about 200k, still around 10 ms to filter."}, "notification": {"what": "The delivery side: push, email and in-app, sent once and at a sensible time.", "how": "Matches are deduped with the dedupe keys, merged across a user's searches, held during quiet hours by time zone, and capped per day with overflow to a digest.", "why": "Spam kills engagement and carries legal risk under TCPA and CAN-SPAM.", "nums": "p95 under 60 seconds from ingest to device for instant alerts.", "risk": "A feed storm can flood users; the storm guard holds a feed's alerts if its change rate jumps five times."}, "clients": {"what": "The apps: web, iOS and Android.", "how": "They send tile-snapped search requests, render pins on the GPU, and load listing pages that are server-side rendered.", "why": "Listing pages drive organic search traffic, so they must be crawlable and fast on first paint.", "nums": "100M monthly users, about 20M daily, 35M on a spring Sunday.", "risk": "Old app versions hitting changed APIs; the gateway versions APIs and keeps old ones alive."}, "cdn": {"what": "Cloud CDN and Cloud Armor on a global external load balancer: one anycast IP worldwide.", "how": "The CDN serves photos, map tiles and anonymous pages from the edge, and serves stale content while refreshing if the origin hiccups. Armor blocks scrapers and applies WAF rules before traffic reaches us.", "why": "Most bytes are photos; serving them from the edge is the biggest cost and latency win.", "nums": "About 170 Gbps of photo egress at peak, above 95% cache hit rate for photos.", "risk": "A cache-busting change or a purge storm sends traffic to origin; we purge by key, never globally."}, "media": {"what": "The media pipeline: photos, tours and video at the right size for each device.", "how": "An upload lands in Cloud Storage, Eventarc fires, a Cloud Run job makes every size and format (AVIF, WebP) once, and the CDN serves them. Identical photos are stored once by content hash.", "why": "Resize once at write time, never per view. Originals are only read again to make a new size, so they move to cold storage.", "nums": "7.5 PB of originals, about 1.5 PB of sizes kept hot.", "risk": "Format support differs by device; we keep JPEG as the fallback."}, "gateway": {"what": "The API gateway, or backend-for-frontend: the one front door for all requests.", "how": "It authenticates, rate-limits, sets feature flags, server-renders pages and assigns a priority class to each request.", "why": "Load shedding needs one place to decide what to drop first.", "nums": "About 10 ms of the 200 ms budget.", "risk": "Overload: it sheds low-priority work first based on CPU, queue depth and p95, with a manual override."}, "peaks-ladder": {"what": "The degradation ladder: what we turn off, in order, when traffic exceeds capacity.", "how": "Longer cache TTLs first, then skip the re-rank and personalization, then serve only precomputed values, then pause background jobs. Search, listing pages, contact-agent and mortgage are never shed.", "why": "Bend, don't break. A rate cut or a viral story can bring 4x traffic faster than autoscaling reacts.", "nums": "Scheduled capacity floors cover the known spring peak; the ladder covers surprises.", "risk": "Leaving a degraded mode on after the spike; every flag has an owner and an alarm."}, "avm": {"what": "The automated valuation model: an estimated value for all 200M homes.", "how": "We train gradient-boosted trees (XGBoost) on BigQuery data, packaged in a container that runs as a Cloud Run job or on GKE. Each night it re-scores only homes touched by a change, on Spot VMs, and writes values to AlloyDB and Valkey. BigQuery ML's boosted-tree regressor is the day-one baseline.", "why": "Valuation is a differentiator, so we build it. A container is portable; Vertex AI endpoints would be always-on serving for a number that changes nightly.", "nums": "About 55 CPU-hours a night for a full re-score; a live re-estimate when an owner edits facts runs in under a second. Confidence ranges come from quantile regression.", "risk": "Training leakage: Iceberg time travel lets us train on what was known at the time. Fair housing rules apply to features here too."}, "agents": {"what": "The agent marketplace: connecting buyers with agents. This is the revenue event.", "how": "A contact-agent request is written transactionally and routed to the agent's CRM.", "why": "Search can be seconds stale; a lead can never be lost. So leads are strongly consistent and never shed.", "nums": "Small volume compared with search, but every one is revenue.", "risk": "Losing a lead during an incident; writes are durable before we acknowledge them."}, "mortgage": {"what": "Mortgage pre-approval and rate comparison, built with lending partners.", "how": "It runs in its own GCP project behind VPC Service Controls, with Cloud KMS encryption and every access logged. We store consent and every disclosure shown, versioned.", "why": "We aren't the lender; partners carry the licensing and most of the TILA-RESPA liability. Isolation keeps the blast radius and audit boundary small.", "nums": "One region with warm DR.", "risk": "Showing a rate that can't be reproduced; quotes are stored so they can be."}, "build": {"what": "The build versus buy rule: managed where the protocol is open, proprietary only behind an adapter.", "how": "We buy what is stateful, painful to run and speaks an open protocol: AlloyDB, Memorystore for Valkey, the CDN. Proprietary services like Pub/Sub, Cloud Tasks and BigQuery stay off the user request path or behind our adapter. We build what differentiates: normalization, ranking on OpenSearch and the valuation model. Mortgage is a partnership.", "why": "Relevance and data are the product; engines and plumbing are commodities.", "nums": "Switch triggers are explicit: Dragonfly if the cache becomes a top-three cost, Elastic Cloud if running OpenSearch costs more than an engineer, Kafka above sustained 10k events a second.", "risk": "Lock-in creeping in through convenience features; every proprietary call goes through one module."}, "n-qps": {"what": "Peak search load: about 25,000 queries a second.", "how": "20M daily users times 20 searches each is 400M searches a day. Divided by 86,400 seconds is about 4,600 a second on average. The evening peak is about 2.5 times average, around 12k, and spring weekends double that to about 25k.", "why": "Map pans and filter changes each count as a search, which is why 20 a day is realistic.", "nums": "Design target 40k for headroom.", "risk": "If we're two times wrong, we add replicas; nothing structural changes."}, "n-egress": {"what": "Peak photo traffic: about 170 gigabits a second.", "how": "About 9,000 listing views a second at peak, times about 15 photos loaded, times about 150 KB per photo, is roughly 20 GB a second, about 170 Gbps.", "why": "This is why the CDN and modern image formats matter so much.", "nums": "CDN hit rate above 95% keeps origin traffic small.", "risk": "A drop in CDN hit rate multiplies origin and egress cost quickly."}, "n-writes": {"what": "Write load: about 12 writes a second.", "how": "1M listing changes a day divided by 86,400 seconds is about 12 a second; bursts reach a few hundred when a large MLS publishes a batch.", "why": "Writes are tiny, so the hard part is correctness, not throughput. That's why one AlloyDB primary and Pub/Sub are enough.", "nums": "Reads outnumber writes about 1,000 to 1.", "risk": "Bursts after an MLS outage; the queues absorb them."}, "n-index": {"what": "The hot search index: about 20 GB.", "how": "5M active listings times about 4 KB per search document is about 20 GB. Indexing all 200M properties would be about 400 GB.", "why": "Because it fits in memory, queries are fast, the DR standby is cheap, and a full rebuild takes under an hour.", "nums": "Even at 10M active listings it's 40 GB and still fits.", "risk": "If product wanted every search to cover off-market homes, this assumption breaks and the cost model changes."}, "n-photos": {"what": "Photo storage: about 7.5 petabytes of originals.", "how": "100M homes with photos times about 25 photos times about 3 MB each is 7.5 PB.", "why": "Photos are the biggest line on the bill, so storage tiering is the first cost lever.", "nums": "At standard storage that's roughly $160k a month; moving originals to Nearline, Coldline and Archive brings it to roughly $30k.", "risk": "Retrieval fees from cold tiers if we read originals too often; we only read them to make a new size."}, "n-alerts": {"what": "Alert volume: about 15M matches a day.", "how": "Roughly 300k relevant changes a day, like new listings and price drops, times about 50 matching saved searches each.", "why": "It shows why polling is wrong: re-running searches would be 50k queries a second, while streaming handles about 12 changes a second.", "nums": "Matches are highly skewed toward popular areas.", "risk": "A storm of changes from one feed; the storm guard holds it."}};
+const LEARN_LBL = [["what", "What it is"], ["how", "How it works"], ["why", "Why this choice"], ["nums", "The numbers"], ["risk", "What can go wrong"]];
+const SECTION_LINKS = { pipeline: ["#pipeline", "Pipeline walk"], geo: ["#geo", "Geo walk"], cost: ["#cost", "Cost walk"] };
 
 /* ---------- Layers ---------- */
 const LAYERS = [
-  { n: "Sources + ingest", c: ["sources", "ingest"], holds: "800+ feeds → canonical model", ground: true },
-  { n: "Events", c: ["kafka", "event"], holds: "property.changed", i: "radio-tower" },
-  { n: "Data", c: ["postgres", "opensearch", "redis", "dynamo", "lake", "features"], holds: "1 golden record, many read models", i: "database" },
-  { n: "Services", c: ["search", "property", "avm", "agents", "mortgage", "alerts"], holds: "Search, property, AVM, agents, mortgage, alerts", i: "boxes" },
-  { n: "Gateway", c: ["gateway"], holds: "Auth, limits, SSR, shedding", i: "door-open" },
-  { n: "Edge", c: ["cdn", "media"], holds: "Pages, tiles, photos", i: "globe" },
-  { n: "Clients", c: ["clients", "maps"], holds: "Web, iOS, Android", i: "monitor-smartphone" }
+  { n: "1 · Pull", c: ["sources", "tasks"], holds: "Cloud Scheduler fills one Cloud Tasks queue per MLS, capped to its contract", store: "Nothing yet", i: "rss", ground: true },
+  { n: "2 · Land + normalize", c: ["ingest", "lake"], holds: "Raw payload saved as is, mapped to RESO, validated; bad records quarantined", store: "GCS raw zone", i: "hard-drive-download" },
+  { n: "3 · Resolve + store", c: ["property", "postgres"], holds: "Matched to a property_id, merged by precedence, upserted with an outbox row", store: "AlloyDB", i: "database" },
+  { n: "4 · Publish", c: ["pubsub", "event"], holds: "property.changed goes out once; every sink checks the version first", store: "Pub/Sub (7-day replay)", i: "radio-tower" },
+  { n: "5 · Read models", c: ["opensearch", "redis", "alerts", "bigquery"], holds: "Search reindexes, cache purges, alerts match, history lands", store: "OpenSearch · Valkey · BigQuery", i: "scan-search" }
 ];
-LAYERS[0].i = "rss";
-const short = id => ({ sources: "MLS feeds", ingest: "Ingest", kafka: "Kafka", event: "property.changed", postgres: "Postgres", opensearch: "OpenSearch", redis: "Redis", dynamo: "KV store", lake: "Lake", features: "Features", search: "Search", property: "Property", avm: "AVM", agents: "Agents", mortgage: "Mortgage", alerts: "Alerts", gateway: "Gateway", cdn: "CDN", media: "Media", clients: "Apps", maps: "Map pins" }[id] || D[id].t);
+const short = id => ({ sources: "MLS feeds", ingest: "Ingest", pubsub: "Pub/Sub", tasks: "Cloud Tasks", bigquery: "BigQuery", event: "property.changed", postgres: "AlloyDB", opensearch: "OpenSearch", redis: "Valkey", dynamo: "Dedupe keys", lake: "Lake", features: "Features", search: "Search", property: "Property", avm: "AVM", agents: "Agents", mortgage: "Mortgage", alerts: "Alerts", gateway: "Gateway", cdn: "CDN", media: "Media", clients: "Apps", maps: "Map pins" }[id] || D[id].t);
 
 const iso = $("#iso");
 const tbody = $("#layerTable tbody");
@@ -768,13 +818,13 @@ LAYERS.forEach((L, i) => {
   iso.appendChild(pl);
   const tr = document.createElement("tr");
   tr.className = "row"; tr.dataset.i = i; tr.tabIndex = 0;
-  tr.innerHTML = `<td>${ic(L.i)}${esc(L.n)}</td><td>${esc(L.holds)}</td>`;
+  tr.innerHTML = `<td>${ic(L.i)}${esc(L.n)}</td><td>${esc(L.holds)}</td><td class="st">${esc(L.store)}</td>`;
   tbody.prepend(tr);
 });
 let selLayer = -1;
 const hotLayer = (i, on) => $$(`.plate[data-i="${i}"], #layerTable tr[data-i="${i}"]`).forEach(el => el.classList.toggle("hot", on));
-function selectLayer(i) {
-  selLayer = selLayer === i ? -1 : i;
+function selectLayer(i, force) {
+  selLayer = selLayer === i && !force ? -1 : i;
   $$(".plate, #layerTable tr.row").forEach(el => el.classList.toggle("sel", +el.dataset.i === selLayer));
   iso.classList.toggle("focus", selLayer >= 0);
 }
@@ -791,43 +841,169 @@ $("#explode").addEventListener("click", e => {
   $$(".plate").forEach(p => p.style.setProperty("--gap", on ? "92px" : "68px"));
 });
 
-/* ---------- Concepts ---------- */
-const NOUNS = ["feed", "property", "listing", "event", "searchdoc", "cell", "savedsearch", "notification"];
-$("#concepts").innerHTML = NOUNS.map(id => `<button class="concept" type="button" data-drill="${id}"><span class="tile">${ic(D[id].i, "m")}</span><h3>${esc(D[id].t)}</h3><p>${esc(D[id].p)}</p></button>`).join("");
-
-/* ---------- Who does what ---------- */
-const VERBS = ["Ingest", "Resolve", "Publish", "Index", "Query", "Match", "Deliver", "Replay"];
-const M = { feed: ["Ingest", "Replay"], property: ["Resolve", "Publish", "Query"], listing: ["Ingest", "Resolve", "Publish", "Query"], event: ["Publish", "Index", "Match", "Replay"], searchdoc: ["Index", "Query", "Replay"], cell: ["Index", "Query", "Match"], savedsearch: ["Query", "Match"], notification: ["Match", "Deliver"] };
-$("#matrix").innerHTML = `<thead><tr><th></th>${VERBS.map(v => `<th>${v}</th>`).join("")}</tr></thead><tbody>${NOUNS.map(id =>
-  `<tr><th scope="row" data-drill="${id}" tabindex="0">${ic(D[id].i)}${esc(D[id].t)}</th>${VERBS.map(v => M[id].includes(v) ? `<td class="on" title="${esc(D[id].t)} · ${v}"><span class="dot"></span></td>` : `<td><span class="dot no"></span></td>`).join("")}</tr>`
-).join("")}</tbody>`;
-
-const LEADS = { layers: "Data flows up. Requests flow down.", nouns: "Eight concepts, one purpose each.", verbs: "Read a row: what a concept does. Read a column: who takes part." };
-function setTab(name) {
-  ["nouns", "verbs", "layers"].forEach(n => { $("#tab-" + n).setAttribute("aria-selected", n === name); $("#pane-" + n).hidden = n !== name; });
-  $("#grammar-lead").textContent = LEADS[name];
-  try { localStorage.setItem("hf-tab", name); } catch (e) {}
-}
-["nouns", "verbs", "layers"].forEach(n => $("#tab-" + n).addEventListener("click", () => setTab(n)));
-let savedTab = "layers";
-try { savedTab = localStorage.getItem("hf-tab") || "layers"; } catch (e) {}
-setTab(LEADS[savedTab] ? savedTab : "layers");
+/* Follow a listing: step the selection up the stack */
+let followT = null;
+function stopFollow() { clearInterval(followT); followT = null; $("#follow").innerHTML = ic("play") + "<span>Follow a listing</span>"; }
+$("#follow").addEventListener("click", () => {
+  if (followT) { stopFollow(); return; }
+  let k = 0; selectLayer(0, true);
+  $("#follow").innerHTML = ic("pause") + "<span>Pause</span>";
+  followT = setInterval(() => { k++; if (k >= LAYERS.length) { stopFollow(); selectLayer(selLayer); return; } selectLayer(k, true); }, reduced ? 2400 : 1500);
+});
 
 /* ---------- Numbers ---------- */
 const FIGS = [["n-qps", "~25k", "search QPS at peak"], ["n-egress", "~170 Gbps", "photo egress"], ["n-writes", "12/s", "MLS writes"], ["n-index", "~20 GB", "hot index"], ["n-photos", "7.5 PB", "photo originals"], ["n-alerts", "15M", "alert matches / day"]];
 $("#figs").innerHTML = FIGS.map(f => `<button class="fig" type="button" data-drill="${f[0]}"><span class="tile">${ic(D[f[0]].i, "m")}</span><span class="v">${f[1]}</span><span class="u">${esc(f[2])}</span></button>`).join("");
 
-/* ---------- Decisions ---------- */
-const DEC = [
-  ["rss", "Feeds", "Own adapters + neutral aggregators", "One aggregator", "No competitor dependency", "sources"],
-  ["database", "Truth", "Golden record + events", "Full event sourcing", "Simple state, replay still works", "postgres"],
-  ["hexagon", "Geo", "Precomputed H3 cells", "Shape queries per search", "1M writes vs 400M reads", "cell"],
-  ["scan-search", "Index", "20 GB hot + 400 GB warm", "One 200M-doc index", "Fits in RAM everywhere", "opensearch"],
-  ["bell-ring", "Alerts", "Reverse search on the stream", "Polling", "50k QPS → ~12/s", "alerts"],
-  ["scale", "Consistency", "Stale search, strong leads", "Strong everywhere", "Latency + availability", "agents"],
-  ["globe", "Regions", "Active-active reads, one writer", "Multi-writer", "Tiny writes, no conflicts", "postgres"]
-];
-$("#dec tbody").innerHTML = DEC.map(d => `<tr data-drill="${d[5]}" tabindex="0"><td>${ic(d[0])}${d[1]}</td><td>${esc(d[2])}</td><td class="over">${esc(d[3])}</td><td class="why">${esc(d[4])}</td></tr>`).join("");
+/* ---------- Decisions ----------
+   Each decision: [key, area, chose, sub, legend, number, exit (1-3), switch-if, drill, options].
+   options: [name, one line]; the first one is the pick. */
+const DECS = {
+  gcp: {
+    lead: "tech decisions",
+    legend: [["open", "Buy · open protocol", "var(--ink)"], ["adapter", "Buy · behind an adapter", "var(--accent)"], ["build", "Build · we run it", "var(--signal)"]],
+    groups: [
+      ["workflow", "Ingest", "MLS feeds to events", [
+        ["events", "Events", "Pub/Sub", "behind a CloudEvents adapter", "adapter", "12/s", 2, "Sustained 10k+ events/s, or we need log compaction.", "pubsub",
+          [["Pub/Sub", "Managed fan-out, seek to replay, dead-letter topics"], ["Kafka", "Brokers and partitions sized for scale we don't have"], ["Cloud Tasks", "One target per task, so no fan-out"]]],
+        ["mls", "MLS limits", "Cloud Tasks", "one queue per MLS, capped to its contract", "adapter", "≤500/s", 1, "An MLS moves to webhooks; it then skips the queue.", "tasks",
+          [["Queue per MLS", "Rate and concurrency per queue, retries with backoff"], ["One shared poller", "A slow MLS starves the others"], ["Pub/Sub pull", "No rate limit per source"]]],
+        ["order", "Ordering", "Version check", "MLS timestamp + sequence at every sink", "build", "ts+seq", 1, "Never; ordering keys can sit on top.", "event",
+          [["Version check", "Covers worker races, redelivery and replay"], ["Ordering keys alone", "Publish order only; one poison message blocks the key"], ["Global sequencer", "A bottleneck to protect 12 events/s"]]]
+      ]],
+      ["database", "Store", "Truth, history, lake", [
+        ["truth", "Truth", "AlloyDB", "Postgres + PostGIS, read pools, DR secondary", "open", "2 TB", 1, "Writes outgrow one primary, or we need multi-region writes.", "postgres",
+          [["AlloyDB", "Transactions, PostGIS, read pools, cross-region DR"], ["Spanner", "Multi-region writes and 99.999% we don't need"], ["Bigtable", "No transactions or geo; nothing here is wide-column"]]],
+        ["analytics", "Analytics", "BigQuery subscription", "Pub/Sub writes every change as a row", "adapter", "0 code", 2, "Transforms before landing get complex; then Dataflow.", "bigquery",
+          [["BigQuery subscription", "Every change lands as history, no pipeline"], ["Datastream", "Mirrors current state, minutes behind"], ["Dataflow", "Code to own for a 12/s stream"]]],
+        ["lake", "Lake", "Iceberg on GCS", "BigQuery tables for Apache Iceberg", "open", "~30 TB", 1, "A hot dashboard needs native speed; materialize just that.", "lake",
+          [["Iceberg tables", "Open format with time travel; any engine reads it"], ["Native BigQuery storage", "Faster, but only BigQuery reads it"], ["Raw Parquet", "No schema evolution or snapshots"]]]
+      ]],
+      ["zap", "Serve", "Search, cache, geo", [
+        ["cache", "Cache", "Memorystore for Valkey", "Redis protocol, Google runs failover", "open", "~100 GB", 1, "Cache is a top-3 cost, or a hot key outgrows a shard: Dragonfly.", "redis",
+          [["Memorystore for Valkey", "BSD license, 99.99% SLA, rebuildable from AlloyDB"], ["Dragonfly on GKE", "Faster per node, but BSL and our pager"], ["Redis Cluster / Cloud", "Left BSD in 2024; extras we don't need"]]],
+        ["search", "Search", "OpenSearch on GKE", "our one stateful build", "build", "25k QPS", 2, "Running it costs more than an engineer: Elastic Cloud.", "opensearch",
+          [["OpenSearch on GKE", "geo_shape, custom ranking and facets we control"], ["Vertex AI Search", "Relevance black box, not geo-first"], ["Elastic Cloud", "Same model; the buy fallback"]]],
+        ["geo", "Geo SQL", "PostGIS at write", "BigQuery GIS for analytics only", "open", "1M:400M", 1, "Never on the request path.", "cell",
+          [["PostGIS at write", "Polygons computed once per change"], ["Geo SQL per search", "Polygon math on 400M searches a day"], ["BigQuery GIS online", "Seconds, not milliseconds"]]]
+      ]],
+      ["cpu", "Run", "ML, compute, DR", [
+        ["avm", "Valuation", "XGBoost container", "BigQuery ML as the day-one baseline", "build", "nightly", 1, "Real-time scoring is needed; add an endpoint then.", "avm",
+          [["XGBoost container", "Custom features; the same image runs anywhere"], ["BigQuery ML only", "Great baseline, limited features"], ["Vertex AI endpoints", "Always-on serving for a nightly score"]]],
+        ["compute", "Compute", "Cloud Run", "GKE only for OpenSearch", "open", "→ 0", 1, "Steady load where GKE plus CUDs is cheaper.", "build",
+          [["Cloud Run", "Plain containers, billed per request"], ["GKE for everything", "A cluster to run for stateless code"], ["Cloud Functions", "Fine for glue, awkward for services"]]],
+        ["regions", "Regions", "One region + DR", "AlloyDB cross-region secondary", "open", "99.95%", 2, "p95 outside the region misses 200 ms.", "postgres",
+          [["One region + DR", "DR is a promotion, not a rebuild"], ["Multi-region writes", "Conflict handling for 12 writes a second"], ["Active-active reads", "A second search fleet; add if p95 needs it"]]]
+      ]]
+    ]
+  },
+  design: {
+    lead: "design decisions",
+    legend: [["speed", "Optimizes latency", "var(--accent)"], ["simple", "Optimizes simplicity", "var(--ink)"], ["control", "Optimizes control", "var(--signal)"]],
+    groups: [
+      ["database", "Data", "Feeds and truth", [
+        ["feeds", "Feeds", "Own adapters", "plus neutral aggregators", "control", "~15", 3, "A small MLS isn't worth an adapter; use an aggregator.", "sources",
+          [["Own adapters", "No competitor in our data path"], ["One aggregator", "Fast start, but a dependency on a rival"], ["Scraping", "Against MLS rules"]]],
+        ["record", "Truth", "Golden record + events", "state in Postgres, changes on the bus", "simple", "2 TB", 2, "Audit needs per-field history in the store.", "postgres",
+          [["Golden record + events", "Simple state; replay still works"], ["Full event sourcing", "Projections to rebuild for every read"], ["CRUD only", "No history for AVM or price charts"]]]
+      ]],
+      ["scan-search", "Search", "Geo and index", [
+        ["h3", "Geo", "Precomputed H3 cells", "term filter first, exact check on the ring", "speed", "1M:400M", 2, "Shapes change faster than we can retag.", "cell",
+          [["H3 cells", "Cheap term filter, exact math only on the edge"], ["Shape query per search", "Polygon math on every search"], ["Geohash", "Uneven cells and edge effects"]]],
+        ["index", "Index", "20 GB hot + 400 GB warm", "active listings in RAM", "speed", "20 GB", 1, "Off-market search becomes a top feature.", "opensearch",
+          [["Hot and warm split", "The hot set fits in memory"], ["One 200M-doc index", "400 GB on memory-heavy nodes"], ["Shard per state", "Hot spots in CA, TX, FL"]]]
+      ]],
+      ["bell-ring", "Product", "Alerts, consistency, stance", [
+        ["alerts", "Alerts", "Reverse search", "match each change against saved searches", "speed", "50k→12/s", 2, "Saved searches outgrow memory; shard by H3.", "alerts",
+          [["Reverse search on the stream", "Each change checked once against 30M searches"], ["Polling", "50k QPS of repeated queries"], ["Nightly digest", "Hours late on a hot listing"]]],
+        ["consistency", "Consistency", "Stale search, strong leads", "seconds-stale results, leads never lost", "simple", "~5 s", 1, "A flow shows a price that must match a contract.", "agents",
+          [["Mixed", "Search can lag; leads are transactional"], ["Strong everywhere", "Latency and availability cost"], ["Eventual everywhere", "A lost lead is lost revenue"]]],
+        ["bvb", "Build vs buy", "Buy plumbing, build product", "managed where the protocol is open", "control", "1 rule", 3, "Decided per component; see Tech choices.", "build",
+          [["Buy open + stateful, build what differentiates", "Relevance and data are the product"], ["Buy everything", "Our edge becomes a vendor's roadmap"], ["Build everything", "A pager for commodity plumbing"]]]
+      ]]
+    ]
+  }
+};
+const EXIT = ["", "low", "medium", "high"];
+const DICON = { events: "radio-tower", mls: "list-ordered", order: "activity", truth: "database", analytics: "layers", lake: "archive", cache: "zap", search: "scan-search", geo: "map-pin", avm: "badge-dollar-sign", compute: "boxes", regions: "globe",
+  feeds: "rss", record: "file-text", h3: "hexagon", index: "memory-stick", alerts: "bell-ring", consistency: "scale", bvb: "hammer" };
+let decSet = "gcp", decFilter = null;
+const ringArc = n => { const a = n / 3 * 2 * Math.PI, r = 12, x = 13 + r * Math.sin(a), y = 13 - r * Math.cos(a); return n >= 3 ? `<circle cx="13" cy="13" r="12" style="fill:none;stroke:var(--ink-2);stroke-width:1.6"/>` : `<path d="M13 1 A12 12 0 ${a > Math.PI ? 1 : 0} 1 ${x.toFixed(2)} ${y.toFixed(2)}"/>`; };
+function decCard(d, legend) {
+  const [key, area, chose, sub, lg, num, exit, sw, drill, opts] = d;
+  const L = legend.find(l => l[0] === lg);
+  return `<article class="dcard" id="dc-${key}" data-lg="${lg}" style="--c:${L[2]}">
+    <button class="dmain" type="button" aria-expanded="false" aria-controls="dm-${key}">
+      <span class="drow"><span class="dic">${ic(DICON[key])}</span><h3>${esc(area)}</h3></span>
+      <span class="dpick"><b>${esc(chose)}</b><span class="xt">, ${esc(sub)}</span></span>
+      <span class="dfoot"><span class="st"><i class="dot"></i><span class="xt">${esc(L[1])}</span></span><span class="dchips"><span class="dnum">${esc(num)}</span><span class="ring" title="Cost to reverse: ${EXIT[exit]}"><svg viewBox="0 0 26 26" aria-hidden="true"><circle cx="13" cy="13" r="11"/>${ringArc(exit)}</svg><span>${"LMH"[exit - 1]}</span></span></span></span>
+    </button>
+    <div class="dmore" id="dm-${key}"><div>
+      <ul class="dopts">${opts.map((o, i) => `<li class="${i ? "lose" : "win"}">${ic(i ? "x" : "check")}<b>${esc(o[0])}</b><p>${esc(o[1])}</p></li>`).join("")}</ul>
+      <p class="dswitch"><b>Switch if:</b> ${esc(sw)}</p>
+      <div class="dgo"><button class="iconbtn" type="button" data-drill="${drill}">${ic("arrow-up-right")}<span>Open in the system</span></button></div>
+    </div></div>
+  </article>`;
+}
+function setDec(name) {
+  decSet = name; decFilter = null;
+  ["gcp", "design"].forEach(n => $("#dtab-" + n).setAttribute("aria-selected", n === name));
+  const set = DECS[name], all = set.groups.flatMap(g => g[3]);
+  const RANK = { "var(--signal)": 0, "var(--accent)": 1, "var(--ink)": 2 }, rank = d => RANK[set.legend.find(l => l[0] === d[4])[2]];
+  const byColor = all.slice().sort((a, b) => rank(a) - rank(b));
+  const count = k => all.filter(d => d[4] === k).length;
+  $("#ledger").innerHTML = `<div class="ledger-top"><b>${all.length} ${set.lead}</b><span>Each bar is one decision, grouped by color. Click one to open it.</span></div>
+    <div class="lbar">${byColor.map(d => `<button type="button" data-goto="${d[0]}" data-lg="${d[4]}" style="--c:${set.legend.find(l => l[0] === d[4])[2]}" aria-label="${esc(d[1])}: ${esc(d[2])}" title="${esc(d[1])}: ${esc(d[2])}"></button>`).join("")}</div>
+    <div class="legend">${set.legend.slice().sort((a, b) => RANK[a[2]] - RANK[b[2]]).map(l => `<button type="button" data-lgf="${l[0]}" aria-pressed="false" style="--c:${l[2]}"><i></i>${esc(l[1])}<b>${count(l[0])}</b></button>`).join("")}<span class="hintx">Ring = cost to reverse: L, M, H</span></div>`;
+  const dc = $("#dcols");
+  dc.className = "dcols" + (set.groups.length === 3 ? " c3" : "");
+  dc.innerHTML = set.groups.map(g => `<div class="dcol">
+    <div class="dlane"><b>${esc(g[1])}</b><span>${g[3].length}</span></div>
+    ${g[3].map(d => decCard(d, set.legend)).join("")}</div>`).join("");
+}
+function filterDec(k) {
+  decFilter = decFilter === k ? null : k;
+  $$("#ledger [data-lgf]").forEach(b => b.setAttribute("aria-pressed", b.dataset.lgf === decFilter));
+  $$("#ledger .lbar button").forEach(b => b.classList.toggle("dim", !!decFilter && b.dataset.lg !== decFilter));
+  $$("#dcols .dcard").forEach(c => c.classList.toggle("dim", !!decFilter && c.dataset.lg !== decFilter));
+}
+$("#decisions").addEventListener("click", e => {
+  const f = e.target.closest("[data-lgf]"); if (f) { filterDec(f.dataset.lgf); return; }
+  const g = e.target.closest("[data-goto]");
+  if (g) { const c = $("#dc-" + g.dataset.goto); c.scrollIntoView({ behavior: "smooth", block: "center" }); c.classList.remove("flash"); void c.offsetWidth; c.classList.add("flash"); if (!c.classList.contains("open")) c.querySelector(".dmain").click(); return; }
+  const m = e.target.closest(".dmain");
+  if (m) { const c = m.parentElement, open = !c.classList.contains("open"); c.classList.toggle("open", open); m.setAttribute("aria-expanded", open); }
+});
+["gcp", "design"].forEach(n => $("#dtab-" + n).addEventListener("click", () => setDec(n)));
+setDec("gcp");
+
+/* ---------- Notes on/off (off by default) ---------- */
+function applyNotes(on) {
+  document.documentElement.classList.toggle("notes", on);
+  const b = $("#notesBtn"); b.innerHTML = ic(on ? "captions" : "captions-off"); b.setAttribute("aria-pressed", on);
+  b.title = on ? "Hide notes" : "Show notes"; b.setAttribute("aria-label", b.title);
+}
+$("#notesBtn").addEventListener("click", () => {
+  const on = !document.documentElement.classList.contains("notes");
+  applyNotes(on);
+  try { localStorage.setItem("hf-notes", on ? "on" : "off"); } catch (e) {}
+});
+try { applyNotes(localStorage.getItem("hf-notes") === "on"); } catch (e) { applyNotes(false); }
+
+/* ---------- Theme: system → light → dark ---------- */
+const THEMES = [["system", "sun-moon"], ["light", "sun"], ["dark", "moon"]];
+function applyTheme(t) {
+  if (t === "system") document.documentElement.removeAttribute("data-theme"); else document.documentElement.setAttribute("data-theme", t);
+  const b = $("#themeBtn"), th = THEMES.find(x => x[0] === t);
+  b.innerHTML = ic(th[1]); b.setAttribute("aria-label", "Theme: " + t); b.title = "Theme: " + t;
+}
+$("#themeBtn").addEventListener("click", () => {
+  const cur = document.documentElement.getAttribute("data-theme") || "system";
+  const next = THEMES[(THEMES.findIndex(x => x[0] === cur) + 1) % 3][0];
+  applyTheme(next);
+  try { localStorage.setItem("hf-theme", next); } catch (e) {}
+});
+try { applyTheme(localStorage.getItem("hf-theme") || "system"); } catch (e) { applyTheme("system"); }
 
 /* ---------- Walks ---------- */
 const REC = [
@@ -841,25 +1017,25 @@ const REC = [
 const HOPS = [["Edge", "globe", 15, "cdn"], ["Gateway", "door-open", 10, "gateway"], ["Cache", "zap", 5, "redis"], ["OpenSearch", "scan-search", 70, "opensearch"], ["Re-rank", "arrow-up-down", 20, "features"], ["Hydrate", "layers", 15, "redis"], ["Return", "send", 25, "clients"]];
 const WALKS = {
   pipeline: [
-    { t: "Connect", desc: "Most of the 800 MLSs run on a handful of vendor platforms, so about 15 adapters cover them all. Each MLS is just config: credentials, cadence, field mappings.", cue: ["~15 adapters", "RESO · RETS · FTP", "1–15 min"], d: "sources" },
+    { t: "Connect", desc: "About 15 adapters cover the 800 MLSs, and each MLS is just config. Each MLS gets its own Cloud Tasks queue, throttled to its contract.", cue: ["~15 adapters", "queue per MLS", "1–15 min"], d: "tasks" },
     { t: "Land", desc: "The untouched payload goes to object storage first. It's our audit trail, and when a mapping bug shows up we replay instead of re-pulling from the MLS.", cue: ["raw → GCS", "fix = replay"], d: "lake" },
     { t: "Normalize", desc: "A versioned mapping per MLS turns vendor fields into the RESO Data Dictionary. Onboarding a new MLS needs no code deploy.", cue: ["RESO dictionary", "config, not code"], d: "ingest" },
     { t: "Validate", desc: "Standardize the address, geocode it, run sanity rules. A bad record is quarantined with a reason, and the last good version stays live.", cue: ["address", "geocode", "bad → quarantine"], d: "ingest" },
-    { t: "Resolve", desc: "County FIPS + parcel number gives a stable property_id. Duplicates from overlapping MLSs merge field by field, then upsert and outbox commit together.", cue: ["FIPS + APN", "merge dupes", "upsert + outbox"], d: "property" },
-    { t: "Fan out", desc: "property.changed goes to five independent consumers. Each can replay from any offset, and a nightly reconcile catches deletes the feeds missed.", cue: ["5 consumers", "nightly reconcile"], d: "kafka" }
+    { t: "Resolve", desc: "County FIPS + parcel number gives a stable property_id. Duplicates merge field by field, then the AlloyDB upsert and outbox row commit together.", cue: ["FIPS + APN", "merge dupes", "upsert + outbox"], d: "property" },
+    { t: "Fan out", desc: "property.changed goes to Pub/Sub, and five subscriptions consume it independently. A version check makes replays safe, and a nightly reconcile catches missed deletes.", cue: ["1 topic · 5 subscriptions", "version check"], d: "pubsub" }
   ],
   search: [
     { t: "Edge", desc: "The CDN terminates TLS close to the user. Because requests snap to map tiles, many of them are cacheable right here.", cue: ["TLS at the PoP", "cacheable GETs"], d: "cdn" },
     { t: "Gateway", desc: "Auth, rate limits, and query normalization: sorted filters, rounded prices. That normalization is what makes the cache work.", cue: ["auth", "rate limit", "normalize"], d: "gateway" },
-    { t: "Cache", desc: "Redis keyed on normalized query + tile, not the raw viewport. About 40% of searches end here in roughly 30 ms.", cue: ["query + tile key", "~40% stop"], d: "redis" },
+    { t: "Cache", desc: "Valkey keyed on normalized query + tile, not the raw viewport. About 40% of searches end here in roughly 30 ms.", cue: ["query + tile key", "~40% stop"], d: "redis" },
     { t: "OpenSearch", desc: "The biggest slice. Geography routing means a metro query hits one shard group, never all of them, and geometry was done at write time.", cue: ["one shard group", "top 500"], d: "opensearch" },
     { t: "Re-rank", desc: "A small model re-orders the top 200. It runs under a deadline; if the request is already slow, we skip it. No protected-class features.", cue: ["top 200", "deadline or skip"], d: "features" },
-    { t: "Hydrate", desc: "The index returns ids only. Card data comes from Redis in one MGET, so index docs stay small and cards change without reindexing.", cue: ["one MGET"], d: "redis" },
+    { t: "Hydrate", desc: "The index returns ids only. Card data comes from Valkey in one MGET, so index docs stay small and cards change without reindexing.", cue: ["one MGET"], d: "redis" },
     { t: "Return", desc: "160 ms planned. The last 40 ms is held back for GC pauses, cross-zone hops and bad days.", cue: ["160 planned", "40 spare"], d: "search" }
   ],
   geo: [
     { t: "Listing arrives", desc: "At write time, 1M times a day, the listing's point gets its H3 cells at three resolutions, stored on the search doc.", cue: ["cells r5 · r7 · r9"], d: "cell" },
-    { t: "Tag once", desc: "Point-in-polygon runs once for school district, ZIP and city. \"In this school district\" becomes a cheap term filter.", cue: ["district · ZIP · city"], d: "searchdoc" },
+    { t: "Tag once", desc: "Point-in-polygon runs once in PostGIS for school district, ZIP and city. \"In this school district\" becomes a cheap term filter.", cue: ["district · ZIP · city"], d: "searchdoc" },
     { t: "Map moves", desc: "At read time, 400M times a day, the client sends a viewport or a drawn shape plus a zoom level.", cue: ["viewport + zoom"], d: "maps" },
     { t: "Interior cells", desc: "Cells fully inside the shape become a terms filter. No geometry, and the filter is cacheable.", cue: ["terms filter", "no geometry"], d: "cell" },
     { t: "Boundary ring", desc: "Only cells that straddle the edge get an exact geo check, so just a thin ring pays for real geometry.", cue: ["exact check", "thin ring only"], d: "opensearch" },
@@ -870,16 +1046,20 @@ const WALKS = {
     { t: "Flip it", desc: "Index the searches instead, and stream each listing change through them. That's about 12 events a second.", cue: ["~12 events/s"], d: "alerts" },
     { t: "Classify", desc: "Only buyer-relevant changes pass: new, price drop, back on market, open house. A feed suddenly sending 5× its normal volume is held.", cue: ["new · price drop · back", "storm guard"], d: "feed" },
     { t: "Match", desc: "A listing sits in exactly one cell. That cell's posting list gives the candidate searches, then exact filters confirm. Typical cell: under 1 ms.", cue: ["1 cell → candidates", "< 1 ms"], d: "savedsearch" },
-    { t: "Dedupe", desc: "A conditional write on user + listing + change. Matches merge across searches; quiet hours and daily caps apply, overflow goes to a digest.", cue: ["user + listing + change", "caps · quiet hours"], d: "dynamo" },
+    { t: "Dedupe", desc: "A Valkey SET NX with a TTL on user + listing + change. Matches merge across searches; quiet hours and daily caps apply, overflow goes to a digest.", cue: ["user + listing + change", "caps · quiet hours"], d: "dynamo" },
     { t: "Deliver", desc: "p95 under 60 seconds from ingest to phone. The MLS poll interval comes before that, outside our control.", cue: ["p95 < 60 s"], d: "notification" }
   ],
-  peaks: [
-    { t: "Normal week", desc: "Evening peaks around 12k search QPS, a little higher at weekends.", cue: ["~12k QPS evenings"], d: "n-qps" },
-    { t: "Spring", desc: "Browsing roughly doubles, about 25k on a spring Sunday evening. MLS write volume barely moves: the spike is buyers, not data.", cue: ["~25k", "writes flat"], d: "n-qps" },
-    { t: "Absorb", desc: "The CDN serves ~90% of bytes and the cache answers ~40% of searches. What reaches the index is the blue area.", cue: ["CDN ~90% bytes", "cache ~40%"], d: "redis" },
-    { t: "Scale early", desc: "Load-test in February at 2× last year's peak, raise floors in March and every Friday, freeze changes on weekends. Autoscaling works above the floor.", cue: ["Feb load test 2×", "Friday floors", "weekend freeze"], d: "gateway" },
-    { t: "Bend", desc: "If the forecast is wrong, a rate cut or a viral story, give things up in order, cheapest first.", cue: ["cheapest first"], d: "peaks-ladder" },
-    { t: "Never shed", desc: "Search, listing pages, contact agent and mortgage keep working. Every region holds the full hot index, so losing one region doesn't take reads down.", cue: ["full index per region"], d: "peaks-ladder" }
+  cost: [
+    { t: "The whole bill", desc: "Nine line items, biggest first, adding up to 100%. Photos and the egress to show them are over half.", cue: ["sums to 100%", "illustrative shares"], d: "n-photos" },
+    { t: "Photo storage · 30%", desc: "7.5 PB of originals. GCS lifecycle rules move them to Nearline at 30 days, Coldline at 90 and Archive once a home sells. Resize once on upload.", cue: ["~$160k → ~$30k / mo", "lifecycle rules"], d: "media" },
+    { t: "Image egress + CDN · 25%", desc: "Cloud CDN above a 95% hit rate, and AVIF or WebP at the right size per device cuts bytes on the wire by a third or more.", cue: ["> 95% CDN hits", "AVIF / WebP"], d: "n-egress" },
+    { t: "Search compute · 15%", desc: "OpenSearch on GKE. Only the 20 GB hot index sits on memory-heavy nodes, the cache absorbs ~40% of searches, and CUDs cover the steady base.", cue: ["~40% cache hits", "hot + warm", "CUDs"], d: "opensearch" },
+    { t: "AlloyDB · 9%", desc: "One primary plus read pools behind the cache, and a DR secondary. Steady 24/7 load, so committed use discounts.", cue: ["read pools", "CUDs"], d: "postgres" },
+    { t: "BigQuery · 6%", desc: "A baseline slot reservation with autoscaling for ETL and training, on-demand for ad hoc. Partition by date, cluster by H3; storage untouched for 90 days halves in price.", cue: ["baseline + autoscale", "partition + cluster"], d: "bigquery" },
+    { t: "Batch + ML · 5%", desc: "Nightly AVM scoring and reindexing can be interrupted, so they run on Spot VMs.", cue: ["Spot VMs", "up to ~91% off"], d: "avm" },
+    { t: "Cache · 4%", desc: "Memorystore for Valkey. Small on purpose; if it ever becomes a top-3 cost, that's the trigger to self-host Dragonfly.", cue: ["buy now", "top-3 trigger"], d: "redis" },
+    { t: "APIs on Cloud Run · 3%", desc: "Stateless services scale to zero overnight and bill per request.", cue: ["scale to zero"], d: "build" },
+    { t: "Pub/Sub, Tasks, other · 3%", desc: "12 events a second is pocket change on managed messaging. That's why we didn't run Kafka.", cue: ["12 events/s"], d: "pubsub" }
   ]
 };
 
@@ -925,27 +1105,15 @@ $("#hops").innerHTML = HOPS.map((h, i) => `<button class="card hop" type="button
   $("#geoResult").innerHTML = `<b>${hits} match</b> · geometry on ${ringCells} of ${ringCells + intCells} cells`;
 })();
 
-(function buildChart() {
-  const svg = $("#chart");
-  const X0 = 46, X1 = 588, Y0 = 18, Y1 = 280, MAX = 40000;
-  const x = h => X0 + (X1 - X0) * h / 168, y = v => Y1 - (Y1 - Y0) * v / MAX;
-  const dayPeak = [10000, 10000, 10200, 10400, 10200, 11200, 12000];
-  const bump = h => { const t = h % 24; return Math.min(1, Math.exp(-(((t - 20.5) / 3.4) ** 2)) + 0.55 * Math.exp(-(((t - 12.5) / 3) ** 2))); };
-  const val = (h, k) => 1500 * k + (dayPeak[Math.floor(h / 24) % 7] * k - 1500 * k) * bump(h);
-  const path = (k, f = 1) => { let d = ""; for (let h = 0; h <= 168; h += 1) d += (h ? "L" : "M") + x(h).toFixed(1) + " " + y(val(h, k) * f).toFixed(1); return d; };
-  let g = "";
-  [0, 10000, 20000, 30000, 40000].forEach(v => { g += `<line class="grid" x1="${X0}" x2="${X1}" y1="${y(v)}" y2="${y(v)}"/><text x="${X0 - 8}" y="${y(v) + 3.5}" text-anchor="end">${v ? v / 1000 + "k" : "0"}</text>`; });
-  ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].forEach((d, i) => { g += `<text x="${x(i * 24 + 12)}" y="${Y1 + 18}" text-anchor="middle">${d}</text>`; });
-  const reach = path(2, 0.6) + `L${x(168)} ${Y1} L${x(0)} ${Y1} Z`;
-  const fp = []; for (let d = 0; d < 7; d++) { const lvl = d >= 5 ? 32000 : d === 4 ? 27000 : 24000; fp.push([x(d * 24), y(lvl)], [x(d * 24 + 24), y(lvl)]); }
-  g += `<path class="reach" d="${reach}"/><path class="base" d="${path(1)}"/><path class="spring" d="${path(2)}"/><path class="floor" d="M${fp.map(p => p.map(v => v.toFixed(1)).join(" ")).join(" L")}"/>` +
-    `<line class="design" x1="${X0}" x2="${X1}" y1="${y(40000)}" y2="${y(40000)}"/>` +
-    `<g class="lab l0"><text x="${x(150)}" y="${y(12000) - 10}" text-anchor="middle">~12k</text></g>` +
-    `<g class="lab l1"><text x="${x(150)}" y="${y(24000) - 10}" text-anchor="middle">~25k</text></g>` +
-    `<g class="lab l2"><text x="${x(150)}" y="${y(14400) + 18}" text-anchor="middle">~15k to index</text></g>` +
-    `<g class="lab l3"><text x="${X1 - 4}" y="${y(40000) + 14}" text-anchor="end">design 40k</text></g>`;
-  svg.innerHTML = g;
-})();
+/* Illustrative shares of the monthly bill; they must add up to 100. One walk step per item, in this order. */
+const BILL = [["Photo storage", 30], ["Image egress + CDN", 25], ["Search compute", 15], ["AlloyDB", 9], ["BigQuery", 6], ["Batch + ML", 5], ["Cache", 4], ["APIs on Cloud Run", 3], ["Pub/Sub, Tasks, other", 3]];
+$("#bill").innerHTML = BILL.map((b, i) => `<i data-act="${i + 1}" title="${esc(b[0])}: ${b[1]}%" style="flex:${b[1]} 0 0">${b[1] >= 5 ? b[1] + "%" : ""}</i>`).join("");
+$("#billrows").innerHTML = BILL.map((b, i) => `<span data-act="${i + 1}">${esc(b[0])}<b>${b[1]}%</b></span>`).join("");
+function setBill(at) {
+  const b = BILL[at - 1];
+  $("#billv").textContent = (b ? b[1] : 100) + "%";
+  $("#billof").textContent = b ? "of the bill: " + b[0] : "the monthly bill";
+}
 
 const walks = [];
 $$("section.walk").forEach(sec => {
@@ -961,6 +1129,7 @@ $$("section.walk").forEach(sec => {
     const s = steps[at];
     cap.innerHTML = `<span class="n">${at + 1}/${steps.length}</span>${s.cue.map(c => `<span class="cue">${esc(c)}</span>`).join("")}<button class="go" type="button" data-drill="${s.d}">${ic(D[s.d].i)}${esc(D[s.d].t)}</button>`;
     if (id === "pipeline") $("#rec").innerHTML = REC[at];
+    if (id === "cost") setBill(at);
     if (id === "search") {
       const last = at === steps.length - 1;
       $("#msv").textContent = last ? "160" : String(HOPS.slice(0, at + 1).reduce((a, h) => a + h[2], 0));
@@ -995,6 +1164,7 @@ function render() {
     <div class="how">${ic("workflow")}${ic("activity").replace("ic ", "ic ") && ""}<span>${esc(c.op)}</span></div>
     <dl class="def"><dt>Holds</dt><dd>${esc(c.s)}</dd>${c.a.length ? `<dt>Does</dt><dd><ul>${c.a.map(a => `<li>${esc(a)}</li>`).join("")}</ul></dd>` : ""}</dl>
     ${c.n.length ? `<div class="nums">${c.n.map(n => `<div><b>${esc(n[0])}</b><span>${esc(n[1])}</span></div>`).join("")}</div>` : ""}
+    ${LEARN[id] ? `<section class="learn"><h3>${ic("file-text")}Learn it</h3>${LEARN_LBL.filter(l => LEARN[id][l[0]]).map(l => `<div><span class="lbl">${l[1]}</span><p>${esc(LEARN[id][l[0]])}</p></div>`).join("")}</section>` : ""}
     ${rel ? `<div class="rel">${rel}</div>` : ""}`;
   talk.innerHTML = `
     <div class="point"><span class="lbl">Key point</span><p>${esc(c.pt)}</p></div>
@@ -1057,28 +1227,28 @@ addEventListener("hashchange", fromHash);
     clients: [80, 190, "web · iOS · Android"], cdn: [230, 190, "pages · tiles · photos"], media: [230, 330, "resize · tours"],
     gateway: [380, 190, "auth · limits · SSR"], mortgage: [380, 340, "isolated"],
     search: [560, 120, "< 200 ms p95"], property: [560, 230, "golden record"], agents: [560, 330, "leads"], avm: [560, 430, "200M values"],
-    opensearch: [790, 120, "hot 20 GB"], redis: [790, 230, "~40% hits"],
-    alerts: [1010, 340, "30M searches"], dynamo: [1010, 450, "dedupe + TTL"],
-    sources: [80, 600, "800+ MLS feeds"], ingest: [300, 600, "~15 adapters"], postgres: [540, 600, "1 writer"], kafka: [790, 510, "property.changed"], lake: [1010, 600, "GCS + Iceberg"]
+    opensearch: [790, 120, "on GKE"], redis: [790, 230, "~40% hits"],
+    alerts: [1010, 340, "30M searches"], dynamo: [1010, 450, "SET NX + TTL"],
+    tasks: [190, 480, "per MLS"], sources: [80, 600, "800+ MLS feeds"], ingest: [300, 600, "~15 adapters"], postgres: [540, 600, "1 writer"], pubsub: [790, 510, "property.changed"], lake: [1010, 600, "Iceberg on GCS"]
   };
-  const NAME = { clients: "Apps", cdn: "CDN", media: "Media", gateway: "Gateway", mortgage: "Mortgage", search: "Search", property: "Property", agents: "Agents", avm: "Valuation", opensearch: "OpenSearch", redis: "Redis", alerts: "Alerts", dynamo: "KV store", sources: "MLS feeds", ingest: "Ingest", postgres: "PostgreSQL", kafka: "Kafka", lake: "Data lake" };
+  const NAME = { clients: "Apps", cdn: "CDN", media: "Media", gateway: "Gateway", mortgage: "Mortgage", search: "Search", property: "Property", agents: "Agents", avm: "Valuation", opensearch: "OpenSearch", redis: "Valkey", alerts: "Alerts", dynamo: "Dedupe keys", tasks: "Cloud Tasks", sources: "MLS feeds", ingest: "Ingest", postgres: "AlloyDB", pubsub: "Pub/Sub", lake: "Data lake" };
   const E = {
     "clients-cdn": "GET /search", "cdn-gateway": "cache miss", "cdn-media": "photos", "gateway-search": "query", "gateway-property": "detail page",
     "gateway-agents": "contact agent", "gateway-mortgage": "pre-approve", "search-redis": "cache + cards", "search-opensearch": "cells + filters",
-    "sources-ingest": "poll 1–15 min", "ingest-lake": "raw payload", "ingest-postgres": "upsert + outbox", "postgres-kafka": "property.changed",
-    "kafka-opensearch": "reindex", "kafka-redis": "purge", "kafka-alerts": "match", "kafka-avm": "refresh value", "kafka-lake": "history",
+    "sources-tasks": "schedule", "tasks-ingest": "pull job", "ingest-lake": "raw payload", "ingest-postgres": "upsert + outbox", "postgres-pubsub": "property.changed",
+    "pubsub-opensearch": "reindex", "pubsub-redis": "purge", "pubsub-alerts": "match", "pubsub-avm": "refresh value", "pubsub-lake": "BigQuery sub",
     "alerts-dynamo": "seen?", "alerts-clients": "push"
   };
-  const EDESC = {"clients-cdn": "The app asks for results for a tile-snapped viewport, so neighbors share cache entries.", "cdn-gateway": "Only a cache miss reaches the origin.", "gateway-search": "Auth, rate limit, then the normalized query goes to the search service.", "search-redis": "Check the query + tile cache first; card data also comes from here in one batch.", "search-opensearch": "H3 cells plus filters, routed to one shard group. Top 500, then a light re-rank.", "sources-ingest": "Each MLS is polled on a cursor every 1 to 15 minutes.", "ingest-lake": "The raw payload lands in object storage untouched, so any fix is a replay.", "ingest-postgres": "Normalized, validated and resolved, then upserted with an outbox row in one transaction.", "postgres-kafka": "Debezium publishes the outbox as property.changed, keyed by property_id.", "kafka-opensearch": "The search doc is reindexed with the listing's version; stale events lose.", "kafka-redis": "Cached cards and pages for that property are purged.", "kafka-avm": "The home value is refreshed for the changed property.", "kafka-alerts": "The listing's cell finds candidate saved searches; filters confirm the match.", "alerts-dynamo": "Have we already told this buyer about this change? One conditional write decides.", "alerts-clients": "One push, email or in-app message, under 60 seconds from ingest."};
+  const EDESC = {"clients-cdn": "The app asks for results for a tile-snapped viewport, so neighbors share cache entries.", "cdn-gateway": "Only a cache miss reaches the origin.", "gateway-search": "Auth, rate limit, then the normalized query goes to the search service.", "search-redis": "Check the query + tile cache first; card data also comes from here in one batch.", "search-opensearch": "H3 cells plus filters, routed to one shard group. Top 500, then a light re-rank.", "sources-tasks": "Every MLS gets its own Cloud Tasks queue; Cloud Scheduler adds a pull job every 1 to 15 minutes, rated to that MLS's contract.", "tasks-ingest": "The queue hands each job to an Ingest worker on Cloud Run, which calls the MLS API and pulls changes since its cursor.", "ingest-lake": "The raw payload lands in object storage untouched, so any fix is a replay.", "ingest-postgres": "Normalized, validated and resolved, then upserted with an outbox row in one transaction.", "postgres-pubsub": "An outbox relay publishes property.changed to Pub/Sub with the MLS timestamp as its version.", "pubsub-opensearch": "The search doc is reindexed only if the version is newer; stale events lose.", "pubsub-redis": "Cached cards and pages for that property are purged.", "pubsub-avm": "The home value is re-scored for the changed property.", "pubsub-lake": "A BigQuery subscription writes every change as a row: history with no pipeline code.", "pubsub-alerts": "The listing's cell finds candidate saved searches; filters confirm the match.", "alerts-dynamo": "Have we already told this buyer about this change? One SET NX with a TTL decides.", "alerts-clients": "One push, email or in-app message, under 60 seconds from ingest."};
   const ROUTE = {
     "ingest-lake": "M300 600 C300 672 1010 672 1010 600",
-    "kafka-opensearch": "M790 510 C905 510 905 120 790 120",
+    "pubsub-opensearch": "M790 510 C905 510 905 120 790 120",
     "alerts-clients": "M1010 340 C1082 330 1082 34 960 34 L200 34 C110 34 80 110 80 190"
   };
   const FLOWS = {
-    update: { t: "Listing update", lead: "A price change in one MLS reaches every read model.", seq: ["sources-ingest", "ingest-lake", "ingest-postgres", "postgres-kafka", "kafka-opensearch", "kafka-redis", "kafka-avm", "kafka-alerts"] },
+    update: { t: "Listing update", lead: "A price change in one MLS reaches every read model.", seq: ["sources-tasks", "tasks-ingest", "ingest-lake", "ingest-postgres", "postgres-pubsub", "pubsub-opensearch", "pubsub-redis", "pubsub-avm", "pubsub-lake", "pubsub-alerts"] },
     search: { t: "Search", lead: "A map search, edge to index and back, inside 200 ms.", seq: ["clients-cdn", "cdn-gateway", "gateway-search", "search-redis", "search-opensearch"] },
-    alert: { t: "Alert", lead: "A price drop on a buyer's phone in under 60 seconds.", seq: ["postgres-kafka", "kafka-alerts", "alerts-dynamo", "alerts-clients"] },
+    alert: { t: "Alert", lead: "A price drop on a buyer's phone in under 60 seconds.", seq: ["postgres-pubsub", "pubsub-alerts", "alerts-dynamo", "alerts-clients"] },
     all: { t: "Everything", lead: "Requests come in on top. Data flows in from the bottom.", seq: [] }
   };
   const path = (k) => {
@@ -1100,7 +1270,7 @@ addEventListener("hashchange", fromHash);
   });
   Object.keys(N).forEach(id => {
     const [x, y, sub] = N[id], b = document.createElement("button");
-    b.type = "button"; b.className = "node" + (id === "kafka" ? " wide" : "") + (id === "mortgage" ? " iso" : "");
+    b.type = "button"; b.className = "node" + (id === "pubsub" ? " wide" : "") + (id === "mortgage" ? " iso" : "");
     b.dataset.drill = id; b.dataset.n = id;
     b.style.left = (x / 1100 * 100) + "%"; b.style.top = (y / 680 * 100) + "%";
     b.innerHTML = `<span class="tile">${ic(D[id].i)}</span><b>${esc(NAME[id])}</b><small>${esc(sub)}</small>`;
@@ -1193,3 +1363,5 @@ const io = new IntersectionObserver(entries => {
 $$("section.block").forEach(s => io.observe(s));
 })();
 </script>
+
+</body></html>
