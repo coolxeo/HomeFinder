@@ -3,7 +3,7 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap">
 <style>
 /* Hallmark · redesign (look + motion + copy, final review) · macrostructure: Workbench (studied: user reference video) · tone: technical, austere
  * theme: studied-DNA (warm grey ground, paper sheets, one blue accent, one red signal) · Geist + Geist Mono · icons: Lucide 0.460, inlined
@@ -461,6 +461,10 @@ table.matrix td.on { background: var(--accent-soft); }
 .dm-chk .ic { color: var(--ink-3); }
 .dm-chk.ok { box-shadow: var(--lift2), 0 0 0 2px var(--accent); }
 .dm-chk.ok .ic { color: var(--accent); }
+.cd-stage { position: relative; left: 50%; translate: -50% 0; width: min(calc(100vw - 32px), 1440px, calc((100svh - 330px) * 16 / 9)); min-width: min(calc(100vw - 32px), 1120px); margin-top: 8px; }
+#cdHost { box-shadow: 0 30px 80px rgba(0,0,0,.28), 0 0 0 1px var(--hair); border-radius: 18px; }
+#cdHost:fullscreen { border-radius: 0; box-shadow: none; }
+@media (min-width: 760px) and (min-height: 600px) { section.block#talk { min-height: calc(100svh - 70px); padding-block: 24px; border-top: 0; } }
 .dm-ctrl { display: flex; align-items: center; gap: 10px; margin-top: 14px; flex-wrap: wrap; }
 .dm-chaps { flex: 1; display: grid; grid-template-columns: repeat(5, minmax(0,1fr)); gap: 6px; min-width: 260px; }
 .dm-chaps button { all: unset; cursor: pointer; display: grid; gap: 6px; font-size: 12px; color: var(--ink-3); padding: 4px 2px; }
@@ -718,6 +722,7 @@ abbr[title]:hover { border-bottom-color: var(--ink-3); }
 
 <nav class="nav" aria-label="Sections">
   <a class="brand" href="#top"><i data-i="house"></i>HomeFinder</a>
+  <a href="#talk">Talk</a>
   <a href="#demo">Demo</a>
   <a href="#decisions">Decisions</a>
   <a href="#arch">Architecture</a>
@@ -734,6 +739,20 @@ abbr[title]:hover { border-bottom-color: var(--ink-3); }
 </nav>
 
 <main class="wrap" id="top">
+  <section class="block" id="talk">
+    <div class="sec-head"><div class="ttl"><h2>The talk</h2></div></div>
+    <p class="sec-lead">The 30 minute presentation for the architecture committee, timed to the brief: high-level architecture, the geo search deep dive, then cost. Each <kbd>→</kbd> reveals the next idea.</p>
+    <div class="cd-stage"><div id="cdHost" role="region" aria-label="Committee presentation"></div></div>
+    <div class="dm-ctrl">
+      <button class="iconbtn" type="button" onclick="talkDeck.prev()" aria-label="Previous step">←</button>
+      <button class="iconbtn" type="button" onclick="talkDeck.next()" aria-label="Next step">→</button>
+      <button class="iconbtn" type="button" onclick="talkDeck.restart()" aria-label="Restart"><i data-i="rotate-ccw"></i></button>
+      <button class="iconbtn" type="button" onclick="talkDeck.notes()"><i data-i="file-text"></i><span>Notes</span><kbd>N</kbd></button>
+      <button class="iconbtn" type="button" onclick="talkDeck.full()"><span>Full screen</span><kbd>F</kbd></button>
+      <span class="dm-time" id="talkStep"></span>
+    </div>
+  </section>
+
   <header class="mast">
     <h1 style="--k:0">HomeFinder</h1>
     <p class="lede" style="--k:1">System design for a national home search platform on Google Cloud. It pulls listings from more than 800 Multiple Listing Services (MLSs), answers map searches for 100M monthly users, and alerts a buyer within a minute when a saved home changes.</p>
@@ -1701,7 +1720,7 @@ function setBill(at) {
   $("#billof").textContent = b ? "of the bill: " + b[0] : "the monthly bill";
 }
 
-const walks = [];
+const walks = []; window.hfWalks = walks;
 $$("section.walk").forEach(sec => {
   const id = sec.id, steps = WALKS[id], stage = $(".stage", sec), cap = $(".cap", sec), ol = $(".steps", sec), play = $(".play", sec);
   ol.innerHTML = steps.map((s, i) => `<li><button type="button" data-i="${i}">${esc(s.t)}</button><p class="sdesc">${esc(s.desc)}</p></li>`).join("");
@@ -1811,7 +1830,7 @@ addEventListener("hashchange", fromHash);
 
 /* ---------- Keyboard: one section per key press, like a deck ---------- */
 (function sectionKeys() {
-  const SECS = () => [document.querySelector(".mast"), ...$$("section.block")];
+  const SECS = () => $$(".mast, section.block");
   const ease = p => p < .5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2;
   let busy = false;
   function glide(y) {
@@ -2007,4 +2026,495 @@ $$("section.block").forEach(s => io.observe(s));
 })();
 </script>
 
+<script>
+/* ---------- The talk: committee deck, isolated in a shadow root ---------- */
+(function talkDeck() {
+const host = document.getElementById("cdHost"); if (!host) return;
+const ROOT = host.attachShadow({ mode: "open" });
+ROOT.innerHTML = "<style>\n:host {\n  --bg: #121211; --sheet: #1f1f1d; --sheet2: #292926; --ink: #efeee9; --ink2: #b6b3ab; --ink3: #85827a;\n  --hair: rgba(255,255,250,.09); --hair2: rgba(255,255,250,.16);\n  --accent: #8aa6f5; --accentS: rgba(138,166,245,.18); --signal: #f2845f; --signalS: rgba(242,132,95,.18); --ok: #7fd1a0;\n  --sans: \"Geist\", system-ui, sans-serif; --mono: \"Geist Mono\", ui-monospace, monospace;\n}\n* { box-sizing: border-box; margin: 0; }\n:host { display: block; position: relative; width: 100%; aspect-ratio: 16 / 9; overflow: hidden; border-radius: 18px; background: var(--bg); color: var(--ink); font-family: var(--sans); -webkit-font-smoothing: antialiased; color-scheme: dark; }\n:host(:fullscreen) { border-radius: 0; width: 100vw; height: 100vh; aspect-ratio: auto; }\n#deck { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; overflow: hidden; transform-origin: 0 0; cursor: pointer; user-select: none; }\n#cap { display: none !important; }\n#deck .scene { top: 250px; }\n#hint { position: absolute; left: 96px; right: 96px; top: 1036px; display: flex; justify-content: space-between; font: 500 15px/1 var(--mono); letter-spacing: .08em; color: var(--ink3); }\n#hint kbd { font: inherit; padding: 3px 7px; border-radius: 6px; background: var(--sheet2); box-shadow: 0 0 0 1px var(--hair); color: var(--ink2); }\n#hint b { color: var(--ink); font-weight: 500; }\n#notes { position: absolute; right: 96px; bottom: 76px; width: 760px; padding: 26px 30px; border-radius: 20px; background: rgba(31,31,29,.97); box-shadow: 0 30px 70px rgba(0,0,0,.6), 0 0 0 1.5px var(--accent); display: none; z-index: 5; }\n#deck.shownotes #notes { display: block; }\n#notes .nh { display: flex; justify-content: space-between; font: 500 15px/1 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--accent); margin-bottom: 16px; }\n#notes #ntime { color: var(--ink); }\n#notes #ntime.over { color: var(--signal); }\n#ntext { font: 400 23px/1.45 var(--sans); color: var(--ink2); }\n#ntext b { color: var(--ink); font-weight: 600; }\n.rq { position: absolute; width: 548px; height: 250px; padding: 28px 30px; }\n.rq .m { font: 600 50px/1 var(--mono); letter-spacing: -.03em; margin-top: 16px; }\n.rq .m small { font: 500 22px/1 var(--sans); color: var(--ink3); letter-spacing: 0; margin-left: 10px; }\n.rq p { font: 400 23px/1.4 var(--sans); color: var(--ink2); margin-top: 16px; }\n.rq .hd { display: flex; justify-content: space-between; align-items: center; }\n.node.sm { padding: 12px 16px; font-size: 20px; gap: 12px; }\n.node.sm .tile { width: 44px; height: 44px; border-radius: 12px; }\n.node.sm .ic { width: 22px; height: 22px; }\n.node.sm small { font-size: 13px; }\n.node.dim { opacity: .35 !important; }\n.doc { font: 400 21px/1.5 var(--mono); color: var(--ink3); }\n.doc div { padding: 0 10px; border-radius: 6px; white-space: pre; }\n.doc div.on { color: var(--ink); background: var(--accentS); }\n.doc div.on2 { color: var(--ink); background: var(--signalS); }\n.ms { position: absolute; top: 96px; display: grid; justify-items: center; gap: 12px; width: 200px; margin-left: -100px; text-align: center; }\n.ms i { width: 18px; height: 18px; border-radius: 50%; background: var(--sheet2); box-shadow: 0 0 0 2px var(--hair2); display: block; }\n.ms.on i { background: var(--accent); box-shadow: 0 0 0 6px var(--accentS); }\n.ms b { font: 600 24px/1.1 var(--sans); }\n.ms span { font: 500 18px/1 var(--mono); color: var(--ink3); }\n.fl { position: absolute; width: 840px; height: 160px; padding: 24px 28px; display: grid; grid-template-columns: 54px 1fr; gap: 20px; align-items: start; }\n.fl b { font: 600 27px/1.2 var(--sans); display: block; }\n.fl span { font: 400 22px/1.4 var(--sans); color: var(--ink2); display: block; margin-top: 8px; }\n.cu { position: absolute; left: 0; width: 1728px; display: grid; grid-template-columns: 54px 420px 1fr; gap: 28px; align-items: center; padding: 18px 26px; }\n.cu b { font: 600 28px/1.2 var(--sans); }\n.cu span { font: 400 25px/1.35 var(--sans); color: var(--ink2); }\n.st { position: absolute; top: 40px; width: 400px; height: 270px; padding: 28px 28px; }\n.st b { font: 600 28px/1.15 var(--sans); display: block; margin-top: 16px; }\n.st .lbl { margin-top: 10px; display: block; }\n.st p { font: 400 21px/1.4 var(--sans); color: var(--ink2); margin-top: 14px; }\n.zm { position: absolute; top: 0; width: 548px; height: 370px; padding: 24px 26px; }\n.zm b { font: 600 26px/1.2 var(--sans); display: block; margin-top: 14px; }\n.zm p { font: 400 20px/1.4 var(--sans); color: var(--ink2); margin-top: 8px; }\n\n#bg { position: absolute; inset: 0; background-image: radial-gradient(rgba(255,255,250,.07) 1.2px, transparent 1.4px); background-size: 36px 36px; }\n#glow { position: absolute; width: 1400px; height: 1400px; border-radius: 50%; background: radial-gradient(circle, rgba(138,166,245,.13), transparent 62%); }\n#glow2 { position: absolute; width: 1100px; height: 1100px; border-radius: 50%; background: radial-gradient(circle, rgba(242,132,95,.07), transparent 62%); }\n.abs { position: absolute; }\n#hdr { left: 96px; top: 64px; display: grid; gap: 10px; }\n#hdr .k { font: 500 15px/1 var(--mono); letter-spacing: .14em; color: var(--ink3); text-transform: uppercase; }\n#hdr .t { font: 600 34px/1.1 var(--sans); letter-spacing: -.01em; display: flex; gap: 16px; align-items: baseline; }\n#hdr .t em { font: 500 26px/1 var(--mono); font-style: normal; color: var(--accent); }\n#dots { right: 96px; top: 74px; display: flex; gap: 10px; }\n#dots i { width: 34px; height: 4px; border-radius: 4px; background: var(--hair2); overflow: hidden; display: block; }\n#dots i u { display: block; height: 100%; width: 0; background: var(--ink); }\n.scene { position: absolute; left: 96px; top: 170px; width: 1728px; height: 660px; }\n/* caption */\n#cap { left: 96px; right: 96px; top: 872px; height: 150px; display: grid; grid-template-columns: 300px 1fr; gap: 40px; align-items: start; }\n.spk { display: grid; gap: 14px; }\n.who { display: flex; align-items: center; gap: 14px; opacity: .38; }\n.who.on { opacity: 1; }\n.av { position: relative; width: 52px; height: 52px; border-radius: 50%; display: grid; place-items: center; font: 600 20px/1 var(--sans); color: #121211; }\n.av::after { content: \"\"; position: absolute; inset: -6px; border-radius: 50%; border: 2px solid currentColor; opacity: var(--lv, 0); transform: scale(calc(1 + var(--lv, 0) * .25)); }\n.who b { font-size: 19px; font-weight: 600; display: block; }\n.who small { font: 400 14px/1.2 var(--mono); color: var(--ink3); }\n#line { font: 500 33px/1.42 var(--sans); letter-spacing: -.005em; color: var(--ink3); max-width: 1300px; }\n#line .w.on { color: var(--ink); }\n/* shared bits */\n.card { position: absolute; background: var(--sheet); border-radius: 22px; box-shadow: 0 30px 70px rgba(0,0,0,.45), 0 0 0 1px var(--hair); }\n.chip { display: inline-flex; align-items: center; gap: 10px; padding: 10px 18px; border-radius: 999px; background: var(--sheet2); box-shadow: 0 0 0 1px var(--hair); font: 500 22px/1 var(--sans); color: var(--ink); white-space: nowrap; }\n.mono { font-family: var(--mono); }\n.lbl { font: 500 16px/1 var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--ink3); }\n.big { font: 600 92px/1.02 var(--sans); letter-spacing: -.035em; }\n.ic { width: 26px; height: 26px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex: none; }\n.tile { width: 54px; height: 54px; border-radius: 15px; display: grid; place-items: center; background: var(--sheet2); color: var(--accent); flex: none; }\n.node { position: absolute; display: flex; align-items: center; gap: 14px; padding: 16px 20px; background: var(--sheet); border-radius: 18px; box-shadow: 0 20px 50px rgba(0,0,0,.4), 0 0 0 1px var(--hair); font: 600 22px/1.15 var(--sans); white-space: nowrap; }\n.node small { display: block; font: 400 15px/1.3 var(--mono); color: var(--ink3); margin-top: 3px; }\n.node .ic { color: var(--accent); }\n.node.hot { box-shadow: 0 20px 50px rgba(0,0,0,.4), 0 0 0 2.5px var(--accent); }\n.node.bad { box-shadow: 0 20px 50px rgba(0,0,0,.4), 0 0 0 2.5px var(--signal); }\nsvg.wires { position: absolute; left: 0; top: 0; overflow: visible; }\nsvg.wires path { fill: none; stroke: var(--hair2); stroke-width: 2.5; stroke-dasharray: 2 9; stroke-linecap: round; }\n.dot { position: absolute; width: 14px; height: 14px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 6px var(--accentS), 0 0 24px var(--accent); }\n.dot.r { background: var(--signal); box-shadow: 0 0 0 6px var(--signalS); }\n.vs { position: absolute; top: 40px; width: 760px; padding: 44px 46px; min-height: 400px; }\n.vs h3 { font: 600 54px/1 var(--sans); letter-spacing: -.02em; display: flex; align-items: center; gap: 16px; }\n.vs .tagc { font: 600 15px/1 var(--mono); letter-spacing: .1em; padding: 7px 11px; border-radius: 8px; margin-left: auto; }\n.tagc.ok { background: var(--accent); color: #121211; }\n.tagc.no { background: var(--sheet2); color: var(--ink3); }\n.vs ul { list-style: none; padding: 0; margin-top: 36px; display: grid; gap: 24px; }\n.vs li { display: flex; gap: 16px; align-items: center; font: 400 30px/1.3 var(--sans); color: var(--ink2); }\n.vs li .ic { width: 24px; height: 24px; }\n.vs li.y .ic { color: var(--ok); } .vs li.n .ic { color: var(--signal); }\n.stat { position: absolute; top: 20px; width: 396px; height: 200px; padding: 28px 30px; display: grid; align-content: space-between; }\n.stat b { font: 600 72px/1 var(--sans); letter-spacing: -.04em; font-variant-numeric: tabular-nums; }\n.stat span { font: 400 22px/1.2 var(--sans); color: var(--ink2); }\n.barrow { position: absolute; left: 0; width: 1728px; display: grid; grid-template-columns: 300px 1fr 260px; align-items: center; gap: 28px; }\n.barrow .tr { height: 54px; border-radius: 14px; background: var(--sheet); box-shadow: 0 0 0 1px var(--hair); overflow: hidden; }\n.barrow .tr i { display: block; height: 100%; border-radius: 14px; }\n.barrow .nm { font: 500 26px/1.1 var(--sans); color: var(--ink2); }\n.barrow .vl { font: 600 40px/1 var(--mono); letter-spacing: -.02em; text-align: right; }\n.stamp { position: absolute; font: 700 84px/1 var(--sans); letter-spacing: -.035em; }\n.stamp em { font-style: normal; color: var(--accent); }\n.hx { fill: transparent; stroke: rgba(255,255,250,.12); stroke-width: 1.4; }\n.hx.in { fill: rgba(138,166,245,.28); stroke: var(--accent); }\n.hx.ring { fill: rgba(242,132,95,.24); stroke: var(--signal); }\n.hx.out { opacity: .4; }\n.seg { position: absolute; height: 100%; top: 0; display: grid; place-items: center; font: 600 18px/1 var(--mono); color: #121211; border-right: 3px solid var(--bg); }\n.k3 { position: absolute; top: 30px; width: 548px; height: 470px; padding: 38px; display: grid; align-content: start; gap: 18px; }\n.k3 h3 { font: 600 50px/1 var(--sans); letter-spacing: -.02em; display: flex; align-items: center; gap: 12px; }\n.k3 p { font: 400 30px/1.42 var(--sans); color: var(--ink2); }\n.k3 .tagc { font: 600 14px/1 var(--mono); letter-spacing: .1em; padding: 7px 10px; border-radius: 8px; margin-left: auto; }\n.banner { position: absolute; left: 0; right: 0; padding: 24px 32px; border-radius: 18px; background: var(--signalS); box-shadow: 0 0 0 1.5px var(--signal); font: 500 26px/1.3 var(--sans); display: flex; gap: 16px; align-items: center; }\n.banner .ic { color: var(--signal); }\n.ev { position: absolute; display: flex; gap: 10px; align-items: center; padding: 14px 20px; border-radius: 14px; background: var(--sheet); box-shadow: 0 16px 40px rgba(0,0,0,.4), 0 0 0 1px var(--hair); font: 500 22px/1.2 var(--mono); white-space: nowrap; }\n.ev.r { box-shadow: 0 0 0 2.5px var(--signal); color: var(--ink3); }\n.ev.g { box-shadow: 0 0 0 2.5px var(--accent); }\n.rc { position: absolute; left: 0; font: 600 52px/1.15 var(--sans); letter-spacing: -.025em; display: flex; gap: 26px; align-items: baseline; }\n.rc em { font: 500 26px/1 var(--mono); font-style: normal; color: var(--accent); width: 48px; }\n<\/style><div id=\"deck\">\n<div id=\"bg\"><\/div><div id=\"glow\" class=\"abs\"><\/div><div id=\"glow2\" class=\"abs\"><\/div>\n<div id=\"hdr\" class=\"abs\"><span class=\"k\">HomeFinder \u00b7 pitch rehearsal<\/span><span class=\"t\"><em id=\"hn\">01<\/em><span id=\"ht\"><\/span><\/span><\/div>\n<div id=\"dots\" class=\"abs\"><\/div>\n<div id=\"stage\"><\/div>\n<div id=\"cap\" class=\"abs\">\n  <div class=\"spk\">\n    <div class=\"who\" id=\"wM\"><span class=\"av\" style=\"background:#f2c48a;color:#f2c48a\"><span style=\"color:#121211\">M<\/span><\/span><span><b>Maya<\/b><small>plays the committee<\/small><\/span><\/div>\n    <div class=\"who\" id=\"wS\"><span class=\"av\" style=\"background:var(--accent);color:var(--accent)\"><span style=\"color:#121211\">S<\/span><\/span><span><b>Sam<\/b><small>the architect<\/small><\/span><\/div>\n  <\/div>\n  <div id=\"line\"><\/div>\n<\/div>\n<div id=\"hint\"><span id=\"hs\"><\/span><span><kbd>\u2190<\/kbd> <kbd>\u2192<\/kbd> step &nbsp; <kbd>N<\/kbd> notes &nbsp; <kbd>F<\/kbd> full screen &nbsp;&nbsp; <b id=\"hn2\"><\/b><\/span><\/div><div id=\"notes\"><div class=\"nh\"><span id=\"nsec\"><\/span><span id=\"ntime\">00:00<\/span><\/div><div id=\"ntext\"><\/div><\/div><\/div>";
+
+const TL = {"fps":30,"env":[],"scenes":[{"id":"intro","t0":3.0,"dur":22.407,"lines":[{"s":"","text":"","t0":3.0,"t1":4.0},{"s":"","text":"","t0":12.356,"t1":13.356},{"s":"","text":"","t0":21.988,"t1":22.988}]},{"id":"frame","t0":27.407,"dur":38.047,"lines":[{"s":"","text":"","t0":27.407,"t1":28.407},{"s":"","text":"","t0":30.153,"t1":31.153},{"s":"","text":"","t0":40.945,"t1":41.945},{"s":"","text":"","t0":42.887,"t1":43.887},{"s":"","text":"","t0":56.963,"t1":57.963},{"s":"","text":"","t0":60.489,"t1":61.489}]},{"id":"reqs","t0":67.454,"dur":17,"lines":[{"s":"","text":"","t0":67.454,"t1":68.454},{"s":"","text":"","t0":69.454,"t1":70.454},{"s":"","text":"","t0":71.454,"t1":72.454},{"s":"","text":"","t0":73.454,"t1":74.454},{"s":"","text":"","t0":75.454,"t1":76.454},{"s":"","text":"","t0":77.454,"t1":78.454},{"s":"","text":"","t0":79.454,"t1":80.454}]},{"id":"rule","t0":86.454,"dur":32.127,"lines":[{"s":"","text":"","t0":86.454,"t1":87.454},{"s":"","text":"","t0":89.526,"t1":90.526},{"s":"","text":"","t0":103.968,"t1":104.968},{"s":"","text":"","t0":108.271,"t1":109.271}]},{"id":"overview","t0":120.581,"dur":19,"lines":[{"s":"","text":"","t0":120.581,"t1":121.581},{"s":"","text":"","t0":122.581,"t1":123.581},{"s":"","text":"","t0":124.581,"t1":125.581},{"s":"","text":"","t0":126.581,"t1":127.581},{"s":"","text":"","t0":128.581,"t1":129.581},{"s":"","text":"","t0":130.581,"t1":131.581},{"s":"","text":"","t0":132.581,"t1":133.581},{"s":"","text":"","t0":134.581,"t1":135.581}]},{"id":"ingest","t0":141.581,"dur":47.166,"lines":[{"s":"","text":"","t0":141.581,"t1":142.581},{"s":"","text":"","t0":143.69,"t1":144.69},{"s":"","text":"","t0":160.097,"t1":161.097},{"s":"","text":"","t0":163.492,"t1":164.492},{"s":"","text":"","t0":174.427,"t1":175.427},{"s":"","text":"","t0":179.063,"t1":180.063}]},{"id":"kafka","t0":190.747,"dur":30.887,"lines":[{"s":"","text":"","t0":190.747,"t1":191.747},{"s":"","text":"","t0":195.11,"t1":196.11},{"s":"","text":"","t0":208.261,"t1":209.261},{"s":"","text":"","t0":211.205,"t1":212.205}]},{"id":"data","t0":223.634,"dur":37.967,"lines":[{"s":"","text":"","t0":223.634,"t1":224.634},{"s":"","text":"","t0":227.63,"t1":228.63},{"s":"","text":"","t0":243.063,"t1":244.063},{"s":"","text":"","t0":246.136,"t1":247.136}]},{"id":"reco","t0":263.601,"dur":15,"lines":[{"s":"","text":"","t0":263.601,"t1":264.601},{"s":"","text":"","t0":265.601,"t1":266.601},{"s":"","text":"","t0":267.601,"t1":268.601},{"s":"","text":"","t0":269.601,"t1":270.601},{"s":"","text":"","t0":271.601,"t1":272.601},{"s":"","text":"","t0":273.601,"t1":274.601}]},{"id":"search","t0":280.601,"dur":49.087,"lines":[{"s":"","text":"","t0":280.601,"t1":281.601},{"s":"","text":"","t0":283.398,"t1":284.398},{"s":"","text":"","t0":295.304,"t1":296.304},{"s":"","text":"","t0":300.126,"t1":301.126},{"s":"","text":"","t0":316.182,"t1":317.182},{"s":"","text":"","t0":321.952,"t1":322.952}]},{"id":"index","t0":331.688,"dur":15,"lines":[{"s":"","text":"","t0":331.688,"t1":332.688},{"s":"","text":"","t0":333.688,"t1":334.688},{"s":"","text":"","t0":335.688,"t1":336.688},{"s":"","text":"","t0":337.688,"t1":338.688},{"s":"","text":"","t0":339.688,"t1":340.688},{"s":"","text":"","t0":341.688,"t1":342.688}]},{"id":"map","t0":348.688,"dur":13,"lines":[{"s":"","text":"","t0":348.688,"t1":349.688},{"s":"","text":"","t0":350.688,"t1":351.688},{"s":"","text":"","t0":352.688,"t1":353.688},{"s":"","text":"","t0":354.688,"t1":355.688},{"s":"","text":"","t0":356.688,"t1":357.688}]},{"id":"fresh","t0":363.688,"dur":17,"lines":[{"s":"","text":"","t0":363.688,"t1":364.688},{"s":"","text":"","t0":365.688,"t1":366.688},{"s":"","text":"","t0":369.688,"t1":370.688},{"s":"","text":"","t0":371.688,"t1":372.688},{"s":"","text":"","t0":373.688,"t1":374.688},{"s":"","text":"","t0":375.688,"t1":376.688}]},{"id":"cache","t0":382.688,"dur":49.206,"lines":[{"s":"","text":"","t0":382.688,"t1":383.688},{"s":"","text":"","t0":385.805,"t1":386.805},{"s":"","text":"","t0":399.308,"t1":400.308},{"s":"","text":"","t0":400.484,"t1":401.484},{"s":"","text":"","t0":421.966,"t1":422.966},{"s":"","text":"","t0":423.441,"t1":424.441}]},{"id":"cost","t0":433.894,"dur":43.806,"lines":[{"s":"","text":"","t0":433.894,"t1":434.894},{"s":"","text":"","t0":435.738,"t1":436.738},{"s":"","text":"","t0":452.544,"t1":453.544},{"s":"","text":"","t0":453.771,"t1":454.771},{"s":"","text":"","t0":467.966,"t1":468.966},{"s":"","text":"","t0":470.387,"t1":471.387}]},{"id":"costunit","t0":479.7,"dur":13,"lines":[{"s":"","text":"","t0":479.7,"t1":480.7},{"s":"","text":"","t0":481.7,"t1":482.7},{"s":"","text":"","t0":483.7,"t1":484.7},{"s":"","text":"","t0":485.7,"t1":486.7},{"s":"","text":"","t0":487.7,"t1":488.7}]},{"id":"risks","t0":494.7,"dur":15,"lines":[{"s":"","text":"","t0":494.7,"t1":495.7},{"s":"","text":"","t0":496.7,"t1":497.7},{"s":"","text":"","t0":498.7,"t1":499.7},{"s":"","text":"","t0":500.7,"t1":501.7},{"s":"","text":"","t0":502.7,"t1":503.7},{"s":"","text":"","t0":504.7,"t1":505.7}]},{"id":"close","t0":511.7,"dur":29.407,"lines":[{"s":"","text":"","t0":511.7,"t1":512.7},{"s":"","text":"","t0":514.041,"t1":515.041},{"s":"","text":"","t0":530.554,"t1":531.554},{"s":"","text":"","t0":537.118,"t1":538.118}]}]};
+const $ = (s, r = ROOT) => r.querySelector(s);
+const IC = {
+  feed: '<path d="M4 11a9 9 0 0 1 9 9"/><path d="M4 4a16 16 0 0 1 16 16"/><circle cx="5" cy="19" r="1"/>',
+  list: '<path d="M3 12h.01M3 18h.01M3 6h.01M8 12h13M8 18h13M8 6h13"/>',
+  filter: '<polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>',
+  db: '<ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14a9 3 0 0 0 18 0V5"/><path d="M3 12a9 3 0 0 0 18 0"/>',
+  radio: '<path d="M4.9 16.1C1 12.2 1 5.8 4.9 1.9M7.8 4.7a6.14 6.14 0 0 0-.8 7.5"/><circle cx="12" cy="9" r="2"/><path d="M16.2 4.8c2 2 2.26 5.11.8 7.47M19.1 1.9a9.96 9.96 0 0 1 0 14.1M9.5 18h5M8 22l4-11 4 11"/>',
+  search: '<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>',
+  zap: '<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>',
+  bell: '<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>',
+  dollar: '<circle cx="12" cy="12" r="10"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8M12 18V6"/>',
+  layers: '<path d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z"/><path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65"/><path d="m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65"/>',
+  check: '<path d="M20 6 9 17l-5-5"/>', x: '<path d="M18 6 6 18M6 6l12 12"/>',
+  plug: '<path d="M12 22v-5M9 8V2M15 8V2M18 8v5a4 4 0 0 1-4 4h-4a4 4 0 0 1-4-4V8Z"/>',
+  alert: '<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4M12 17h.01"/>',
+  clock: '<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>',
+};
+const ic = n => `<svg class="ic" viewBox="0 0 24 24">${IC[n]}</svg>`;
+const ease = p => p < .5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2;
+const eo = p => 1 - Math.pow(1 - p, 3);
+const cl = v => Math.max(0, Math.min(1, v));
+const E = (t, a, d = .7) => eo(cl((t - a) / d));
+const sh = (el, p, dy = 26, sc = 0) => { el.style.opacity = p; el.style.transform = `translateY(${(1 - p) * dy}px) scale(${1 - (1 - p) * sc})`; };
+const mk = (parent, html, cls = "", style = "") => { const d = document.createElement("div"); if (cls) d.className = cls; if (style) d.style.cssText = style; d.innerHTML = html; parent.appendChild(d); return d; };
+const TITLES_OLD = { intro: "Tomorrow's pitch", frame: "Open with the shape of the problem", rule: "One rule to hang it on", ingest: "How a listing gets in", kafka: "Push back: why not Kafka?", data: "Push back: why not Spanner?", search: "Deep dive: geo search", cache: "Build vs buy: the cache", cost: "Cost, in one bill", close: "The close" };
+Object.assign(IC, {
+  map: '<path d="M14.1 4.6 9.9 2.4a2 2 0 0 0-1.8 0L3.6 4.7A1 1 0 0 0 3 5.6v14.8a.5.5 0 0 0 .7.4l4.4-2.2a2 2 0 0 1 1.8 0l4.2 2.2a2 2 0 0 0 1.8 0l4.5-2.3a1 1 0 0 0 .6-.9V3.6a.5.5 0 0 0-.7-.4l-4.4 2.2a2 2 0 0 1-1.8 0Z"/><path d="M15 5.8v15M9 3.2v15"/>',
+  image: '<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.1-3.1a2 2 0 0 0-2.8 0L6 21"/>',
+  shield: '<path d="M20 13c0 5-3.5 7.5-7.7 9a1 1 0 0 1-.7 0C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.2-2.7a1.2 1.2 0 0 1 1.6 0C14.5 3.8 17 5 19 5a1 1 0 0 1 1 1z"/>',
+  users: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8"/>',
+  globe: '<circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20M2 12h20"/>',
+  home: '<path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .7-1.5l7-6a2 2 0 0 1 2.6 0l7 6a2 2 0 0 1 .7 1.5v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>',
+  lock: '<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>',
+  scale: '<path d="m16 16 3-8 3 8c-.9.6-1.9 1-3 1s-2.1-.4-3-1ZM2 16l3-8 3 8c-.9.6-1.9 1-3 1s-2.1-.4-3-1Z"/><path d="M7 21h10M12 3v18M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2"/>',
+  cpu: '<rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><path d="M15 2v2M15 20v2M2 15h2M2 9h2M20 15h2M20 9h2M9 2v2M9 20v2"/>',
+  trend: '<path d="M22 7 13.5 15.5 8.5 10.5 2 17"/><path d="M16 7h6v6"/>',
+  building: '<rect x="4" y="2" width="16" height="20" rx="2"/><path d="M9 22v-4h6v4M8 6h.01M16 6h.01M12 6h.01M12 10h.01M12 14h.01M16 10h.01M16 14h.01M8 10h.01M8 14h.01"/>',
+  phone: '<rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18h.01"/>',
+});
+const TITLES = {
+  intro: "HomeFinder system design", frame: "The shape of the problem", reqs: "Requirements that drive the design",
+  rule: "The design principle", overview: "System overview", ingest: "MLS integration pipeline",
+  kafka: "Event backbone: Pub/Sub over Kafka", data: "System of record: AlloyDB over Spanner", reco: "Search and recommendations",
+  search: "Geo search: how a map query runs", index: "Index design and sharding", map: "1,000+ pins in under 300 ms",
+  fresh: "Freshness and failure modes", cache: "Caching, and the build vs buy call", cost: "Cost: one bill, biggest line first",
+  costunit: "Cost: levers and guardrails", risks: "Risks and compliance", close: "Summary",
+};
+const SECTIONS = [
+  { name: "Introduction", min: 0, ids: ["intro"] },
+  { name: "01 · High-level architecture", min: 8, ids: ["frame", "reqs", "rule", "overview", "ingest", "kafka", "data", "reco"] },
+  { name: "02 · Deep dive: geo search", min: 15, ids: ["search", "index", "map", "fresh", "cache"] },
+  { name: "03 · Cost optimization", min: 7, ids: ["cost", "costunit"] },
+  { name: "Wrap-up", min: 0, ids: ["risks", "close"] },
+];
+const SEC = {}; SECTIONS.forEach(s => s.ids.forEach(id => SEC[id] = s));
+// Presenter notes (N): cues, not a script.
+const NOTES = {
+  intro: "<b>30 min, three parts:</b> architecture 8, geo search deep dive 15, cost 7. Interrupt me anytime.",
+  frame: "Numbers are <b>planning assumptions</b>. 1M changes/day = <b>12 writes/s</b>. ~25k searches/s at peak. <b>Read heavy, write light</b>: every later choice falls out of this.",
+  reqs: "These six targets come straight from the brief. Each has <b>a mechanism</b>, and I'll show where it lives as we go.",
+  rule: "<b>Managed where the protocol is open</b>: leaving is a migration. <b>Proprietary only behind an adapter</b>, off the request path.",
+  overview: "Two paths. <b>Event path</b> (left): sources into one golden record, then fan-out. <b>Request path</b> (right): edge, stateless services on Cloud Run, read stores. Mortgage and credit go through a <b>partner gateway</b>, so we never hold more financial data than we need.",
+  ingest: "<b>One Cloud Tasks queue per MLS</b>, rate cap = its contract. Map to RESO, dedupe to one property_id. Outbox row in the same transaction, then <b>5 subscribers</b>. Public records and third-party data are batch loads into the same record.",
+  kafka: "12 events/s does not justify brokers and partitions. Pub/Sub gives <b>fan-out, dead letters, replay</b>. Cloud Tasks hits one target, so it is wrong for fan-out. <b>Trigger to revisit</b>: sustained thousands/s or cross-cloud consumers.",
+  data: "~2 TB at 12 writes/s from one region. Spanner sells global writes we don't use, and we'd lose <b>PostGIS</b>. Ordering: <b>version check</b> on (ModificationTimestamp, seq), so retries and replay are safe.",
+  reco: "Recommendations reuse search: <b>candidates from OpenSearch, one ranker</b> for search re-rank, home feed and alerts. Guardrails are part of the design, not an afterthought (fair housing).",
+  search: "<b>The deep dive.</b> OpenSearch on GKE is the one stateful thing we run, because geo + ranking is the product. H3 cells tagged at write time; <b>exact math only on the edge ring</b>. Budget: <b>160 of 200 ms</b>.",
+  index: "One doc per listing, <b>denormalized</b>. School districts and neighborhoods precomputed with PostGIS on write (1M/day), not per search (~400M/day). Active index is small: <b>hash routing</b>, no hot shards. Off-market is separate and warm. Reindex = <b>alias swap</b>.",
+  map: "Pins never scale with listings: <b>aggregate by H3 cell</b> until the viewport holds ≤ 1,000 homes. ~32 KB payload. WebGL on the client. Budget <b>250 of 300 ms</b>.",
+  fresh: "Our part is ~10 s. <b>The MLS polling cadence is the real lag</b>, so we report freshness per feed. Failures degrade, they don't take search down: replicas in 3 zones, cached fallback, dead letters, DR promotion.",
+  cache: "Layers: <b>CDN → Valkey → OpenSearch request cache</b>. Buy Memorystore for Valkey. Dragonfly is faster but the pager becomes ours. <b>Switch trigger is written down.</b>",
+  cost: "Illustrative split, but the ranking holds: <b>photos + egress are over half</b>. Lifecycle tiers, resize once on upload, CDN. BigQuery: <b>slots for steady jobs, on-demand for ad hoc</b>, partition by date, cluster by H3.",
+  costunit: "Commit what runs all year, Spot what can be interrupted. Cache hit rate is a cost metric. <b>Cost per 1,000 searches</b> is the number we report.",
+  risks: "Only if time allows, otherwise go to questions. <b>Fair housing</b> and <b>CCPA</b> are the two most likely to come up.",
+  close: "Say the four lines slowly. <b>Every choice has a trigger to revisit it.</b> Then open for questions.",
+};
+
+const S = {};
+const stage = $("#stage");
+TL.scenes.forEach((sc, i) => { const el = mk(stage, "", "scene"); el.dataset.id = sc.id; S[sc.id] = { el, sc, i }; });
+$("#dots").innerHTML = TL.scenes.map(() => "<i><u></u></i>").join("");
+
+/* ---------- scene builders: each returns draw(lt, L) where L[k] is line k's start, relative ---------- */
+const B = {};
+B.intro = el => {
+  const t1 = mk(el, "HomeFinder system design", "big abs", "left:0;top:150px;font-size:118px");
+  const t2 = mk(el, "A national real estate platform on Google Cloud · Dani, lead engineer", "abs", "left:4px;top:300px;font:400 38px/1.2 var(--sans);color:var(--ink2)");
+  const row = mk(el, "", "abs", "left:0;top:430px;display:flex;gap:18px");
+  const chips = [["High-level architecture", "8 min"], ["Deep dive: geo search", "15 min"], ["Cost optimization", "7 min"]].map((c, k) => mk(row, `<span class="mono" style="color:var(--accent)">0${k + 1}</span>${c[0]}<span class="mono" style="color:var(--ink3);font-size:20px">${c[1]}</span>`, "chip", "font-size:26px;padding:16px 24px"));
+  return (t, L) => { sh(t1, E(t, -.6, 1), 40); sh(t2, E(t, .1, 1), 30); chips.forEach((c, k) => sh(c, E(t, L[1] + 1 + k * .9), 20)); };
+};
+B.frame = el => {
+  const D = [["100M", "users a month"], ["200M", "properties"], ["800", "MLS feeds"], ["5M", "active listings"]];
+  const st = D.map((d, k) => mk(el, `<b>${d[0]}</b><span>${d[1]}</span>`, "card stat", `left:${k * 444}px`));
+  const r1 = mk(el, `<span class="nm">Writes</span><div class="tr"><i style="background:var(--signal);width:0"></i></div><span class="vl">12 / s</span>`, "barrow", "top:300px");
+  const r2 = mk(el, `<span class="nm">Reads, at peak</span><div class="tr"><i style="background:var(--accent);width:0"></i></div><span class="vl">25,000 / s</span>`, "barrow", "top:384px");
+  const p95 = mk(el, `${ic("clock")}p95 under 200 ms`, "chip abs", "left:328px;top:470px");
+  const stamp = mk(el, "Read heavy, <em>write light.</em>", "stamp", "left:0;top:560px;font-size:72px");
+  return (t, L) => {
+    st.forEach((s, k) => sh(s, E(t, L[1] + .3 + k * 2.2), 30, .04));
+    sh(r1, E(t, L[3] + .2)); sh(r2, E(t, L[3] + 4.5)); sh(p95, E(t, L[3] + 9));
+    r1.querySelector("i").style.width = (0.5 * E(t, L[3] + .8, 1.5)) + "%";
+    r2.querySelector("i").style.width = (100 * E(t, L[3] + 5, 2.4)) + "%";
+    sh(stamp, E(t, L[4] + .2, .9), 30);
+  };
+};
+B.rule = el => {
+  const q1 = mk(el, "Managed where the protocol is open.", "abs", "left:0;top:0;font:600 64px/1.1 var(--sans);letter-spacing:-.03em");
+  const q2 = mk(el, "Proprietary only behind an adapter.", "abs", "left:0;top:82px;font:600 64px/1.1 var(--sans);letter-spacing:-.03em;color:var(--accent)");
+  const L1 = mk(el, `<div class="lbl">Buy · open protocol</div>`, "abs", "left:0;top:230px");
+  const a = [["db", "AlloyDB", "speaks Postgres"], ["zap", "Memorystore for Valkey", "speaks the Redis protocol"]].map((n, k) => mk(el, `<span class="tile">${ic(n[0])}</span><span>${n[1]}<small>${n[2]}</small></span>`, "node", `left:0;top:${276 + k * 110}px`));
+  const mig = mk(el, "Leaving = a migration, not a rewrite", "chip abs", "left:0;top:510px;color:var(--ok)");
+  const L2 = mk(el, `<div class="lbl">Proprietary · behind one adapter</div>`, "abs", "left:900px;top:230px");
+  const box = mk(el, `<div class="lbl" style="margin-bottom:22px">adapter · CloudEvents envelope</div><div style="display:flex;gap:12px;flex-wrap:wrap"><span class="chip">${ic("radio")}Pub/Sub</span><span class="chip">${ic("list")}Cloud Tasks</span><span class="chip">${ic("layers")}BigQuery</span></div><div style="margin-top:26px;font:400 23px/1.4 var(--sans);color:var(--ink2)">Off the user request path. Move to Kafka later? Rewrite one module.</div>`, "card", "left:900px;top:276px;width:828px;padding:30px 32px;border:2px dashed var(--hair2);background:transparent;box-shadow:none");
+  return (t, L) => { sh(q1, E(t, -.4, .9), 30); sh(q2, E(t, .6, .9), 30); sh(L1, E(t, L[1])); a.forEach((n, k) => sh(n, E(t, L[1] + 1.5 + k * 4), 24)); sh(mig, E(t, L[1] + 10)); sh(L2, E(t, L[3] - 3)); sh(box, E(t, L[3] - 2.5), 30); };
+};
+B.ingest = el => {
+  const W = mk(el, "", ""); W.innerHTML = '<svg class="wires" width="1728" height="660"></svg>'; const svg = W.firstChild;
+  const mls = [["Unlock MLS", "2 req/s"], ["Central TX MLS", "1 req/s"], ["HAR", "3 req/s"]].map((m, k) => mk(el, `<span class="tile">${ic("feed")}</span><span>${m[0]}<small>Cloud Tasks queue · ${m[1]}</small></span>`, "node", `left:0;top:${60 + k * 150}px;width:330px`));
+  const ing = mk(el, `<div style="display:flex;gap:14px;align-items:center"><span class="tile">${ic("filter")}</span><span>Ingest<small>Cloud Run job</small></span></div><ul style="list-style:none;padding:0;margin-top:16px;display:grid;gap:9px;font:400 17px/1.2 var(--mono);color:var(--ink3)">${["raw payload → lake", "map to RESO", "validate · geocode", "resolve property_id"].map(s => `<li>· ${s}</li>`).join("")}</ul>`, "node", "left:460px;top:150px;display:block;width:300px");
+  const al = mk(el, `<span class="tile">${ic("db")}</span><span>AlloyDB<small>golden record + outbox row</small></span>`, "node", "left:860px;top:205px");
+  const ps = mk(el, `<span class="tile">${ic("radio")}</span><span>Pub/Sub<small>property.changed</small></span>`, "node", "left:860px;top:400px");
+  const SK = [["search", "OpenSearch", "reindex"], ["zap", "Valkey", "purge"], ["bell", "Alerts", "match"], ["dollar", "Valuation", "re-score"], ["layers", "BigQuery", "history row"]];
+  const sk = SK.map((s, k) => mk(el, `<span class="tile" style="width:44px;height:44px">${ic(s[0])}</span><span>${s[1]}<small>${s[2]}</small></span>`, "node", `left:1400px;top:${10 + k * 128}px;padding:12px 18px;width:310px`));
+  const P = [];
+  [0, 1, 2].forEach(k => P.push(`M330 ${100 + k * 150} C 400 ${100 + k * 150}, 400 260, 460 260`));
+  P.push("M760 260 L 860 260", "M1000 300 L 1000 400"); SK.forEach((_, k) => P.push(`M1170 440 C 1290 440, 1290 ${50 + k * 128}, 1400 ${50 + k * 128}`));
+  svg.innerHTML = P.map(d => `<path d="${d}"/>`).join("");
+  const paths = [...svg.querySelectorAll("path")];
+  const dots = paths.map((p, k) => mk(el, "", "dot" + (k === 1 ? " r" : "")));
+  const lis = [...ing.querySelectorAll("li")];
+  const slow = mk(el, `${ic("alert")}slow MLS, its own queue`, "chip abs", "left:0;top:-10px;color:var(--signal)");
+  return (t, L) => {
+    mls.forEach((m, k) => sh(m, E(t, L[1] + k * .5), 24)); sh(ing, E(t, L[1] + 2.5), 24);
+    lis.forEach((li, k) => { const on = t > L[1] + 6 + k * 2; li.style.color = on ? "var(--ink)" : ""; li.textContent = (on ? "✓ " : "· ") + li.textContent.slice(2); });
+    const bad = t > L[3] && t < L[5]; mls[1].classList.toggle("bad", bad); sh(slow, bad ? E(t, L[3] + .3) : 0, 10);
+    sh(al, E(t, L[5]), 24); sh(ps, E(t, L[5] + 3), 24); sk.forEach((s, k) => sh(s, E(t, L[5] + 4.5 + k * .5), 20));
+    paths.forEach((p, k) => p.style.opacity = k < 3 ? E(t, L[1] + 2) : k === 3 ? E(t, L[5]) : k === 4 ? E(t, L[5] + 3) : E(t, L[5] + 4.5));
+    dots.forEach((d, k) => {
+      let a = k < 3 ? L[1] + 3 : k === 3 ? L[5] + 1 : k === 4 ? L[5] + 3.5 : L[5] + 5;
+      const per = k === 1 && bad ? 4.5 : 1.8; const ph = ((t - a) / per + k * .37) % 1;
+      if (t < a) { d.style.opacity = 0; return; }
+      const pt = paths[k].getPointAtLength(paths[k].getTotalLength() * ph);
+      d.style.opacity = Math.min(1, (t - a) * 2) * (ph > .9 ? (1 - ph) * 10 : 1); d.style.transform = `translate(${pt.x - 7}px,${pt.y - 7}px)`;
+    });
+  };
+};
+B.kafka = el => {
+  const meter = mk(el, `<div class="lbl">event rate · 1M changes a day</div><div style="font:600 84px/1 var(--mono);letter-spacing:-.04em;margin-top:10px">12<span style="font-size:34px;color:var(--ink3)"> events / s</span></div>`, "abs", "left:0;top:0");
+  const k1 = mk(el, `<h3>Kafka <span class="tagc no">NOT NOW</span></h3><ul><li class="n">${ic("x")}Brokers and partitions to size</li><li class="n">${ic("x")}A cluster someone is on call for</li><li class="y">${ic("check")}Great at scale we don't have</li></ul>`, "card vs", "left:0;top:150px;width:840px");
+  const k2 = mk(el, `<h3>Pub/Sub <span class="tagc ok">CHOSEN</span></h3><ul><li class="y">${ic("check")}Fan-out to many subscribers</li><li class="y">${ic("check")}Dead-letter topics, replay</li><li class="y">${ic("check")}No cluster to run</li></ul>`, "card vs", "left:888px;top:150px;width:840px;box-shadow:0 30px 70px rgba(0,0,0,.45),0 0 0 2.5px var(--accent)");
+  const low = mk(el, "", "abs", "left:0;top:0;width:1728px;height:660px");
+  const ct = mk(low, `<div class="lbl">Cloud Tasks</div><div style="font:500 30px/1.3 var(--sans);margin-top:12px">1 task → 1 target.<br><span style="color:var(--ink3)">5 consumers = 5 tasks. Producer changes every time.</span></div>`, "card", "left:0;top:150px;width:840px;padding:34px 38px;height:420px");
+  const pb = mk(low, `<div class="lbl">Pub/Sub</div><div style="font:500 30px/1.3 var(--sans);margin-top:12px">1 topic → N subscriptions.<br><span style="color:var(--ink3)">A new consumer is one more subscription.</span></div>`, "card", "left:888px;top:150px;width:840px;padding:34px 38px;height:420px;box-shadow:0 30px 70px rgba(0,0,0,.45),0 0 0 2.5px var(--accent)");
+  const tasks = [0, 1, 2, 3, 4].map(k => mk(ct, `task ${k + 1}`, "chip abs", `left:${38 + k * 156}px;top:290px;font-size:19px`));
+  const subs = [0, 1, 2, 3, 4, 5].map(k => mk(pb, k === 5 ? "+ new" : `sub ${k + 1}`, "chip abs", `left:${38 + k * 128}px;top:290px;font-size:19px${k === 5 ? ";color:var(--accent);box-shadow:0 0 0 2px var(--accent)" : ""}`));
+  return (t, L) => {
+    sh(meter, E(t, -.2)); const sw = E(t, L[2] - .4, .8);
+    sh(k1, E(t, L[1] + .5) * (1 - sw), 30); sh(k2, E(t, L[1] + 3) * (1 - sw), 30);
+    sh(ct, sw, 30); sh(pb, E(t, L[2] + 2) , 30); low.style.opacity = sw;
+    tasks.forEach((c, k) => sh(c, E(t, L[3] + .5 + k * .5), 14)); subs.forEach((c, k) => sh(c, E(t, L[3] + (k === 5 ? 6 : 3 + k * .3)), 14, k === 5 ? .3 : 0));
+  };
+};
+B.data = el => {
+  const a = mk(el, `<h3>AlloyDB <span class="tagc ok">CHOSEN</span></h3><ul><li class="y">${ic("check")}~2 TB at 12 writes/s, one region</li><li class="y">${ic("check")}PostGIS for school zones</li><li class="y">${ic("check")}Postgres: leave = migrate</li></ul>`, "card vs", "left:0;top:60px;width:840px;box-shadow:0 30px 70px rgba(0,0,0,.45),0 0 0 2.5px var(--accent)");
+  const s = mk(el, `<h3>Spanner <span class="tagc no">OVERKILL</span></h3><ul><li class="n">${ic("x")}Multi-region writes we don't use</li><li class="n">${ic("x")}Five nines we don't need</li><li class="n">${ic("x")}No PostGIS</li></ul>`, "card vs", "left:888px;top:60px;width:840px");
+  const v = mk(el, "", "abs", "left:0;top:0;width:1728px;height:660px");
+  const lbl = mk(v, "Version check, not ordering keys", "abs", "left:0;top:0;font:600 50px/1.1 var(--sans);letter-spacing:-.025em");
+  const rule = mk(v, "write only if (ModificationTimestamp, seq) is newer", "chip abs mono", "left:0;top:90px;font:500 24px/1 var(--mono);color:var(--accent)");
+  const lane = mk(v, "", "abs", "left:0;top:330px;width:1100px;border-top:2px dashed var(--hair2)");
+  const row = mk(v, `${ic("db")}AlloyDB row · v11 · 10:04:12`, "ev g", "left:1120px;top:300px");
+  const e1 = mk(v, "v11 · 10:04:12", "ev", "left:0;top:240px");
+  const e2 = mk(v, "v10 · 10:02:55  (late)", "ev", "left:0;top:360px");
+  const sk = mk(v, `${ic("x")} older → skipped`, "chip abs", "left:1120px;top:420px;color:var(--signal)");
+  const safe = mk(v, "Retries, redelivery and replay are all safe.", "abs", "left:0;top:520px;font:500 32px/1.3 var(--sans);color:var(--ok)");
+  return (t, L) => {
+    const sw = E(t, L[2] - .3, .8);
+    sh(a, E(t, L[1] + .3) * (1 - sw), 30); sh(s, E(t, L[1] + 2) * (1 - sw), 30); v.style.opacity = sw;
+    sh(lbl, E(t, L[3] - 2)); lane.style.opacity = E(t, L[3] + 6) * .8; sh(rule, E(t, L[3] + 5));
+    const x1 = 300 + 700 * ease(cl((t - L[3] - 7) / 1.6)), x2 = 300 + 700 * ease(cl((t - L[3] - 9.5) / 1.6));
+    e1.style.opacity = E(t, L[3] + 6.5); e1.style.transform = `translateX(${x1 - 300}px)`;
+    e2.style.opacity = E(t, L[3] + 9) * (1 - .55 * E(t, L[3] + 11.3)); e2.style.transform = `translateX(${x2 - 300}px)`; e2.classList.toggle("r", t > L[3] + 11.1);
+    sh(row, E(t, L[3] + 8.6)); sh(sk, E(t, L[3] + 11.3), 14); sh(safe, E(t, L[3] + 12.5));
+  };
+};
+B.search = el => {
+  const R = 36, HW = Math.sqrt(3) * R, C = 13, Rw = 11;
+  let h = '<svg width="880" height="620" style="position:absolute;left:0;top:10px;overflow:visible">';
+  const cells = [];
+  for (let r = 0; r < Rw; r++) for (let c = 0; c < C; c++) { const x = 30 + c * HW + (r % 2) * HW / 2, y = 30 + r * 1.5 * R; const pts = [0, 1, 2, 3, 4, 5].map(i => { const a = Math.PI / 180 * (60 * i - 30); return (x + R * Math.cos(a)).toFixed(1) + "," + (y + R * Math.sin(a)).toFixed(1); }).join(" "); cells.push({ x, y }); h += `<polygon class="hx" points="${pts}"/>`; }
+  const vp = { x: 240, y: 140, w: 420, h: 300 };
+  h += `<rect id="vpr" x="${vp.x}" y="${vp.y}" width="${vp.w}" height="${vp.h}" rx="8" fill="none" stroke="#efeee9" stroke-width="3" stroke-dasharray="10 8"/></svg>`;
+  const map = mk(el, h, "abs", "left:0;top:0");
+  const polys = [...map.querySelectorAll("polygon")]; const vpr = map.querySelector("#vpr");
+  const cls = cells.map(({ x, y }) => { const inside = x > vp.x + R * .9 && x < vp.x + vp.w - R * .9 && y > vp.y + R * .9 && y < vp.y + vp.h - R * .9; const near = x > vp.x - R * .8 && x < vp.x + vp.w + R * .8 && y > vp.y - R * .8 && y < vp.y + vp.h + R * .8; return inside ? "in" : near ? "ring" : "out"; });
+  const os = mk(el, `<span class="tile">${ic("search")}</span><span>OpenSearch on GKE<small>the one stateful thing we run</small></span>`, "node", "left:930px;top:70px");
+  const why = mk(el, `<div style="display:grid;gap:12px;font:400 25px/1.35 var(--sans);color:var(--ink2)"><div>${ic("check")} geo shapes, custom ranking, our facets</div><div style="color:var(--ink3)">${ic("x")} Vertex AI Search: relevance black box</div></div>`, "abs", "left:930px;top:200px");
+  const lg = mk(el, `<div style="display:grid;gap:16px;font:500 25px/1.3 var(--sans)"><div><span style="display:inline-block;width:22px;height:22px;border-radius:6px;background:rgba(138,166,245,.4);box-shadow:0 0 0 2px var(--accent);vertical-align:-3px;margin-right:12px"></span>inside: cheap H3 term filter</div><div><span style="display:inline-block;width:22px;height:22px;border-radius:6px;background:rgba(242,132,95,.35);box-shadow:0 0 0 2px var(--signal);vertical-align:-3px;margin-right:12px"></span>edge ring: exact polygon check</div><div style="color:var(--ink3)">cells tagged at write time</div></div>`, "abs", "left:930px;top:200px");
+  const H = [["edge", 40, "#85827a"], ["gateway", 10, "#b6b3ab"], ["cache", 5, "#5c5a54"], ["OpenSearch", 70, "var(--accent)"], ["re-rank", 20, "var(--signal)"], ["hydrate", 15, "#efeee9"]];
+  const bar = mk(el, `<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:14px"><span class="lbl">request budget · p95 &lt; 200 ms</span><b id="msv" style="font:600 46px/1 var(--mono)">0 ms</b></div><div style="position:relative;height:46px;border-radius:12px;background:var(--sheet);box-shadow:0 0 0 1px var(--hair);overflow:hidden">${H.map(x => `<i class="seg" style="background:${x[2]};width:0"><span>${x[0]}</span></i>`).join("")}</div>`, "abs", "left:930px;top:430px;width:798px");
+  const segs = [...bar.querySelectorAll(".seg")], msv = bar.querySelector("#msv");
+  return (t, L) => {
+    sh(map, E(t, -.3, 1), 20); vpr.style.opacity = E(t, L[3] + 1.5);
+    const cl3 = t > L[3] + 4, cl4 = t > L[3] + 8;
+    polys.forEach((p, k) => { const c = cls[k]; p.setAttribute("class", "hx" + (cl3 && c === "in" ? " in" : "") + (cl4 && c === "ring" ? " ring" : "") + (cl4 && c === "out" ? " out" : "")); });
+    const sw = E(t, L[2] + .2, .6);
+    sh(os, E(t, L[1] + .4) * (1 - sw * 0)); sh(why, E(t, L[1] + 4) * (1 - sw), 20); sh(lg, sw, 20);
+    sh(bar, E(t, L[5] - .5), 20);
+    let acc = 0, x = 0; const p = cl((t - L[5]) / 6), tot = 200;
+    segs.forEach((s, k) => { const a = acc / 160, b = (acc + H[k][1]) / 160; acc += H[k][1]; const q = cl((p - a) / (b - a)); s.style.left = (x / tot * 100) + "%"; s.style.width = (H[k][1] / tot * 100 * q) + "%"; s.querySelector("span").style.opacity = q > .95 && H[k][1] >= 15 ? 1 : 0; x += H[k][1] * q; });
+    msv.textContent = Math.round(Math.min(160, p * 160)) + " ms";
+  };
+};
+B.cache = el => {
+  const K = [["Valkey", "BUY", "ok", "Memorystore for Valkey. Google runs failover, 99.99% SLA. Redis protocol. Hot set 50–100 GB, so speed doesn't decide."], ["Dragonfly", "BUILD", "no", "Faster on one big node. But failover, upgrades and the pager become ours. Costs more than the nodes we'd save."], ["Redis", "LICENSE", "no", "Same class of speed. Left BSD in 2024. Valkey is the open fork, same API. The license decides."]];
+  const ks = K.map((k, i) => mk(el, `<h3>${k[0]} <span class="tagc ${k[2]}">${k[1]}</span></h3><p>${k[3]}</p>`, "card k3", `left:${i * 590}px`));
+  const ban = mk(el, `${ic("alert")}<span><b>Switch trigger:</b> cache becomes a top-3 cost, or a hot key outgrows one shard. Cache rebuilds from AlloyDB.</span>`, "banner", "top:540px");
+  return (t, L) => {
+    ks.forEach((k, i) => { const a = [L[1], L[3], L[5]][i]; sh(k, E(t, a + .2), 30, .03); const focus = i === 0 ? t < L[3] || t > L[5] + 6 : i === 1 ? t >= L[3] && t < L[5] : t >= L[5]; k.style.opacity = E(t, a + .2) * (focus ? 1 : .42); k.style.boxShadow = focus && i === 0 ? "0 30px 70px rgba(0,0,0,.45),0 0 0 2.5px var(--accent)" : ""; });
+    sh(ban, E(t, L[3] + 9.5), 20);
+  };
+};
+B.cost = el => {
+  const BILL = [["Photo storage", 30, "#8aa6f5"], ["Image egress + CDN", 25, "#6f8de0"], ["Search compute", 15, "#5c5a54"], ["AlloyDB", 9, "#6b6963"], ["BigQuery", 6, "#7a7871"], ["Batch + ML", 5, "#8a877f"], ["Cache", 4, "#9a978e"], ["Cloud Run APIs", 3, "#aaa79e"], ["Other", 3, "#bab7ae"]];
+  const bar = mk(el, `<div class="lbl" style="margin-bottom:16px">illustrative monthly bill · adds to 100%</div><div style="position:relative;height:84px;border-radius:16px;overflow:hidden;background:var(--sheet)">${(() => { let x = 0; return BILL.map(b => { const s = `<i class="seg" style="left:${x}%;width:${b[1]}%;background:${b[2]};font-size:${b[1] > 8 ? 20 : 15}px">${b[1]}%</i>`; x += b[1]; return s; }).join(""); })()}</div><div style="display:flex;margin-top:12px;font:500 18px/1.2 var(--sans);color:var(--ink3)"><span style="width:30%">Photo storage</span><span style="width:25%">Egress + CDN</span><span style="width:15%">Search</span><span>AlloyDB, BigQuery, ML, cache, APIs…</span></div>`, "abs", "left:0;top:0;width:1728px");
+  const segs = [...bar.querySelectorAll(".seg")];
+  const half = mk(el, "55% of the bill: start here", "chip abs", "left:0;top:175px;color:var(--accent);font-size:24px");
+  const life = ["Standard", "Nearline · 30 d", "Coldline · 90 d", "Archive · sold"].map((s, k) => mk(el, (k ? '<span style="color:var(--ink3);margin-right:6px">→</span>' : "") + s, "chip abs", `left:${470 + k * 310}px;top:175px;font-size:23px`));
+  const bq1 = mk(el, `<div class="lbl">steady jobs · ETL, training</div><div style="font:600 38px/1.15 var(--sans);margin-top:14px">Baseline slots + autoscaling</div>`, "card", "left:0;top:290px;width:840px;padding:30px 34px");
+  const bq2 = mk(el, `<div class="lbl">ad hoc · analysts</div><div style="font:600 38px/1.15 var(--sans);margin-top:14px">On-demand, ~$6.25 per TiB</div>`, "card", "left:888px;top:290px;width:840px;padding:30px 34px");
+  const part = mk(el, "Partition by date · cluster by H3 cell → scan only what you need", "chip abs", "left:0;top:450px;font-size:23px");
+  const one = mk(el, `<span style="color:var(--accent)">Buy</span> what is stateful, painful and open. <span style="color:var(--signal)">Build</span> what makes us different.`, "abs", "left:0;top:545px;font:600 44px/1.2 var(--sans);letter-spacing:-.02em");
+  return (t, L) => {
+    sh(bar, E(t, -.2), 20);
+    const hl = t < L[1] + 2 ? -1 : t < L[1] + 6 ? 0 : t < L[3] ? 1 : -2;
+    segs.forEach((s, k) => { s.style.opacity = hl === -1 || hl === -2 ? 1 : (k === 0 || (hl === 1 && k === 1)) ? 1 : .25; });
+    sh(half, E(t, L[1] + 6.5) * (1 - E(t, L[1] + 8.5)), 14);
+    life.forEach((c, k) => sh(c, E(t, L[1] + 9 + k * 1.3), 14));
+    sh(bq1, E(t, L[3] + .5), 24); sh(bq2, E(t, L[3] + 5), 24); sh(part, E(t, L[3] + 8.5), 14); sh(one, E(t, L[5] + .2), 24);
+  };
+};
+B.close = el => {
+  const R = [["Read heavy, write light."], ["Managed where open. Proprietary behind an adapter."], ["One write region · one event bus · one search cluster we own."], ["Every choice has a written trigger to revisit it."]];
+  const rs = R.map((r, k) => mk(el, `<em>0${k + 1}</em><span>${r[0]}</span>`, "rc", `top:${40 + k * 120}px;${k === 3 ? "color:var(--accent)" : ""}`));
+  const end = mk(el, "Thank you. Happy to go deeper on any of it.", "abs", "left:0;top:560px;font:500 34px/1 var(--sans);color:var(--ink2)");
+  return (t, L) => { const d = L[1]; [d + .2, d + 2.5, d + 7, d + 12.5].forEach((a, k) => sh(rs[k], E(t, a, .9), 26)); sh(end, E(t, L[3] + .2), 14); };
+};
+
+/* ---------- committee scenes ---------- */
+const head = (el, txt, top = 0) => mk(el, txt, "abs", `left:0;top:${top}px;font:600 40px/1.15 var(--sans);letter-spacing:-.02em`);
+const tl = (i, c = "var(--accent)") => `<span class="tile" style="width:44px;height:44px;color:${c}">${ic(i)}</span>`;
+const nd = (el, i, a, b, x, y, w) => mk(el, `<span class="tile">${ic(i)}</span><span>${a}<small>${b}</small></span>`, "node sm", `left:${x}px;top:${y}px;width:${w}px`);
+B.reqs = el => {
+  const t0 = head(el, "Six targets from the brief, and how each one is met");
+  const R = [["Search", "p95", "< 200 ms", "OpenSearch on H3 cells. The request budget adds to 160 ms.", "search"],
+    ["Map with 1,000+ pins", "load", "< 300 ms", "Aggregate by H3 cell when zoomed out, compact pins when zoomed in.", "map"],
+    ["Photos", "load", "< 1 s", "Resized once on upload to WebP and AVIF, served from Cloud CDN.", "image"],
+    ["Valuation", "estimate", "< 5 s", "Nightly batch scores read in ms. On-demand model run for edited homes.", "trend"],
+    ["Availability", "uptime", "99.95%", "Multi-zone everywhere. AlloyDB cross-region secondary for DR.", "shield"],
+    ["Data accuracy", "correct", "99.9%", "Version check, dedupe to one property_id, freshness SLO per feed.", "check"]];
+  const cs = R.map((r, k) => mk(el, `<div class="hd"><span class="lbl">${r[0]}</span>${tl(r[4])}</div><div class="m">${r[2]}<small>${r[1]}</small></div><p>${r[3]}</p>`, "card rq", `left:${(k % 3) * 590}px;top:${80 + Math.floor(k / 3) * 290}px`));
+  return (t, L) => { sh(t0, E(t, L[0])); cs.forEach((c, k) => sh(c, E(t, L[k + 1]), 26, .03)); };
+};
+B.overview = el => {
+  const W = mk(el, ""); W.innerHTML = '<svg class="wires" width="1728" height="660"></svg>'; const svg = W.firstChild;
+  const lb = (x, s) => mk(el, `<div class="lbl">${s}</div>`, "abs", `left:${x}px;top:-34px`);
+  const L1 = [lb(0, "sources"), lb(400, "ingest + events"), lb(760, "stores"), lb(1140, "services · Cloud Run"), lb(1490, "edge")];
+  const src = [["feed", "800+ MLS feeds", "RESO Web API, RETS"], ["building", "Public records", "tax, deeds, permits"], ["globe", "Third-party data", "schools, crime, walk score"], ["dollar", "Lenders · credit · title", "via partner gateway"]].map((n, k) => nd(el, n[0], n[1], n[2], 0, 20 + k * 150, 310));
+  const ing = nd(el, "filter", "Ingest", "map · dedupe · geocode", 400, 170, 250);
+  const ps = nd(el, "radio", "Pub/Sub", "property.changed", 400, 370, 250);
+  const st = [["db", "AlloyDB", "golden record · PostGIS"], ["search", "OpenSearch", "geo + ranking"], ["layers", "BigQuery + lake", "history · ML · analytics"], ["image", "Cloud Storage", "photos, tours, floor plans"]].map((n, k) => nd(el, n[0], n[1], n[2], 760, 20 + k * 150, 290));
+  const sv = [["search", "Search", "geo · filters · rank"], ["home", "Listings", "details, history"], ["trend", "Valuation", "AVM + confidence"], ["users", "Agents", "profiles, reviews"], ["dollar", "Mortgage", "pre-approval, rates"], ["bell", "Alerts", "saved searches"]].map((n, k) => nd(el, n[0], n[1], n[2], 1140, k * 105, 270));
+  const edge = nd(el, "shield", "Edge", "Global LB · CDN · Armor", 1490, 200, 238);
+  const cli = nd(el, "phone", "Web + apps", "100M users a month", 1490, 380, 238);
+  const P = [];
+  src.forEach((_, k) => P.push([`M310 ${58 + k * 150} C 360 ${58 + k * 150}, 350 208, 400 208`, 1]));
+  P.push(["M650 208 C 705 208, 705 58, 760 58", 1], ["M760 70 C 700 70, 710 408, 650 408", 3], ["M650 408 C 705 408, 705 208, 760 208", 3], ["M650 408 C 705 408, 705 358, 760 358", 3]);
+  [[0, 1], [1, 0], [2, 2], [3, 0]].forEach(([s, d]) => P.push([`M1140 ${36 + s * 105} C 1095 ${36 + s * 105}, 1095 ${58 + d * 150}, 1050 ${58 + d * 150}`, 4]));
+  sv.forEach((_, k) => P.push([`M1490 238 C 1445 238, 1455 ${36 + k * 105}, 1410 ${36 + k * 105}`, 5]));
+  P.push(["M1609 380 L 1609 276", 5]);
+  svg.innerHTML = P.map(p => `<path d="${p[0]}"/>`).join("");
+  const ps2 = [...svg.querySelectorAll("path")];
+  const evt = [...src, ing, ps], req = [...sv, edge, cli];
+  return (t, L) => {
+    L1.forEach((l, k) => sh(l, E(t, L[[0, 1, 2, 4, 5][k]])));
+    src.forEach((n, k) => sh(n, E(t, L[0] + k * .2), 20)); sh(ing, E(t, L[1]), 20); st.forEach((n, k) => sh(n, E(t, L[2] + k * .2), 20)); sh(ps, E(t, L[3]), 20);
+    sv.forEach((n, k) => sh(n, E(t, L[4] + k * .15), 20)); sh(edge, E(t, L[5]), 20); sh(cli, E(t, L[5] + .3), 20);
+    ps2.forEach((p, k) => p.style.opacity = E(t, L[P[k][1]] + .3));
+    const mode = t >= L[7] ? "evt" : t >= L[6] ? "req" : "";
+    evt.forEach(n => { n.classList.toggle("hot", mode === "evt"); n.classList.toggle("dim", mode === "req"); });
+    req.forEach(n => { n.classList.toggle("hot", mode === "req"); n.classList.toggle("dim", mode === "evt"); });
+    st.forEach(n => n.classList.remove("dim"));
+  };
+};
+B.reco = el => {
+  const S4 = [["search", "Candidates", "OpenSearch", "Same filters, nearby H3 cells, similar price band. About 500 homes."],
+    ["layers", "Features", "BigQuery → Valkey", "Views, saves, dwell time, freshness. Computed in batch, served from cache."],
+    ["cpu", "Rank", "XGBoost container", "One model for search re-rank, home feed and alerts. ~20 ms of the budget."],
+    ["scale", "Guardrails", "before results ship", "No protected attributes or close proxies. MLS display rules. Mix of neighborhoods."]];
+  const cs = S4.map((s, k) => mk(el, `<span class="tile">${ic(s[0])}</span><b>${s[1]}</b><span class="lbl">${s[2]}</span><p>${s[3]}</p>`, "card st", `left:${k * 442}px${k === 3 ? ";box-shadow:0 30px 70px rgba(0,0,0,.45),0 0 0 2px var(--signal)" : ""}`));
+  const ar = [0, 1, 2].map(k => mk(el, "→", "abs", `left:${400 + k * 442 + 8}px;top:155px;font:500 30px/1 var(--mono);color:var(--ink3)`));
+  const b1 = mk(el, `<div class="lbl">search results · online</div><div style="font:600 32px/1.25 var(--sans);margin-top:14px">Re-rank the top 200 hits per request</div>`, "card", "left:0;top:380px;width:840px;padding:30px 34px");
+  const b2 = mk(el, `<div class="lbl">home feed + alerts · batch</div><div style="font:600 32px/1.25 var(--sans);margin-top:14px">Score each new listing against saved searches</div>`, "card", "left:888px;top:380px;width:840px;padding:30px 34px");
+  return (t, L) => { cs.forEach((c, k) => sh(c, E(t, L[k]), 26, .03)); ar.forEach((a, k) => a.style.opacity = E(t, L[k + 1])); sh(b1, E(t, L[4]), 24); sh(b2, E(t, L[5]), 24); };
+};
+B.index = el => {
+  const D = ['{', '  "listing_id": "unlock-1182736",', '  "property_id": "p_48213990",', '  "status": "active",', '  "location": { "lat": 30.2672, "lon": -97.7431 },', '  "h3_r7": "872f6a8b5ffffff",', '  "h3_r9": "892f6a8b59bffff",', '  "price": 615000, "beds": 3, "baths": 2,', '  "type": "single_family",', '  "school_district_ids": ["tx-austin-isd"],', '  "neighborhood_id": "atx-zilker",', '  "amenities": ["pool", "garage"],', '  "modified_ts": "2026-10-28T09:14:02Z", "seq": 11', '}'];
+  const doc = mk(el, `<div class="lbl" style="margin-bottom:16px">one document per listing · denormalized</div><div class="doc">${D.map(l => `<div>${l}</div>`).join("")}</div>`, "card", "left:0;top:0;width:740px;padding:28px 24px");
+  const rows = [...doc.querySelectorAll(".doc div")];
+  const note = mk(el, `${ic("db")}Districts and neighborhoods come from PostGIS at write time: no polygon math per search`, "chip abs", "left:800px;top:0;font-size:20px;white-space:normal;width:928px;border-radius:16px;color:var(--signal)");
+  const c1 = mk(el, `<div class="lbl">active listings index</div><div style="font:600 46px/1 var(--mono);letter-spacing:-.03em;margin-top:14px">5M docs · ~20 GB</div><div style="font:400 23px/1.4 var(--sans);color:var(--ink2);margin-top:14px">6 primary shards × 2 replicas across 3 zones. Hash routing: shards stay small, fan-out is cheap, no city becomes a hot shard.</div>`, "card", "left:800px;top:100px;width:928px;padding:28px 32px");
+  const c2 = mk(el, `<div class="lbl">off-market + sold index</div><div style="font:600 46px/1 var(--mono);letter-spacing:-.03em;margin-top:14px">195M docs</div><div style="font:400 23px/1.4 var(--sans);color:var(--ink2);margin-top:14px">Queried only when a user asks for sold or off-market homes. Warm nodes, fewer replicas.</div>`, "card", "left:800px;top:355px;width:928px;padding:28px 32px");
+  const al = mk(el, `${ic("check")}Reindex = build a new index, then swap the alias. No downtime.`, "chip abs", "left:800px;top:580px;font-size:21px;color:var(--ok)");
+  return (t, L) => {
+    sh(doc, E(t, L[0]), 26); rows.forEach((r, k) => { r.classList.toggle("on", t >= L[1] && t < L[3] && k >= 4 && k <= 6); r.classList.toggle("on2", t >= L[2] && t < L[3] && (k === 9 || k === 10)); });
+    sh(note, E(t, L[2]), 14); sh(c1, E(t, L[3]), 24); sh(c2, E(t, L[4]), 24); sh(al, E(t, L[5]), 14);
+  };
+};
+B.map = el => {
+  const hexes = (R, cols, rows, fill) => { let s = ""; const HW = Math.sqrt(3) * R; for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) { const x = R + c * HW + (r % 2) * HW / 2, y = R + r * 1.5 * R; const pts = [0, 1, 2, 3, 4, 5].map(i => { const a = Math.PI / 180 * (60 * i - 30); return (x + R * .96 * Math.cos(a)).toFixed(1) + "," + (y + R * .96 * Math.sin(a)).toFixed(1); }).join(" "); s += fill(x, y, pts, r, c); } return s; };
+  const rnd = (i) => { const v = Math.sin(i * 127.1) * 43758.5453; return v - Math.floor(v); };
+  const z1 = hexes(30, 9, 4, (x, y, p, r, c) => { const d = rnd(r * 9 + c); return `<polygon points="${p}" fill="rgba(138,166,245,${(.08 + d * .5).toFixed(2)})" stroke="rgba(138,166,245,.5)" stroke-width="1.2"/>` + (d > .6 ? `<text x="${x}" y="${y + 6}" text-anchor="middle" font-family="Geist Mono" font-size="15" fill="#efeee9">${Math.round(d * 40)}k</text>` : ""); });
+  const z2 = hexes(14, 19, 9, (x, y, p, r, c) => { const d = rnd(r * 19 + c + 500); return `<polygon points="${p}" fill="rgba(138,166,245,${(d * .3).toFixed(2)})" stroke="rgba(255,255,250,.12)" stroke-width="1"/>` + (d > .78 ? `<circle cx="${x}" cy="${y}" r="${6 + d * 6}" fill="#8aa6f5"/>` : ""); });
+  let z3 = ""; for (let i = 0; i < 140; i++) { const x = 8 + rnd(i + 900) * 480, y = 8 + rnd(i + 1900) * 190; z3 += `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="4" fill="${i % 9 ? "#8aa6f5" : "#f2845f"}"/>`; }
+  z3 += `<g font-family="Geist Mono" font-size="14"><rect x="150" y="70" rx="8" width="76" height="26" fill="#efeee9"/><text x="188" y="88" text-anchor="middle" fill="#121211">$615k</text><rect x="320" y="120" rx="8" width="76" height="26" fill="#efeee9"/><text x="358" y="138" text-anchor="middle" fill="#121211">$489k</text></g>`;
+  const Z = [["state zoom · H3 res 4–5", "~200 cells: count + median price", "One aggregation query. No pins at all.", z1], ["city zoom · H3 res 7", "Clusters per cell", "Still an aggregation, so cost doesn't grow with listings.", z2], ["street zoom · real pins", "Up to 1,000 compact pins", "id, lat, lon, price. Details load on click.", z3]];
+  const cs = Z.map((z, k) => mk(el, `<span class="lbl">${z[0]}</span><svg width="496" height="206" style="display:block;margin-top:14px;overflow:hidden;border-radius:12px;background:var(--bg)">${z[3]}</svg><b>${z[1]}</b><p>${z[2]}</p>`, "card zm", `left:${k * 590}px`));
+  const chips = mk(el, ["OpenSearch geohex_grid aggregation", "1,000 pins × ~32 B ≈ 32 KB", "Cached per (cell, filters) in Valkey · 60 s at CDN when signed out", "WebGL rendering on the client"].map(s => `<span class="chip" style="font-size:20px">${s}</span>`).join(""), "abs", "left:0;top:398px;width:1728px;display:flex;flex-wrap:wrap;gap:12px");
+  const H = [["edge", 30, "#85827a"], ["gateway", 15, "#b6b3ab"], ["OpenSearch agg", 110, "var(--accent)"], ["encode", 15, "#5c5a54"], ["client render", 80, "#efeee9"]];
+  const bar = mk(el, `<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px"><span class="lbl">map budget · &lt; 300 ms</span><b class="msv" style="font:600 40px/1 var(--mono)">0 ms</b></div><div style="position:relative;height:44px;border-radius:12px;background:var(--sheet);box-shadow:0 0 0 1px var(--hair);overflow:hidden">${H.map(x => `<i class="seg" style="background:${x[2]};width:0"><span>${x[0]}</span></i>`).join("")}</div>`, "abs", "left:0;top:540px;width:1728px");
+  const segs = [...bar.querySelectorAll(".seg")], msv = bar.querySelector(".msv");
+  return (t, L) => {
+    cs.forEach((c, k) => sh(c, E(t, L[k]), 26, .03)); sh(chips, E(t, L[3]), 18); sh(bar, E(t, L[4] - .3), 18);
+    let acc = 0, x = 0; const p = cl((t - L[4]) / 2.4);
+    segs.forEach((s, k) => { const a = acc / 250, b = (acc + H[k][1]) / 250; acc += H[k][1]; const q = cl((p - a) / (b - a)); s.style.left = (x / 300 * 100) + "%"; s.style.width = (H[k][1] / 300 * 100 * q) + "%"; s.querySelector("span").style.opacity = q > .95 ? 1 : 0; x += H[k][1] * q; });
+    msv.textContent = Math.round(p * 250) + " ms";
+  };
+};
+B.fresh = el => {
+  const t0 = head(el, "From MLS change to searchable: about 10 seconds after we receive it");
+  const track = mk(el, "", "abs", "left:100px;top:104px;width:1528px;height:3px;background:var(--hair2);border-radius:3px");
+  const fill = mk(el, "", "abs", "left:100px;top:104px;width:0;height:3px;background:var(--accent);border-radius:3px");
+  const M = [["received", "0 s"], ["AlloyDB commit", "~1 s"], ["Pub/Sub", "~1 s"], ["indexer bulk", "~5 s"], ["searchable", "~10 s"]];
+  const ms = M.map((m, k) => mk(el, `<i></i><b>${m[0]}</b><span>${m[1]}</span>`, "ms", `left:${100 + k * 382}px`));
+  const lag = mk(el, `${ic("clock")}The real lag is the MLS polling cadence (1–15 min per contract), so freshness is reported per feed`, "chip abs", "left:0;top:206px;font-size:21px;color:var(--signal)");
+  const F = [["OpenSearch node lost", "Replicas in three zones. Search keeps serving while the shard rebuilds."], ["Search slow or down", "Serve the last cached result for that query, marked as possibly stale."], ["Bad MLS payload", "Dead-letter topic. The raw payload stays in the lake: fix the mapper, replay."], ["Region outage", "Promote the AlloyDB secondary. Restore the index from snapshot."]];
+  const fs = F.map((f, k) => mk(el, `${tl("alert", "var(--signal)").replace("44px;height:44px", "54px;height:54px")}<div><b>${f[0]}</b><span>${f[1]}</span></div>`, "card fl", `left:${(k % 2) * 888}px;top:${290 + Math.floor(k / 2) * 190}px`));
+  return (t, L) => {
+    sh(t0, E(t, L[0])); track.style.opacity = E(t, L[1] - .5);
+    const p = ease(cl((t - L[1]) / 2.6)); fill.style.width = (1528 * p) + "px";
+    ms.forEach((m, k) => { sh(m, E(t, L[1] - .4 + k * .15), 14); m.classList.toggle("on", p >= k / 4 - .001 && t >= L[1]); });
+    sh(lag, E(t, L[1] + 2.8), 14); fs.forEach((f, k) => sh(f, E(t, L[k + 2]), 24, .03));
+  };
+};
+B.costunit = el => {
+  const C5 = [["clock", "Committed use discounts", "AlloyDB and the OpenSearch node pool run all year: commit 1 to 3 years."], ["cpu", "Spot VMs for batch", "Training, backfills and reindexing can be interrupted, so they run on Spot."], ["zap", "Cache hit rate", "~40% of searches served from cache. Every point is search compute we skip."], ["layers", "30 years of history", "BigQuery long-term storage halves the price after 90 days. Raw MLS payloads in GCS Archive."], ["dollar", "Cost per 1,000 searches", "Labels per service, budgets with alerts, reviewed weekly. It should fall as traffic grows."]];
+  const rs = C5.map((c, k) => mk(el, `<span class="tile">${ic(c[0])}</span><b>${c[1]}</b><span>${c[2]}</span>`, "card cu", `top:${k * 128}px${k === 4 ? ";box-shadow:0 30px 70px rgba(0,0,0,.45),0 0 0 2px var(--accent)" : ""}`));
+  return (t, L) => rs.forEach((r, k) => sh(r, E(t, L[k]), 24));
+};
+B.risks = el => {
+  const R = [["lock", "Privacy · CCPA", "PII in its own store. One pipeline serves delete and export requests across every system."],
+    ["scale", "Fair housing, fair lending", "No protected attributes or close proxies in ranking or valuation. Bias checks before each model release."],
+    ["shield", "TILA-RESPA", "Mortgage runs through licensed lender partners. Disclosures go to an append-only audit log."],
+    ["list", "MLS and state rules", "Display, attribution and disclosure rules per MLS and per state, held in config."],
+    ["trend", "Spring traffic", "Stateless tiers autoscale. Before spring: more OpenSearch replicas and a bigger cache."],
+    ["check", "99.9% accuracy", "Version check, dedupe, freshness SLO per feed, nightly reconciliation against the source."]];
+  const cs = R.map((r, k) => mk(el, `<div class="hd"><span class="lbl">${r[1]}</span>${tl(r[0])}</div><p style="font-size:24px">${r[2]}</p>`, "card rq", `left:${(k % 3) * 590}px;top:${20 + Math.floor(k / 3) * 300};height:270px`));
+  cs.forEach((c, k) => c.style.top = (20 + Math.floor(k / 3) * 300) + "px");
+  return (t, L) => cs.forEach((c, k) => sh(c, E(t, L[k]), 26, .03));
+};
+
+for (const id in S) S[id].draw = B[id](S[id].el);
+
+function render(t) {
+  const fi = Math.min(TL.env.length - 1, Math.floor(t * TL.fps)), lv = TL.env[fi] || 0;
+  $("#glow").style.transform = `translate(${-200 + 260 * Math.sin(t / 23)}px, ${-500 + 160 * Math.cos(t / 31)}px)`;
+  $("#glow2").style.transform = `translate(${1100 + 200 * Math.cos(t / 27)}px, ${300 + 120 * Math.sin(t / 19)}px)`;
+  $("#bg").style.backgroundPosition = `${-t * 4}px ${-t * 2}px`;
+  let cur = 0; TL.scenes.forEach((sc, i) => { if (t >= sc.t0 - 1) cur = i; });
+  TL.scenes.forEach((sc, i) => {
+    const s = S[sc.id], end = sc.t0 + sc.dur, inP = E(t, sc.t0 - 1.1, .9), outP = 1 - cl((t - end - .5) / .7);
+    const vis = i === TL.scenes.length - 1 ? inP : Math.min(inP, outP);
+    s.el.style.display = vis <= 0.001 ? "none" : "block"; if (vis <= .001) return;
+    s.el.style.opacity = vis; s.el.style.transform = `translateY(${(1 - inP) * 30 - (1 - outP) * 20}px)`;
+    s.draw(t - sc.t0, sc.lines.map(l => l.t0 - sc.t0));
+  });
+  const sc = TL.scenes[cur];
+  $("#hn").textContent = String(cur + 1).padStart(2, "0"); $("#ht").textContent = TITLES[sc.id];
+  const hp = E(t, sc.t0 - 1.1, .8); $("#hdr").style.opacity = t < 1 ? E(t, 0, 1) : 1; $("#ht").style.opacity = hp; $("#hn").style.opacity = hp;
+  [...$("#dots").children].forEach((d, k) => { const s2 = TL.scenes[k]; d.firstChild.style.width = (100 * cl((t - s2.t0) / s2.dur)) + "%"; });
+  // caption: current line with word-by-word highlight
+  let ln = null; for (const s2 of TL.scenes) for (const l of s2.lines) if (t >= l.t0 - .05 && t < l.t1 + .25) ln = l;
+  const lineEl = $("#line");
+  if (ln) {
+    if (lineEl.dataset.k !== ln.text) { lineEl.dataset.k = ln.text; lineEl.innerHTML = ln.text.split(" ").map(w => `<span class="w">${w}</span>`).join(" "); }
+    const ws = lineEl.children, p = cl((t - ln.t0) / Math.max(.5, ln.t1 - ln.t0 - .35));
+    for (let k = 0; k < ws.length; k++) ws[k].classList.toggle("on", k < Math.ceil(p * ws.length));
+    lineEl.style.opacity = Math.min(E(t, ln.t0 - .05, .25), 1);
+  } else { lineEl.style.opacity = 0; }
+  const sp = ln ? ln.s : null;
+  $("#wM").classList.toggle("on", sp === "Maya"); $("#wS").classList.toggle("on", sp === "Sam");
+  $("#wM .av").style.setProperty("--lv", sp === "Maya" ? lv : 0); $("#wS .av").style.setProperty("--lv", sp === "Sam" ? lv : 0);
+  $("#cap").style.opacity = E(t, 1.5, 1);
+}
+window.render = render;
+/* ---------- deck controller: each stop is a moment where a new box has settled ---------- */
+const STOPS = {
+  intro: L => [1.2, L[1] + 1.8, L[1] + 2.7, L[1] + 3.6],
+  frame: L => [L[1] + 1.1, L[1] + 3.3, L[1] + 5.5, L[1] + 7.7, L[3] + 2.3, L[3] + 7.4, L[3] + 9.7, L[4] + 1.1],
+  rule: L => [1.5, L[1] + 2.2, L[1] + 6.2, L[1] + 10.7, L[3] - 1.8],
+  ingest: L => [L[1] + 1.7, L[1] + 3.2, L[1] + 12.1, L[3] + 1, L[5] + .7, L[5] + 3.7, L[5] + 7.2],
+  kafka: L => [.5, L[1] + 1.2, L[1] + 3.7, L[2] + .4, L[2] + 2.7, L[3] + 2.9, L[3] + 4.9, L[3] + 6.7],
+  data: L => [L[1] + 1, L[1] + 2.7, L[2] + .5, L[3] - 1.3, L[3] + 5.7, L[3] + 9.3, L[3] + 12, L[3] + 13.2],
+  search: L => [.7, L[1] + 1.1, L[1] + 4.7, L[2] + .8, L[3] + 2.2, L[3] + 4.1, L[3] + 8.1, L[5] + 6.1],
+  cache: L => [L[1] + .9, L[3] + .9, L[3] + 10.2, L[5] + .9, L[5] + 6.8],
+  cost: L => [.5, L[1] + 2.5, L[1] + 6.5, L[1] + 7.2, L[1] + 13.6, L[3] + 1.2, L[3] + 5.7, L[3] + 9.2, L[5] + .9],
+  close: L => [L[1] + 1.1, L[1] + 3.4, L[1] + 7.9, L[1] + 13.4, L[3] + 1],
+  map: L => [L[0] + .9, L[1] + .9, L[2] + .9, L[3] + .9, L[4] + 2.6],
+  fresh: L => [L[0] + .9, L[1] + 3.6, L[2] + .9, L[3] + .9, L[4] + .9, L[5] + .9],
+  overview: L => L.map(x => x + 1.4),
+};
+const stops = [];
+TL.scenes.forEach((sc, i) => { const L = sc.lines.map(l => l.t0 - sc.t0); (STOPS[sc.id] || (L => L.map(x => x + .9)))(L).forEach(r => stops.push({ t: sc.t0 + r, i })); });
+const deck = $("#deck"), hintN = $("#hn2"), hintS = $("#hs");
+const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+let k = 0, tNow = stops[0].t, anim = null, started = null;
+const fmt = s => String(Math.floor(s / 60)).padStart(2, "0") + ":" + String(Math.floor(s % 60)).padStart(2, "0");
+function labels() {
+  const id = TL.scenes[stops[k].i].id, sec = SEC[id];
+  hintN.textContent = `${k + 1} / ${stops.length}`;
+  hintS.textContent = sec.name + (sec.min ? ` · ${sec.min} min` : "");
+  const st = document.getElementById("talkStep"); if (st) st.textContent = `${k + 1} / ${stops.length}`;
+  $("#hdr .k").textContent = "HomeFinder · " + sec.name.replace(/^\d+ · /, "") + (sec.min ? ` · ${sec.min} min` : "");
+  $("#nsec").textContent = TITLES[id];
+  $("#ntext").innerHTML = NOTES[id] || "";
+}
+function frame(now) {
+  if (!vis && !anim) { requestAnimationFrame(frame); return; }
+  render(tNow);
+  const w = now / 1000;
+  $("#glow").style.transform = `translate(${-200 + 260 * Math.sin(w / 9)}px, ${-500 + 160 * Math.cos(w / 13)}px)`;
+  $("#glow2").style.transform = `translate(${1100 + 200 * Math.cos(w / 11)}px, ${300 + 120 * Math.sin(w / 8)}px)`;
+  $("#bg").style.backgroundPosition = `${-w * 4}px ${-w * 2}px`;
+  const el = started ? (now - started) / 1000 : 0, nt = $("#ntime");
+  nt.textContent = fmt(el) + " / 30:00"; nt.classList.toggle("over", el > 1800);
+  if (anim) {
+    const p = Math.min(1, (now - anim.s) / anim.d);
+    tNow = anim.a + (anim.b - anim.a) * ease(p);
+    if (p >= 1) { tNow = anim.b; anim = null; }
+  }
+  requestAnimationFrame(frame);
+}
+function go(n) {
+  n = Math.max(0, Math.min(stops.length - 1, n)); if (n === k && !anim) return;
+  if (!started) started = performance.now();
+  const from = anim ? anim.b : tNow, to = stops[n].t, fwd = to > from;
+  const d = reduce ? 1 : fwd ? Math.min(1900, Math.max(750, 500 + (to - from) * 120)) : 450;
+  if (anim) tNow = anim.b;
+  k = n; anim = { a: tNow, b: to, s: performance.now(), d };
+  labels();
+}
+addEventListener("keydown", e => {
+  if (e.metaKey || e.ctrlKey || e.altKey || e.defaultPrevented) return;
+  if (e.target.closest && e.target.closest("input, textarea, select, [contenteditable]")) return;
+  const r = host.getBoundingClientRect(); if (!(r.top < innerHeight / 2 && r.bottom > innerHeight / 2) && document.fullscreenElement !== host) return;
+  if (e.key === "n" || e.key === "N") { notes(); e.preventDefault(); }
+  else if (e.key === "f" || e.key === "F") { full(); e.preventDefault(); }
+  else if (document.fullscreenElement === host && (e.key === "ArrowRight" || e.key === " ")) { go(k + 1); e.preventDefault(); e.stopImmediatePropagation(); }
+  else if (document.fullscreenElement === host && e.key === "ArrowLeft") { go(k - 1); e.preventDefault(); e.stopImmediatePropagation(); }
+}, true);
+const notes = () => deck.classList.toggle("shownotes");
+const full = () => { (document.fullscreenElement ? document.exitFullscreen() : host.requestFullscreen?.())?.catch?.(() => {}); };
+queueMicrotask(() => window.hfWalks && hfWalks.push({ sec: document.getElementById("talk"), next: () => go(k + 1), prev: () => go(k - 1) }));
+deck.addEventListener("click", e => { if (e.target.closest("#notes")) return; const r = deck.getBoundingClientRect(); go(e.clientX - r.left < r.width / 3 ? k - 1 : k + 1); });
+window.talkDeck = { next: () => go(k + 1), prev: () => go(k - 1), restart: () => go(0), notes, full };
+function fit() { const W = host.clientWidth, H = host.clientHeight, s = Math.min(W / 1920, H / 1080); deck.style.transform = `translate(${(W - 1920 * s) / 2}px, ${(H - 1080 * s) / 2}px) scale(${s})`; }
+new ResizeObserver(fit).observe(host); fit();
+let vis = true; new IntersectionObserver(es => es.forEach(x => vis = x.isIntersecting)).observe(host);
+labels();
+document.fonts.ready.then(() => requestAnimationFrame(frame));
+
+})();
+</script>
 </body></html>
