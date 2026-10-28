@@ -3,6 +3,7 @@
 Interview material for the HomeFinder system design: a 30-minute talk plus 30 minutes of Q&A. Section picks: MLS integration and pipeline, a deep dive on geospatial search, and cost optimization.
 
 - `explorer.html`: the interactive explorer. It opens with the talk agenda (three parts, timed), then an animated demo of one listing, decision cards (tech and design choices, with what would make us switch), an animated architecture diagram, the five layers a listing passes through, walks (MLS pipeline, 200 ms search budget, H3 geometry, alerts, cost as a 100% bill), a glossary of every term and acronym, and a "Learn it" panel on every component. Acronyms are spelled out on first use with a hover title. Light and dark mode, plus a notes toggle (helper text is hidden by default).
+- `explorer-deck.html`: the pitch video as a keyboard deck, without the audio or speakers. Each → press plays the next reveal from the video and settles; ← steps back, ↑/↓ jump between the ten chapters, F goes full screen. The current step is kept in the URL hash.
 - `deck.html`: the 22-slide "Blueprint" deck. Press N for speaker notes and T to switch theme.
 - `notes/architecture-study-notes.md`: every decision in one line plus the reason.
 - `notes/speaker-notes-components.md`: long-form notes per component.
