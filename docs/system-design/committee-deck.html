@@ -210,7 +210,7 @@ const SEC = {}; SECTIONS.forEach(s => s.ids.forEach(id => SEC[id] = s));
 const NOTES = {
   intro: "<b>30 min, three parts:</b> architecture 8, geo search deep dive 15, cost 7. Interrupt me anytime.",
   frame: "Numbers are <b>planning assumptions</b>. 1M changes/day = <b>12 writes/s</b>. ~25k searches/s at peak. <b>Read heavy, write light</b>: every later choice falls out of this.",
-  reqs: "These six targets come straight from the brief. Each has <b>a mechanism</b>, and I'll show where it lives as we go.",
+  reqs: "Straight from the brief. <b>Search</b>: H3 + OpenSearch, budget 160 ms. <b>Map</b>: H3 aggregates until ≤ 1,000 pins. <b>Photos</b>: resized on upload, CDN. <b>Valuation</b>: nightly scores, on-demand for edits. <b>99.95%</b>: multi-zone + AlloyDB DR. <b>99.9%</b>: version check, dedupe, freshness SLO per feed.",
   rule: "<b>Managed where the protocol is open</b>: leaving is a migration. <b>Proprietary only behind an adapter</b>, off the request path.",
   overview: "Three rows. <b>Top: requests</b> go edge → stateless services → <b>Valkey first</b>, OpenSearch only on a miss, AlloyDB for details. <b>Bottom: listing updates</b> go sources → ingest → AlloyDB → Pub/Sub, which reindexes search, <b>purges the cache</b>, writes history and matches alerts. Lenders sit behind a <b>partner gateway</b>.",
   ingest: "<b>One Cloud Tasks queue per MLS</b>, rate cap = its contract. Map to RESO, dedupe to one property_id. Outbox row in the same transaction, then <b>5 subscribers</b>. Public records and third-party data are batch loads into the same record.",
