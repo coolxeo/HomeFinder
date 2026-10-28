@@ -216,7 +216,7 @@ const NOTES = {
   kafka: "12 events/s does not justify brokers and partitions. Pub/Sub gives <b>fan-out, dead letters, replay</b>. Cloud Tasks hits one target, so it is wrong for fan-out. <b>Trigger to revisit</b>: sustained thousands/s or cross-cloud consumers.",
   data: "~2 TB at 12 writes/s from one region. Spanner sells global writes we don't use, and we'd lose <b>PostGIS</b>. Ordering: <b>version check</b> on (ModificationTimestamp, seq), so retries and replay are safe.",
   reco: "Recommendations reuse search: <b>candidates from OpenSearch, one ranker</b> for search re-rank, home feed and alerts. Guardrails are part of the design, not an afterthought (fair housing).",
-  search: "<b>The deep dive.</b> OpenSearch on GKE is the one stateful thing we run, because geo + ranking is the product. H3 cells tagged at write time; <b>exact math only on the edge ring</b>. Budget: <b>160 of 200 ms</b>.",
+  search: "<b>The deep dive.</b> OpenSearch on GKE is the one stateful thing we run, because geo + ranking is the product, so we keep control of relevance. H3 cells tagged at write time; <b>exact math only on the edge ring</b>. Budget: <b>160 of 200 ms</b>.",
   index: "One doc per listing, <b>denormalized</b>. School districts and neighborhoods precomputed with PostGIS on write (1M/day), not per search (~400M/day). Active index is small: <b>hash routing</b>, no hot shards. Off-market is separate and warm. Reindex = <b>alias swap</b>.",
   map: "Pins never scale with listings: <b>aggregate by H3 cell</b> until the viewport holds ≤ 1,000 homes. ~32 KB payload. WebGL on the client. Budget <b>250 of 300 ms</b>.",
   fresh: "Our part is ~10 s. <b>The MLS polling cadence is the real lag</b>, so we report freshness per feed. Failures degrade, they don't take search down: replicas in 3 zones, cached fallback, dead letters, DR promotion.",
@@ -346,8 +346,7 @@ B.search = el => {
   const polys = [...map.querySelectorAll("polygon")]; const vpr = map.querySelector("#vpr");
   const cls = cells.map(({ x, y }) => { const inside = x > vp.x + R * .9 && x < vp.x + vp.w - R * .9 && y > vp.y + R * .9 && y < vp.y + vp.h - R * .9; const near = x > vp.x - R * .8 && x < vp.x + vp.w + R * .8 && y > vp.y - R * .8 && y < vp.y + vp.h + R * .8; return inside ? "in" : near ? "ring" : "out"; });
   const os = mk(el, `<span class="tile">${ic("search")}</span><span>OpenSearch on GKE<small>the one stateful thing we run</small></span>`, "node", "left:930px;top:70px");
-  const why = mk(el, `<div style="display:grid;gap:12px;font:400 25px/1.35 var(--sans);color:var(--ink2)"><div>${ic("check")} geo shapes, custom ranking, our facets</div><div style="color:var(--ink3)">${ic("x")} Vertex AI Search: relevance black box</div></div>`, "abs", "left:930px;top:200px");
-  const lg = mk(el, `<div style="display:grid;gap:16px;font:500 25px/1.3 var(--sans)"><div><span style="display:inline-block;width:22px;height:22px;border-radius:6px;background:rgba(138,166,245,.4);box-shadow:0 0 0 2px var(--accent);vertical-align:-3px;margin-right:12px"></span>inside: cheap H3 term filter</div><div><span style="display:inline-block;width:22px;height:22px;border-radius:6px;background:rgba(242,132,95,.35);box-shadow:0 0 0 2px var(--signal);vertical-align:-3px;margin-right:12px"></span>edge ring: exact polygon check</div><div style="color:var(--ink3)">cells tagged at write time</div></div>`, "abs", "left:930px;top:200px");
+    const lg = mk(el, `<div style="display:grid;gap:16px;font:500 25px/1.3 var(--sans)"><div><span style="display:inline-block;width:22px;height:22px;border-radius:6px;background:rgba(138,166,245,.4);box-shadow:0 0 0 2px var(--accent);vertical-align:-3px;margin-right:12px"></span>inside: cheap H3 term filter</div><div><span style="display:inline-block;width:22px;height:22px;border-radius:6px;background:rgba(242,132,95,.35);box-shadow:0 0 0 2px var(--signal);vertical-align:-3px;margin-right:12px"></span>edge ring: exact polygon check</div><div style="color:var(--ink3)">cells tagged at write time</div></div>`, "abs", "left:930px;top:200px");
   const H = [["edge", 40, "#85827a"], ["gateway", 10, "#b6b3ab"], ["cache", 5, "#5c5a54"], ["OpenSearch", 70, "var(--accent)"], ["re-rank", 20, "var(--signal)"], ["hydrate", 15, "#efeee9"]];
   const bar = mk(el, `<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:14px"><span class="lbl">request budget · p95 &lt; 200 ms</span><b id="msv" style="font:600 46px/1 var(--mono)">0 ms</b></div><div style="position:relative;height:46px;border-radius:12px;background:var(--sheet);box-shadow:0 0 0 1px var(--hair);overflow:hidden">${H.map(x => `<i class="seg" style="background:${x[2]};width:0"><span>${x[0]}</span></i>`).join("")}</div>`, "abs", "left:930px;top:430px;width:798px");
   const segs = [...bar.querySelectorAll(".seg")], msv = bar.querySelector("#msv");
@@ -356,7 +355,7 @@ B.search = el => {
     const cl3 = t > L[3] + 4, cl4 = t > L[3] + 8;
     polys.forEach((p, k) => { const c = cls[k]; p.setAttribute("class", "hx" + (cl3 && c === "in" ? " in" : "") + (cl4 && c === "ring" ? " ring" : "") + (cl4 && c === "out" ? " out" : "")); });
     const sw = E(t, L[2] + .2, .6);
-    sh(os, E(t, L[1] + .4) * (1 - sw * 0)); sh(why, E(t, L[1] + 4) * (1 - sw), 20); sh(lg, sw, 20);
+    sh(os, E(t, L[1] + .4) * (1 - sw * 0)); sh(lg, sw, 20);
     sh(bar, E(t, L[5] - .5), 20);
     let acc = 0, x = 0; const p = cl((t - L[5]) / 6), tot = 200;
     segs.forEach((s, k) => { const a = acc / 160, b = (acc + H[k][1]) / 160; acc += H[k][1]; const q = cl((p - a) / (b - a)); s.style.left = (x / tot * 100) + "%"; s.style.width = (H[k][1] / tot * 100 * q) + "%"; s.querySelector("span").style.opacity = q > .95 && H[k][1] >= 15 ? 1 : 0; x += H[k][1] * q; });
@@ -575,7 +574,7 @@ const STOPS = {
   ingest: L => [L[1] + 1.7, L[1] + 3.2, L[1] + 12.1, L[3] + 1, L[5] + .7, L[5] + 3.7, L[5] + 7.2],
   kafka: L => [.5, L[1] + 1.2, L[1] + 3.7, L[2] + .4, L[2] + 2.7, L[3] + 2.9, L[3] + 4.9, L[3] + 6.7],
   data: L => [L[1] + 1, L[1] + 2.7, L[2] + .5, L[3] - 1.3, L[3] + 5.7, L[3] + 9.3, L[3] + 12, L[3] + 13.2],
-  search: L => [.7, L[1] + 1.1, L[1] + 4.7, L[2] + .8, L[3] + 2.2, L[3] + 4.1, L[3] + 8.1, L[5] + 6.1],
+  search: L => [.7, L[1] + 1.1, L[2] + .8, L[3] + 2.2, L[3] + 4.1, L[3] + 8.1, L[5] + 6.1],
   cache: L => [L[1] + .9, L[3] + .9, L[3] + 10.2, L[5] + .9, L[5] + 6.8],
   cost: L => [.5, L[1] + 2.5, L[1] + 6.5, L[1] + 7.2, L[1] + 13.6, L[3] + 1.2, L[3] + 5.7, L[3] + 9.2, L[5] + .9],
   close: L => [L[1] + 1.1, L[1] + 3.4, L[1] + 7.9, L[1] + 13.4, L[3] + 1],
