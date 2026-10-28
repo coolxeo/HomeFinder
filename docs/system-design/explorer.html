@@ -123,6 +123,11 @@ kbd { font-family: var(--f-mono); font-size: 11px; padding: 1px 6px; border-radi
 
 /* Sections */
 section.block { padding-block: 64px; border-top: 1px solid var(--hair); }
+/* Presentation feel: each section fills the screen and sits centered, so a key press lands on a whole "slide" */
+@media (min-width: 760px) and (min-height: 600px) {
+  section.block { min-height: 100svh; display: flex; flex-direction: column; justify-content: center; }
+  .mast { min-height: calc(100svh - 70px); align-content: center; }
+}
 .cols { display: grid; grid-template-columns: minmax(0, 250px) minmax(0, 1fr); gap: 48px; align-items: start; }
 .prose { display: grid; gap: 14px; position: sticky; top: 92px; }
 .prose h2 { font-size: 26px; letter-spacing: -0.02em; }
@@ -1803,6 +1808,45 @@ document.addEventListener("keydown", e => {
 function fromHash() { const h = location.hash.slice(1); if (h.startsWith("x-") && D[h.slice(2)]) open(h.slice(2)); }
 addEventListener("hashchange", fromHash);
 
+
+/* ---------- Keyboard: one section per key press, like a deck ---------- */
+(function sectionKeys() {
+  const SECS = () => [document.querySelector(".mast"), ...$$("section.block")];
+  const ease = p => p < .5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2;
+  let busy = false;
+  function glide(y) {
+    y = Math.max(0, Math.min(y, document.documentElement.scrollHeight - innerHeight));
+    if (reduced) { scrollTo({ top: y, behavior: "instant" }); return; }
+    const y0 = scrollY, d = y - y0, dur = Math.min(900, 420 + Math.abs(d) * .25), t0 = performance.now();
+    busy = true; document.documentElement.style.scrollBehavior = "auto";
+    (function step(now) {
+      const p = Math.min(1, (now - t0) / dur); scrollTo(0, y0 + d * ease(p));
+      if (p < 1) requestAnimationFrame(step); else { busy = false; document.documentElement.style.scrollBehavior = ""; }
+    })(t0);
+  }
+  const topOf = el => el.getBoundingClientRect().top + scrollY - (el.matches(".mast") ? 70 : 0);
+  addEventListener("keydown", e => {
+    if (e.defaultPrevented || e.metaKey || e.ctrlKey || e.altKey) return;
+    const down = ["ArrowDown", "PageDown"].includes(e.key) || (e.key === " " && !e.shiftKey);
+    const up = ["ArrowUp", "PageUp"].includes(e.key) || (e.key === " " && e.shiftKey);
+    if (!down && !up) return;
+    if (!layer.hidden || (e.target.closest && e.target.closest("input, textarea, select, [contenteditable], button, a, [role=tab]") && e.key === " ")) return;
+    if (e.target.closest && e.target.closest("input, textarea, select, [contenteditable]")) return;
+    e.preventDefault();
+    if (busy) return;
+    const secs = SECS(), y = scrollY + 2;
+    let i = 0; secs.forEach((s, k) => { if (topOf(s) <= y) i = k; });
+    const cur = secs[i], bottom = topOf(cur) + cur.offsetHeight;
+    if (down) {
+      /* a section taller than the screen pages through itself before moving on */
+      if (bottom - (scrollY + innerHeight) > 40) return glide(Math.min(scrollY + innerHeight * .85, bottom - innerHeight));
+      if (secs[i + 1]) glide(topOf(secs[i + 1]));
+    } else {
+      if (scrollY - topOf(cur) > 40) return glide(Math.max(topOf(cur), scrollY - innerHeight * .85));
+      if (secs[i - 1]) { const p = secs[i - 1], pb = topOf(p) + p.offsetHeight; glide(p.offsetHeight > innerHeight ? pb - innerHeight : topOf(p)); }
+    }
+  });
+})();
 
 /* ---------- Animated architecture diagram ---------- */
 (function arch() {
