@@ -2,7 +2,7 @@
 
 Interview material for the HomeFinder system design: a 30-minute talk plus 30 minutes of Q&A. Section picks: MLS integration and pipeline, a deep dive on geospatial search, and cost optimization.
 
-- `explorer.html`: the interactive explorer. It has decision cards (tech and design choices), an animated architecture diagram, "How a listing moves" in five layers, walks (MLS pipeline, 200 ms search budget, H3 geometry, alerts, cost as a 100% bill) and a "Learn it" panel on every component. Light and dark mode, plus a notes toggle (helper text is hidden by default).
+- `explorer.html`: the interactive explorer. It opens with the talk agenda (three parts, timed), then an animated demo of one listing, decision cards (tech and design choices, with what would make us switch), an animated architecture diagram, the five layers a listing passes through, walks (MLS pipeline, 200 ms search budget, H3 geometry, alerts, cost as a 100% bill), a glossary of every term and acronym, and a "Learn it" panel on every component. Acronyms are spelled out on first use with a hover title. Light and dark mode, plus a notes toggle (helper text is hidden by default).
 - `deck.html`: the 22-slide "Blueprint" deck. Press N for speaker notes and T to switch theme.
 - `notes/architecture-study-notes.md`: every decision in one line plus the reason.
 - `notes/speaker-notes-components.md`: long-form notes per component.
@@ -11,3 +11,5 @@ Interview material for the HomeFinder system design: a 30-minute talk plus 30 mi
 GCP-native but light: managed where the protocol is open, proprietary only behind an adapter. Capacity numbers are assumptions, not sourced figures.
 
 Icons: [Lucide](https://lucide.dev) 0.460 (ISC), inlined.
+
+Design skills used for the visual review live in `.claude/skills/`: `hallmark` (anti-slop rules for layout, motion and copy) and `frontend-design` (Anthropic's frontend design skill). Claude Code picks them up automatically in this repo.
