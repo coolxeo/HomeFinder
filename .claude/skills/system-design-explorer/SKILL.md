@@ -7,7 +7,7 @@ description: Build a scrollable, drill-down system design explorer page (one HTM
 
 One self-contained HTML page that explains a system the way an architect would at a whiteboard: the decisions first, then the moving picture, then a walk through each hard part, with every box clickable for the long explanation. It works as a talk (keyboard, one section per key press) and as something a reviewer reads alone afterwards.
 
-Reference build: `docs/system-design/explorer.html` in the HomeFinder repo (artifact "HomeFinder System Explorer"). Read it before starting a new one; most patterns below are lifted from it.
+Reference build: `docs/system-design/explorer.html` in the HomeFinder repo (artifact "HomeFinder System Explorer"), as of PRs #4 and #5. The copy on `main` before those merge is older (1x default speed, an overshooting spring easing, a fixed-width diagram) and does not follow these rules. Read it before starting a new one; most patterns below are lifted from it.
 
 If `.claude/skills/hallmark` and `.claude/skills/frontend-design` exist, load them for the visual pass. This skill adds the structure, interaction and copy rules that are specific to explaining a system.
 
@@ -56,7 +56,7 @@ Every component, number and decision opens the same drill-down sheet (section 5)
 - **Diagram edges** are dotted paths with moving dash offset and packets traveling along the active flow. The diagram must reflect real control flow: if a queue triggers a worker, draw source → queue → worker, not two arrows into the worker.
 - **Icons**: Lucide, inlined as SVG paths (credit "Lucide (ISC)" in the README). One icon per decision card in a small tile.
 - **Maps in demos**: main roads and highways only, a lake and a park for orientation, no small streets, no road crossing a park, no label colliding with an overlay.
-- Check at 390 px wide: no sideways scroll, diagram nodes in the right place, tables fit.
+- Check at 390 px wide: the page never scrolls sideways and diagram nodes sit in the right place. A wide table or tab strip may scroll inside its own container, never the page.
 
 ## 5. Components
 
@@ -65,7 +65,7 @@ Every component, number and decision opens the same drill-down sheet (section 5)
 - A card shows: icon tile, decision title, the pick, a short reason, a category color dot, a key number, and a reversibility ring (L/M/H).
 - No hover effects inside cards. Click opens the sheet with all options (chosen and rejected, each with a one-line why), the switch trigger and a link to the node in the diagram.
 - A ledger bar across the top shows every decision as one segment, **grouped by color** (all of the first category, then the next), with filter chips in the same order.
-- Data model per decision: `[id, title, pick, pickWhy, category, number, reversibility(1-3), switchIf, nodeId, [[option, oneLineWhy] x3]]`.
+- Data model per decision: `[id, title, pick, pickWhy, category, number, reversibility(1-3), switchIf, nodeId, [[option, oneLineWhy] x3]]`. The first option is always the pick (`options[0][0] === pick`); the renderer marks index 0 as chosen.
 
 ### Drill-down sheet ("Learn it")
 Every node, number and decision opens one sheet with a "Say it" line, likely questions, and a **Learn it** block with five fixed headings: **What it is**, **How it works**, **Why this choice**, **The numbers** (worked, like 1M ÷ 86,400 ≈ 12/s), **What can go wrong**. Store it as one `LEARN = { id: {what, how, why, nums, risk} }` object, and write the same text to `speaker-notes-components.md` in talk order so it can be turned into a podcast. The sheet is deep-linkable (`#x-<id>`).
@@ -94,7 +94,13 @@ Put the keyboard deck in a shadow root inside the Talk section so its CSS cannot
 :root:not(.notes) :is(.sec-lead, .hint, .sdesc, .ag-time, .legend .hintx) { display: none !important; }
 ```
 ```js
-function applyNotes(on) { document.documentElement.classList.toggle("notes", on); /* swap captions / captions-off icon, aria-pressed */ }
+function applyNotes(on) {
+  document.documentElement.classList.toggle("notes", on);
+  const b = document.getElementById("notesBtn");          // keep the control in sync, also when restored from storage
+  b.innerHTML = icon(on ? "captions" : "captions-off");
+  b.setAttribute("aria-pressed", on);
+  b.title = on ? "Hide notes" : "Show notes"; b.setAttribute("aria-label", b.title);
+}
 try { applyNotes(localStorage.getItem("notes") === "on"); } catch (e) { applyNotes(false); }
 ```
 

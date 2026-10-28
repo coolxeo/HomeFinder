@@ -26,6 +26,7 @@ Lifted from `docs/system-design/explorer.html`. Copy and adapt; keep the behavio
 (function sectionKeys() {
   const SECS = () => [...document.querySelectorAll(".mast, section.block")];
   const ease = p => p < .5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2;
+  const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
   let busy = false;
   function glide(y) {
     y = Math.max(0, Math.min(y, document.documentElement.scrollHeight - innerHeight));
@@ -43,6 +44,7 @@ Lifted from `docs/system-design/explorer.html`. Copy and adapt; keep the behavio
     const down = ["ArrowDown", "PageDown"].includes(e.key) || (e.key === " " && !e.shiftKey);
     const up = ["ArrowUp", "PageUp"].includes(e.key) || (e.key === " " && e.shiftKey);
     if (!down && !up) return;
+    if (!document.getElementById("layer").hidden) return;   // drill-down sheet open: leave keys to it
     if (e.target.closest?.("input, textarea, select, [contenteditable]")) return;
     if (e.key === " " && e.target.closest?.("button, a, [role=tab]")) return;
     e.preventDefault(); if (busy) return;
@@ -69,6 +71,7 @@ const walks = []; window.hfWalks = walks;   // each entry: { sec, next, prev }
 addEventListener("keydown", e => {
   if (!["ArrowLeft", "ArrowRight"].includes(e.key) || e.metaKey || e.ctrlKey || e.altKey) return;
   if (e.target.closest?.("input, textarea, [role=tablist]")) return;
+  if (!document.getElementById("layer").hidden) return;     // drill-down sheet open: don't move a hidden walk
   const mid = innerHeight / 2;   // the walk whose section crosses the middle of the screen
   const w = walks.find(w => { const r = w.sec.getBoundingClientRect(); return r.top < mid && r.bottom > mid; });
   if (!w) return;

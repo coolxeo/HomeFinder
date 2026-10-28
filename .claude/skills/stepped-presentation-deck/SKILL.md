@@ -44,6 +44,7 @@ Stage and fit:
 ```js
 // #deck is 1920x1080, absolutely positioned; scale it into the window
 function fit() { const s = Math.min(innerWidth / 1920, innerHeight / 1080);
+  deck.style.transformOrigin = "0 0";                      // the centering math assumes a top-left origin
   deck.style.transform = `translate(${(innerWidth - 1920 * s) / 2}px, ${(innerHeight - 1080 * s) / 2}px) scale(${s})`; }
 ```
 
@@ -59,10 +60,16 @@ B.kafka = el => { const a = mk(el, "...", "card vs"), b = mk(el, "...", "card vs
 **Stops** are the moments where a new box has settled. → tweens the clock from the current stop to the next, so the reveal plays and stops:
 ```js
 const STOPS = { kafka: L => [.5, L[1] + 1.2, L[1] + 3.7, L[2] + .4], /* one entry per scene */ };
+const stops = [];                                         // flattened: [{ t: absolute time, i: scene index }]
+TL.scenes.forEach((sc, i) => { const L = sc.lines.map(l => l.t0 - sc.t0); STOPS[sc.id](L).forEach(r => stops.push({ t: sc.t0 + r, i })); });
+let k = 0, tNow = stops[0].t, anim = null, started = 0;
+const m = /^#s(\d+)$/.exec(location.hash);                // restore the step after a reload
+if (m) { k = Math.max(0, Math.min(stops.length - 1, +m[1] - 1)); tNow = stops[k].t; }
 function go(n) {
   n = Math.max(0, Math.min(stops.length - 1, n)); if (n === k && !anim) return;
   const from = anim ? anim.b : tNow, to = stops[n].t, fwd = to > from;
   const d = reduce ? 1 : fwd ? Math.min(1900, Math.max(750, 500 + (to - from) * 120)) : 450;  // back is a quick rewind
+  if (!started) started = performance.now();               // timer starts on the first move, key or click
   if (anim) tNow = anim.b;
   k = n; anim = { a: tNow, b: to, s: performance.now(), d };
   history.replaceState(null, "", "#s" + (k + 1));                    // reload lands on the same step
@@ -72,9 +79,9 @@ function go(n) {
 
 When one idea is a set (six requirement cards), show the whole set in **one** stop. Don't make the presenter press → six times.
 
-Keys: → Space PageDown Enter = next; ← PageUp Backspace = back; ↓ = next chapter; ↑ = start of this chapter, then previous chapter; Home / End; **N** = presenter notes; **F** = full screen. Click the right two thirds to advance, the left third to go back. Ignore keys with modifiers. Show a hint row at the bottom: current chapter, keys, `k / total`.
+Keys: → Space PageDown Enter = next; ← PageUp Backspace = back; ↓ = next chapter; ↑ = start of this chapter, then previous chapter; Home / End; **N** = presenter notes; **F** = full screen. Click the right two-thirds to advance, the left third to go back. Ignore keys with modifiers. Show a hint row at the bottom: current chapter, keys, `k / total`.
 
-Presenter notes (N): a panel with the section name, a timer started on the first key press showing `mm:ss / 30:00` that turns signal-red past the budget, and the chapter's notes as bold cues: `NOTES = { overview: "Three rows. <b>Top: requests</b> ... <b>Valkey first</b> ..." }`.
+Presenter notes (N): a panel with the section name, a timer started on the first move (set in `go()`, so keys and clicks both start it) showing `mm:ss / 30:00` that turns signal-red past the budget, and the chapter's notes as bold cues: `NOTES = { overview: "Three rows. <b>Top: requests</b> ... <b>Valkey first</b> ..." }`.
 
 Background life: a dotted grid drifting slowly and two large blurred glows on slow sine paths, driven by wall-clock time so the stage never looks frozen between presses. Respect `prefers-reduced-motion` (instant jumps, no drift).
 

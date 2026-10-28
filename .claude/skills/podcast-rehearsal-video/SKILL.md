@@ -31,10 +31,13 @@ If those files aren't available, rebuild them from the descriptions below.
 ## 2. Voices
 
 - Generate **one request per line**. That gives exact start and end times for captions and animation, and lets you regenerate one bad line without touching the rest.
-- HomeFinder used `gemini-3.8-flash-tts` with Aoede (Maya) and Charon (Sam). Model names change; check the current docs if a call fails.
+- HomeFinder used `gemini-3.8-flash-tts` with Aoede (Maya) and Charon (Sam). The `text` field is read verbatim, so delivery direction ("warm, unhurried") goes in `speech_metadata.style`, never in front of the line. Model names and request fields change; check the current speech-generation docs if a call fails.
+- Re-running the voice step regenerates only lines whose text, voice or style changed (a hash sits next to each WAV).
 - **API keys:** read from an environment variable only. Never write a key into a script, a file, the repo or project memory. If the person pasted a key in chat, use it for the session and tell them to rotate it afterwards.
 - **The click bug:** Gemini appends a C2PA provenance record (about 6 KB) to its audio. Joining files as raw bytes plays it as a burst of digital noise at the end of every clip. Read only the samples from the WAV `data` chunk (`build_timeline.py` does), add a 12 ms fade at each edge, then de-ess and normalize loudness (`deesser`, `loudnorm=I=-16:TP=-1.5:LRA=11`). Check the gaps between lines are silent.
 - Timing defaults: 3 s before the first line, 0.25 s between lines, 2 s between chapters, 5 s after the last line.
+
+Run the commands from the skill folder (`cd .claude/skills/podcast-rehearsal-video`), or prefix the paths with it.
 
 ```bash
 GEMINI_API_KEY=... python3 scripts/tts_gemini.py script.json build/lines

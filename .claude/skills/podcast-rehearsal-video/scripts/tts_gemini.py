@@ -6,7 +6,7 @@ Usage:
 
 script.json:
   {"voices": {"Maya": "Aoede", "Sam": "Charon"},
-   "style": "Warm, unhurried podcast conversation.",
+   "style": "Warm, unhurried podcast conversation.",   # optional; a line may set its own "style"
    "scenes": [{"id": "intro", "lines": [{"s": "Maya", "text": "..."}, ...]}, ...]}
 
 Writes out_dir/<scene>-<nn>.wav and adds "wav" paths to out_dir/lines.json.
@@ -16,7 +16,7 @@ The key is read from the environment only. Never write it to a file or commit it
 The model name and response format change over time: check the current Gemini
 speech-generation docs if a request fails, and set TTS_MODEL to override.
 """
-import base64, json, os, struct, sys, time, urllib.request
+import base64, hashlib, json, os, struct, sys, time, urllib.request
 
 MODEL = os.environ.get("TTS_MODEL", "gemini-3.8-flash-tts")
 URL = "https://generativelanguage.googleapis.com/v1beta/models/{}:generateContent"
@@ -29,11 +29,15 @@ def pcm_to_wav(pcm, rate=24000, ch=1, bits=16):
 
 
 def speak(text, voice, style, key):
+    # "text" is spoken verbatim; delivery direction goes in speech_metadata.style.
+    part = {"text": text}
+    if style:
+        part["speech_metadata"] = {"style": style}
     body = {
-        "contents": [{"parts": [{"text": f"{style}\n\n{text}" if style else text}]}],
+        "contents": [{"role": "user", "parts": [part]}],
         "generationConfig": {
             "responseModalities": ["AUDIO"],
-            "speechConfig": {"voiceConfig": {"prebuiltVoiceConfig": {"voiceName": voice}}},
+            "speechConfig": {"voiceConfig": {"voice": voice}},
         },
     }
     req = urllib.request.Request(URL.format(MODEL), data=json.dumps(body).encode(),
@@ -64,9 +68,14 @@ def main():
     for sc in spec["scenes"]:
         for n, ln in enumerate(sc["lines"]):
             path = os.path.join(out, f"{sc['id']}-{n:02d}.wav")
-            if not os.path.exists(path):
+            voice, style = spec["voices"][ln["s"]], ln.get("style", spec.get("style", ""))
+            # Reuse a WAV only if it was made from the same model, text, voice and style.
+            sig = hashlib.sha256(json.dumps([MODEL, ln["text"], voice, style]).encode()).hexdigest()
+            stamp = path + ".sha256"
+            if not (os.path.exists(path) and os.path.exists(stamp) and open(stamp).read() == sig):
                 print(f"{sc['id']} {n}: {ln['s']}")
-                open(path, "wb").write(speak(ln["text"], spec["voices"][ln["s"]], spec.get("style", ""), key))
+                open(path, "wb").write(speak(ln["text"], voice, style, key))
+                open(stamp, "w").write(sig)
             ln["wav"] = path
     json.dump(spec, open(os.path.join(out, "lines.json"), "w"), indent=1)
 
